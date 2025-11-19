@@ -1,0 +1,53 @@
+body { 
+        font-family: system-ui, sans-serif; margin: 24px; 
+        text-align: center;
+}
+
+#glavniDiv{
+
+    width: 90%;
+    margin: 0 auto 0 auto;
+    /* border: 3px solid rgb(13, 131, 228);
+    border-radius: 10px; */
+    display: flex;
+    flex-direction: row;
+
+}
+
+
+
+#glavniDiv div{
+
+    width: 80%;
+    margin: 0 auto 0 auto;
+    /* border: 2px solid rgba(13, 131, 228, 0.5);
+    border-radius: 10px; */
+    max-height: 820px;
+    overflow: hidden;
+    padding: 0.6em;
+
+}
+
+input{
+
+    width: 10em;
+    border: 2px solid rgba(13, 131, 228, 0.8);
+    border-radius: 10px;
+    padding: 0.4em;
+    text-align: center;
+
+}
+
+@media screen and (max-width: 1080px){
+    
+    #glavniDiv{
+
+        display: flex;
+        flex-direction: column;
+
+    }
+
+
+
+}
+
