@@ -3,7 +3,28 @@ body {
         text-align: center;
 }
 
-#glavniDiv{
+#odabirAplikacije /*, .opcije */{
+
+    width: 80%;
+    margin: 0 auto 0 auto;
+    color: rgb(121, 119, 119);
+    border: 1px solid rgba(165, 165, 165, 0.3); 
+    border-radius: 1em;
+    margin-bottom: 1em;
+    padding: 1.2em;
+    
+
+}
+
+a{
+
+    text-decoration: none;
+    font-family: 'Maven Pro', sans-serif;
+    color: rgb(33, 153, 73);
+    
+}
+
+#portfolio{
 
     width: 90%;
     margin: 0 auto 0 auto;
@@ -16,7 +37,7 @@ body {
 
 
 
-#glavniDiv div{
+#portfolio div{
 
     width: 80%;
     margin: 0 auto 0 auto;
@@ -40,7 +61,7 @@ input{
 
 @media screen and (max-width: 1080px){
     
-    #glavniDiv{
+    #portfolio{
 
         display: flex;
         flex-direction: column;
