@@ -135,7 +135,12 @@ async function getMyAccounts() {
   }
 
   let data = await res.json();
-  console.log("get-my-accounts response JSON:", data);
+  //////////////////////////////////////
+  ///////////////////////////////////////
+  //JSON - portfolio
+  ///////////////////////////////////////
+  ///////////////////////////////////////
+  //console.log("get-my-accounts response JSON:", data);
 
   // Jednostavan retry za "Invalid session"
   if (data.error && (data.message || "").toLowerCase().includes("invalid session")) {
@@ -145,7 +150,7 @@ async function getMyAccounts() {
     await loginMyfxbook();
 
     url = `${BASE}/get-my-accounts.json?session=${SESSION}`;
-    console.log(">>> GET-MY-ACCOUNTS (after relogin) URL:", url);
+    //console.log(">>> GET-MY-ACCOUNTS (after relogin) URL:", url);
 
     res = await fetch(url, {
       method: "GET",
@@ -213,8 +218,9 @@ async function getHistoryForAccountId(accountId) {
 
   if (!res.ok) throw new Error(`get-history HTTP ${res.status}`);
 
+  //privremeno uklanjanje prikaza JSON-a
   let data = await res.json();
-  console.log("get-history response:", data);
+  //console.log("get-history response:", data);
 
   // fallback za "Invalid session"
   if (data.error && (data.message || "").toLowerCase().includes("invalid session")) {
@@ -318,6 +324,9 @@ async function getLastTradeByIndex(index) {
 // --------------------------------------------------
 // PERIODIČNO OSVEŽAVANJE TRENUTNOG KAPITALA (CHF)
 // --------------------------------------------------
+// --------------------------------------------------
+// SABIRANJE KAPITALA SA NALOGA [2] i [4]
+// --------------------------------------------------
 async function refreshEquityTick() {
   try {
     const data = await getMyAccounts();
@@ -327,33 +336,64 @@ async function refreshEquityTick() {
       return;
     }
 
-    let idx = ACCOUNT_INDEX;
-    if (idx < 0 || idx >= accounts.length) {
+    // Indeksi koje sabiramo
+    const INDEX1 = 2;
+    const INDEX2 = 4;
+
+    if (INDEX1 >= accounts.length || INDEX2 >= accounts.length) {
       console.warn(
-        `ACCOUNT_INDEX=${ACCOUNT_INDEX} je van opsega (0..${accounts.length - 1}), koristim 0.`
+        `refreshEquityTick: indeksi 2 i/ili 4 su van opsega (max index = ${accounts.length - 1}).`
       );
-      idx = 0;
+      return;
     }
 
-    const a = accounts[idx];
+    const acc1 = accounts[INDEX1];
+    const acc2 = accounts[INDEX2];
 
-    const equityRaw   = Number(a.equity || 0);
-    const equityFixed = Number(equityRaw.toFixed(2));
-    const currency    = a.currency || "CHF";
+    // Kapital sa prvog naloga (pretpostavka: CHF nalog)
+    const eq1Raw = Number(acc1.equity || 0);
+    const cur1   = acc1.currency || "CHF";
+    const eq1Chf = Number(eq1Raw.toFixed(2));   // već u CHF
 
+    // Kapital sa drugog naloga (pretpostavka: AUD nalog)
+    const eq2Raw = Number(acc2.equity || 0);
+    const cur2   = acc2.currency || "AUD";
+    const eq2Aud = Number(eq2Raw.toFixed(2));   // ostaje u AUD za prikaz
+
+    // Konverzija: 1 CHF ≈ 2 AUD ⇒ 1 AUD ≈ 0.52 CHF
+    const AUD_TO_CHF = 0.52;
+    const eq2ChfConv = Number((eq2Aud * AUD_TO_CHF).toFixed(2));
+
+    const totalChf = Number((eq1Chf + eq2ChfConv).toFixed(2));
+
+    // Logovi u konzoli:
+    console.log("=== SABIRANJE PORTFOLIA [2] i [4] ===");
+    console.log(
+      `Nalog [${INDEX1}] -> equity=${eq1Chf} ${cur1} (pretpostavljeno CHF nalog)`
+    );
+    console.log(
+      `Nalog [${INDEX2}] -> equity=${eq2Aud} ${cur2} (ostaje AUD u prikazu)`
+    );
+    console.log(
+      `Konverzija: ${eq2Aud} ${cur2} ≈ ${eq2ChfConv} CHF (1 AUD ≈ 0.52 CHF)`
+    );
+    console.log(
+      `Ukupan kapital (nalog[${INDEX1}] + nalog[${INDEX2}]): ${totalChf} CHF`
+    );
+    console.log("======================================");
+
+    // Ovo ide ka front-endu (SSE /api/stream-equity, /api/equity)
     lastEquityTick = {
       t: Date.now(),
-      equity: equityFixed,
-      currency
+      equity: totalChf,   // zbir u CHF
+      currency: "CHF"
     };
 
-    console.log(
-      `refreshEquityTick: index=${idx}, equity=${equityFixed} ${currency}`
-    );
   } catch (e) {
     console.warn("refreshEquityTick error:", e.message);
   }
 }
+
 
 // --------------------------------------------------
 // STATIC — front-end (market.html, kod.js, m.html, m.js, stil.css)
@@ -425,7 +465,7 @@ app.get("/api/stream-equity", (req, res) => {
 });
 
 //željeni indeksi portfolija (1, 2, 4)
-const LAST_TRADE_INDICES = [1, 2, 4];
+const LAST_TRADE_INDICES = [/*1,*/ 2, 4];
 
 app.get("/api/last-trades", async (_req, res) => {
   const itemsRaw = [];
@@ -500,7 +540,7 @@ app.get("/api/last-trades", async (_req, res) => {
 // --------------------------------------------------
 app.listen(PORT, async () => {
   console.log(`Server running on http://localhost:${PORT}`);
-  console.log("Na startu radim loginMyfxbook() + prvi refreshEquityTick…");
+  console.log("Na početku: loginMyfxbook() + prvi refreshEquityTick…");
 
   try {
     await loginMyfxbook();

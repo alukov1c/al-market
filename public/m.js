@@ -2,29 +2,35 @@
 
 // Koje indekse iz /api/accounts želimo:
 const PORTFOLIO_CONFIGS = [
-  {
-    index: 1,
-    chartId: "chartP1",
-    equityInputId: "procenatKapitalaP1",
-    currencyInputId: "valutaP1",
-    profitId: "lastProfitP1",
-    dateId: "lastDateP1"
-  },
+
+
   {
     index: 2,
     chartId: "chartP2",
-    equityInputId: "procenatKapitalaP2",
-    currencyInputId: "valutaP2",
-    profitId: "lastProfitP2",
-    dateId: "lastDateP2"
+    equityInputId: "procenatKapitalaPA",
+    currencyInputId: "valutaPA",
+    profitId: "lastProfitPA",
+    dateId: "lastDatePA"
   },
+
+    /*
+  {
+    index: 1,
+    chartId: "chartPI",
+    equityInputId: "procenatKapitalaPI",
+    currencyInputId: "valutaPI",
+    profitId: "lastProfitPI",
+    dateId: "lastDatePI"
+  },
+  */
+
   {
     index: 4,
-    chartId: "chartP3",
-    equityInputId: "procenatKapitalaP3",
-    currencyInputId: "valutaP3",
-    profitId: "lastProfitP3",
-    dateId: "lastDateP3"
+    chartId: "chartPB",
+    equityInputId: "procenatKapitalaPB",
+    currencyInputId: "valutaPB",
+    profitId: "lastProfitPB",
+    dateId: "lastDatePB"
   }
 ];
 
