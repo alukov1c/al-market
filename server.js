@@ -31,55 +31,42 @@ let lastEquityTick = {
 // --------------------------------------------------
 // LOGIN — ekvivalent curl "…/login.json?email=...&password=..."
 // --------------------------------------------------
+// Nova verzija
+
 async function loginMyfxbook() {
-  const email    = process.env.MYFXBOOK_EMAIL || "";
-  const password = process.env.MYFXBOOK_PASSWORD || "";
+  const email    = process.env.MYFXBOOK_EMAIL;
+  const password = process.env.MYFXBOOK_PASSWORD;
 
-  if (!email || !password) {
-    throw new Error("MYFXBOOK_EMAIL ili MYFXBOOK_PASSWORD nisu setovani u .env!");
-  }
+  const url = `${BASE}/login.json?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`;
 
-  const url = new URL(`${BASE}/login.json`);
-  url.searchParams.set("email", email);
-  url.searchParams.set("password", password);
-
-  console.log(">>> LOGIN URL:", url.toString());
-
-  const res = await fetch(url.toString(), {
+  const res = await fetch(url, {
     method: "GET",
     headers: {
-      "Accept": "application/json,text/javascript,*/*;q=0.1",
-      "Accept-Language": "en-US,en;q=0.9",
-      "Cache-Control": "no-cache",
-      "Pragma": "no-cache",
-      "Connection": "keep-alive",
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118 Safari/537.36"
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/124 Safari/537.36",
+      "Accept": "application/json"
     }
   });
 
+  console.log("Login HTTP status:", res.status);
+
   if (!res.ok) {
-    throw new Error(`Login HTTP error ${res.status}`);
+    throw new Error("Login HTTP error " + res.status);
   }
 
   const data = await res.json();
-  console.log("LOGIN response JSON:", data);
+  console.log("Login JSON:", data);
 
   if (data.error) {
-    throw new Error("Login API error: " + (data.message || "Unknown"));
-  }
-  if (!data.session) {
-    throw new Error("Login response nema session!");
+    throw new Error("Login error: " + data.message);
   }
 
-  SESSION = String(data.session).trim();
-
-  const testUrl = "https://www.myfxbook.com/api/get-my-accounts.json?session=" + SESSION;
-  console.log("🎉 SESSION =", SESSION);
-  console.log("🔗 Test URL (copy/paste u browser):");
-  console.log(testUrl);
+  SESSION = decodeURIComponent(data.session);
+  console.log("SESSION =", SESSION);
 
   return SESSION;
 }
+
+
 
 // Pomoćna funkcija: parsiranje Myfxbook formata "MM/DD/YYYY HH:mm"
 function parseMyfxbookDate(str) {
@@ -218,7 +205,7 @@ async function getHistoryForAccountId(accountId) {
 
   if (!res.ok) throw new Error(`get-history HTTP ${res.status}`);
 
-  //privremeno uklanjanje prikaza JSON-a
+  //privremeno uklanjanje prikaza JSON
   let data = await res.json();
   //console.log("get-history response:", data);
 
