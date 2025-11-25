@@ -389,12 +389,15 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
+/*
 app.get("/", (_req, res) => {
-  res.sendFile(path.join(__dirname, "public", "market.html"));
+  res.sendFile(path.join(__dirname, "public", "m1.html"));
 });
+*/
 
-app.get("/m", (_req, res) => {
-  res.sendFile(path.join(__dirname, "public", "m.html"));
+
+app.get("/m1", (_req, res) => {
+  res.sendFile(path.join(__dirname, "public", "m1.html"));
 });
 
 
