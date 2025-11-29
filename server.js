@@ -33,7 +33,17 @@ let lastEquityTick = {
 // --------------------------------------------------
 // Nova verzija
 
+let lastLoginTime = 0;
+
 async function loginMyfxbook() {
+
+  const now = Date.now();
+  if (now - lastLoginTime < 10000) {
+    throw new Error("Previše login pokušaja u kratkom vremenu");
+  }
+
+  lastLoginTime = now;
+
   const email    = process.env.MYFXBOOK_EMAIL;
   const password = process.env.MYFXBOOK_PASSWORD;
 
@@ -535,9 +545,9 @@ app.listen(PORT, async () => {
   try {
     await loginMyfxbook();
     await refreshEquityTick();
-    // periodično osvežavanje equity-ja (isto ~5 s kao kod.js polling)
-    setInterval(refreshEquityTick, 5000);
-    console.log("Equity tick refresher pokrenut na 5 s.");
+    // periodično osvežavanje equity-ja (isto 15 s kao kod.js polling)
+    setInterval(refreshEquityTick, 15000);
+    console.log("Equity tick refresher pokrenut na 15 s.");
   } catch (e) {
     console.error("Init error:", e.message);
   }

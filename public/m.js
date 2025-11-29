@@ -34,8 +34,44 @@ const PORTFOLIO_CONFIGS = [
   }
 ];
 
+const PORT_A = {
+    index: 2,
+    chartId: "chartP2",
+    equityInputId: "procenatKapitalaPA",
+    currencyInputId: "valutaPA",
+    profitId: "lastProfitPA",
+    dateId: "lastDatePA",
+    jacinaId: "jacinaPozicijeA"
+};
 
-// ovde ćemo čuvati Chart instance da možemo da ih osvežavamo
+const PORT_B = {
+    index: 4,
+    chartId: "chartPB",
+    equityInputId: "procenatKapitalaPB",
+    currencyInputId: "valutaPB",
+    profitId: "lastProfitPB",
+    dateId: "lastDatePB",
+    jacinaId: "jacinaPozicijeB"
+};
+
+const PORTFOLIOS = [PORT_A, PORT_B];
+
+let marginA = 6.15;
+let marginB = 107.52;
+const trzisteA = 290;
+const trzisteB = 290;
+
+let chartPortfolioInfo = null;
+
+
+function calcJacina(equity, margin, trziste) {
+    if (margin <= 0) return 0;
+    const pozicija = equity / margin;
+    return (pozicija / trziste) * 100;   // procenat
+}
+
+
+// ovde se čuvaju Chart instance da bi mogle da se osvežavaju
 const charts = {};
 
 function fmtPercent(n) {
@@ -94,8 +130,9 @@ async function updatePortfolios() {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
+              tooltip: {enabled: false},
               legend: {
-                display: true,
+                display: true /* true */,
                 position: "bottom"
               },
               tooltip: {
@@ -119,17 +156,127 @@ async function updatePortfolios() {
       }
     });
 
+    // --- sabiranje kapitala A + B i slanje na grafik portfolioInfo ---
+
+    let equityA = 0;
+    let equityB = 0;
+
+    PORTFOLIOS.forEach(cfg => {
+        const acc = accounts[cfg.index];
+        if (!acc) return;
+
+        let eq = Number(acc.equity || 0);
+
+        const curr = (acc.currency || "").toUpperCase();
+        if (curr === "AUD") {
+            eq = eq * 0.52; // konverzija AUD → CHF
+        }
+
+        if (cfg.index === 2) equityA = eq;
+        if (cfg.index === 4) equityB = eq;
+    });
+
+    const totalChf = equityA + equityB;
+
+    // UPDATE LINE CHART
+    updatePortfolioInfoChart(totalChf);
+
+    // --- računanje jačine pozicije A i B ---
+    PORTFOLIOS.forEach(cfg => {
+        const acc = accounts[cfg.index];
+        if (!acc) return;
+
+        const equity = Number(acc.equity || 0);
+
+        let marginVal = 0;
+        if (cfg.index === 2) {
+
+          marginVal = marginA;
+          trziste = trzisteA;
+
+        }
+        if (cfg.index === 4) {
+          
+          marginVal = marginB / 3;
+          trziste = trzisteB;
+
+
+        };
+
+        const jacina = calcJacina(equity, marginVal, trziste);
+        const el = document.getElementById(cfg.jacinaId);
+        if (el) el.value = jacina.toFixed(2) + " %";
+
+    });
+
   } catch (err) {
     console.error("Greška u updatePortfolios():", err);
     // Po želji: jednom prikaži alert, ali ne svaki put
   }
 }
 
-
 function fmtNumber2(n) {
   if (typeof n !== "number" || Number.isNaN(n)) return "—";
   return n.toFixed(2);
 }
+
+// Line chart: Portfolio A + Portfolio B (equity zbir u CHF)
+function updatePortfolioInfoChart(totalChf) {
+    const canvas = document.getElementById("chartPortfolioInfo");
+    if (!canvas || !canvas.getContext) return;
+
+    const ctx = canvas.getContext("2d");
+    const now = new Date();
+
+    // Ako chart već postoji → obrisati ga pre pravljenja novog
+    if (!chartPortfolioInfo) {
+        chartPortfolioInfo = new Chart(ctx, {
+            type: "line",
+            data: {
+                datasets: [{
+                    label: "Ukupan kapital (CHF)",
+                    data: [{ x: now, y: totalChf }],
+                    borderWidth: 2,
+                    tension: 0.25
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                parsing: false,
+                plugins: {
+                  tooltip: {enabled: false},
+                  legend: {display: true},
+                },
+                scales: {
+                    x: {
+                        type: "time",
+                        time: { unit: "minute" },
+                        title: { display: true, text: "Vreme" }
+                    },
+                    y: {
+                        title: /* { display: true, text: "CHF" }, */ {display: false},
+                        ticks: {display: false}, 
+                        /* grid: {display: false} */
+
+                    }
+                }
+            }
+        });
+        return;
+    }
+
+    // BEZ NOVOG KREIRANJA – samo update postojećeg grafikona
+    const data = chartPortfolioInfo.data.datasets[0].data;
+
+    data.push({ x: now, y: totalChf });
+
+    const cutoff = Date.now() - 12 * 60 * 60 * 1000;
+    while (data.length && +data[0].x < cutoff) data.shift();
+
+    chartPortfolioInfo.update("none");
+}
+
 
 // Učitavanje poslednjih trejdova za indekse 1, 2, 4
 async function updateLastTrades() {

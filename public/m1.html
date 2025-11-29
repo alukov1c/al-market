@@ -7,7 +7,9 @@
     <title>A-L market - portfolio</title>
     <link rel="stylesheet" href="stil.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
     <link rel="shortcut icon" href="ico.ico" type="image/x-icon">
+
 </head>
 <body>
 
@@ -29,10 +31,10 @@
 
             <div id="portfolioA">
                 
-
-                <b>Portfolio A</b>
-
-
+                <div> 
+                    <b>Portfolio A</b>
+                </div>
+                
                 <div>
                     <canvas id="chartP2" height="150"></canvas>
                 </div>
@@ -51,6 +53,59 @@
 
                 <p>Datum: </p>
                 <p id="lastDatePA">—</p>
+
+            </div>
+
+            <div id="portfolioInfo">
+
+                <div>
+                    <b>Grafik (Portfolio A + Portfolio B): </b>
+                </div>
+
+                <div>
+                    <canvas id="chartPortfolioInfo" height="180"></canvas>
+                </div>
+
+                <!-- A -->
+
+                <div>
+
+                    <div>
+
+                        <b>Portfolio A - info:</b>
+                        <hr>
+
+                    </div>
+
+                    <div>
+                        Jačina pozicije u odnosu na tržište:
+                    </div>
+
+                    <div>
+                        <input id="jacinaPozicijeA" type="text">
+                    </div>
+
+                </div>
+
+                <!-- B -->
+
+                <div>
+
+                    <div>
+                        <b>Portfolio B - info:</b>
+                        <hr>
+                    </div>
+
+                    <div>
+                        Jačina pozicije u odnosu na tržište:
+                    </div>
+
+                    <div>
+                        <input id="jacinaPozicijeB" type="text">
+                    </div>
+
+                </div>
+                
 
             </div>
 
@@ -85,8 +140,10 @@
 
             <div id="portfolioB">
                 
-                <b>Portfolio B</b>
-
+                <div>
+                    <b>Portfolio B</b>
+                </div>
+                
                 <div>
                     <canvas id="chartPB" height="150"></canvas>
                 </div>

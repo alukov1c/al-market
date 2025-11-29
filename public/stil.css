@@ -1,6 +1,13 @@
-body { 
-        font-family: system-ui, sans-serif; margin: 24px; 
-        text-align: center;
+body {
+
+    font-family: system-ui, sans-serif; margin: 24px; 
+    text-align: center;
+    overflow: hidden;
+    
+}
+
+#glavniDiv{
+    
 }
 
 #odabirAplikacije /*, .opcije */{
@@ -13,7 +20,6 @@ body {
     margin-bottom: 1em;
     padding: 1.2em;
     
-
 }
 
 a{
@@ -35,6 +41,12 @@ a{
 
 }
 
+#chartPortfolioInfo {
+    width: 100%;
+    height: 180px !important;
+    max-height: 180px !important;
+    /* display: block; */
+}
 
 
 #portfolio div{
