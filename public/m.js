@@ -56,8 +56,9 @@ const PORT_B = {
 
 const PORTFOLIOS = [PORT_A, PORT_B];
 
-let marginA = 6.15;
-let marginB = 107.52;
+
+let marginA = 107.52;
+let marginB = 6.15;
 const trzisteA = 290;
 const trzisteB = 290;
 
@@ -197,7 +198,7 @@ async function updatePortfolios() {
         }
         if (cfg.index === 4) {
           
-          marginVal = marginB / 3;
+          marginVal = marginB;
           trziste = trzisteB;
 
 
