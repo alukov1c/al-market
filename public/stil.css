@@ -81,7 +81,16 @@ input{
 
         display: flex;
         flex-direction: column;
+        border: 1px solid black;
 
+    }
+
+    input {
+        width: 20em;
+    }
+
+    canvas{
+        width: 120%;
     }
 
 
