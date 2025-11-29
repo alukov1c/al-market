@@ -3,7 +3,7 @@ body {
     font-family: system-ui, sans-serif; margin: 24px; 
     text-align: center;
     overflow: hidden;
-    
+
 }
 
 #glavniDiv{
@@ -72,6 +72,10 @@ input{
 }
 
 @media screen and (max-width: 1080px){
+
+    body{
+        overflow: auto;
+    }
     
     #portfolio{
 
