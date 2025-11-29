@@ -167,6 +167,7 @@ async function updatePortfolios() {
         if (!acc) return;
 
         let eq = Number(acc.equity || 0);
+        //let eq = Number(parseFloat(acc.equity).toFixed(4));
 
         const curr = (acc.currency || "").toUpperCase();
         if (curr === "AUD") {
@@ -232,13 +233,19 @@ function updatePortfolioInfoChart(totalChf) {
     // Ako chart već postoji → obrisati ga pre pravljenja novog
     if (!chartPortfolioInfo) {
         chartPortfolioInfo = new Chart(ctx, {
-            type: "line",
+            type: "scatter",
             data: {
                 datasets: [{
+
                     label: "Ukupan kapital (CHF)",
                     data: [{ x: now, y: totalChf }],
+                    showLine: false,
+                    stepped: true,
                     borderWidth: 2,
-                    tension: 0.25
+                    tension: 0 /* 0.25 */,
+                    pointRadius: 2,
+                    pointHoverRadius: 4
+
                 }]
             },
             options: {
@@ -251,14 +258,21 @@ function updatePortfolioInfoChart(totalChf) {
                 },
                 scales: {
                     x: {
+
                         type: "time",
                         time: { unit: "minute" },
                         title: { display: true, text: "Vreme" }
+
                     },
                     y: {
                         title: /* { display: true, text: "CHF" }, */ {display: false},
-                        ticks: {display: false}, 
+                        ticks: {
+                          display: false,
+                        }, 
                         /* grid: {display: false} */
+
+                        suggestedMin: totalChf - 5,
+                        suggestedMax: totalChf + 5
 
                     }
                 }
