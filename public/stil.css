@@ -81,17 +81,12 @@ input{
 
         display: flex;
         flex-direction: column;
-        
+
     }
 
     input {
-        width: 20em;
+        width: 15em;
     }
-
-    canvas{
-        width: 120%;
-    }
-
 
 
 }
