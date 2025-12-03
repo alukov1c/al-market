@@ -122,7 +122,7 @@ async function updatePortfolios() {
         charts[chartId] = new Chart(ctx, {
           type: "doughnut",
           data: {
-            labels: ["Kapital %", "Ostatak do 100%"],
+            labels: ["Nivo %", "Ostatak do 100%"],
             datasets: [{
               data: [equityPercent, rest]
             }]
@@ -237,7 +237,7 @@ function updatePortfolioInfoChart(totalChf) {
             data: {
                 datasets: [{
 
-                    label: "Ukupan kapital (CHF)",
+                    label: "Ukupno (CHF)",
                     data: [{ x: now, y: totalChf }],
                     showLine: false,
                     stepped: true,
