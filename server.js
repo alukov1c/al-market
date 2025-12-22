@@ -5,6 +5,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+import crypto from 'crypto';
 
 dotenv.config();
 
@@ -141,7 +142,7 @@ async function getMyAccounts() {
 
   // Jednostavan retry za "Invalid session"
   if (data.error && (data.message || "").toLowerCase().includes("invalid session")) {
-    console.warn("⚠ Invalid session u getMyAccounts() → radim relogin i ponovni pokušaj…");
+    console.warn("⚠ Invalid session u getMyAccounts() → Relogin i ponovni pokušaj je u toku…");
 
     SESSION = null;
     await loginMyfxbook();
@@ -316,6 +317,128 @@ async function getLastTradeByIndex(index) {
   return last;
 }
 
+// -----------------------------------------------------
+//
+//BINANCE
+//
+//------------------------------------------------------
+async function getBinanceCapital() {
+    try {
+        const apiKey = process.env.BINANCE_API_KEY;
+        const apiSecret = process.env.BINANCE_API_SECRET;
+
+        if (!apiKey || !apiSecret) {
+            console.warn("Binance API ključevi nisu definisani u .env!");
+            return null;
+        }
+
+        const timestamp = Date.now();
+        const recvWindow = 45000;
+
+        const query = `timestamp=${timestamp}&recvWindow=${recvWindow}`;
+
+        const signature = crypto
+            .createHmac("sha256", apiSecret)
+            .update(query)
+            .digest("hex");
+
+        const url = `https://api.binance.com/api/v3/account?${query}&signature=${signature}`;
+
+        const res = await fetch(url, {
+            method: "GET",
+            headers: {
+                "X-MBX-APIKEY": apiKey
+            }
+        });
+
+        // DEBUG: detaljniji ispis zbog lakšeg praćenja grešaka
+        if (!res.ok) {
+            const txt = await res.text();
+            console.warn("Binance HTTP error:", res.status, txt);
+            return null;
+        }
+
+        const data = await res.json();
+        if (!data.balances) return null;
+
+        // -------------------------------------
+        // UKUPNA VREDNOST PORTFOLIJA U USDT
+        // -------------------------------------
+        let totalUsdt = 0;
+
+        for (const b of data.balances) {
+            const free   = Number(b.free   || 0);
+            const locked = Number(b.locked || 0);
+            const total  = free + locked;
+
+            if (total <= 0) continue;
+
+            if (b.asset === "USDT") {
+                totalUsdt += total;
+            } else {
+                // trenutna cena preko /ticker/price
+                const priceRes = await fetch(
+                    `https://api.binance.com/api/v3/ticker/price?symbol=${b.asset}USDT`
+                );
+
+                if (!priceRes.ok) continue;
+
+                const priceData = await priceRes.json();
+                const price = Number(priceData.price || 0);
+
+                if (price > 0) {
+                    totalUsdt += total * price;
+                }
+            }
+        }
+
+        return Number(totalUsdt.toFixed(2));
+
+    } catch (e) {
+        console.warn("Binance API error:", e.message);
+        return null;
+    }
+}
+
+// --------------------------------------------
+// KONVERZIJA USDT → CHF preko Binance API
+// --------------------------------------------
+async function convertUsdtToChf(usdtAmount) {
+    try {
+        if (!usdtAmount || usdtAmount <= 0) return 0;
+
+        // Binance par USDTCHF MORA DA POSTOJI
+        // Ako ne postoji, koristi USDT → EUR → CHF
+        const direct = await fetch("https://api.binance.com/api/v3/ticker/price?symbol=USDCHF");
+        
+        if (direct.ok) {
+            const dj = await direct.json();
+            const chfPrice = Number(dj.price || 0);
+            if (chfPrice > 0) {
+                return Number((usdtAmount * chfPrice).toFixed(2));
+            }
+        }
+
+        // fallback ako USDCHF ne postoji
+        const eurPriceRes = await fetch("https://api.binance.com/api/v3/ticker/price?symbol=EURCHF");
+        const usdeurRes   = await fetch("https://api.binance.com/api/v3/ticker/price?symbol=USDEUR");
+
+        if (!eurPriceRes.ok || !usdeurRes.ok) return 0;
+
+        const eurChf  = Number((await eurPriceRes.json()).price || 0);
+        const usdEur  = Number((await usdeurRes.json()).price || 0);
+
+        if (eurChf > 0 && usdEur > 0) {
+            return Number((usdtAmount * usdEur * eurChf).toFixed(2));
+        }
+
+        return 0;
+
+    } catch (err) {
+        console.warn("convertUsdtToChf error:", err.message);
+        return 0;
+    }
+}
 
 
 // --------------------------------------------------
@@ -324,6 +447,10 @@ async function getLastTradeByIndex(index) {
 // --------------------------------------------------
 // SABIRANJE KAPITALA SA NALOGA [2] i [4]
 // --------------------------------------------------
+//
+// + Binance
+//
+//---------------------------------------------------
 async function refreshEquityTick() {
   try {
     const data = await getMyAccounts();
@@ -379,16 +506,59 @@ async function refreshEquityTick() {
     );
     console.log("======================================");
 
-    // Ovo ide ka front-endu (SSE /api/stream-equity, /api/equity)
+    // Kka front-endu (SSE /api/stream-equity, /api/equity)
     lastEquityTick = {
       t: Date.now(),
       equity: totalChf,   // zbir u CHF
       currency: "CHF"
     };
 
-  } catch (e) {
-    console.warn("refreshEquityTick error:", e.message);
-  }
+    /////////////////////
+    ////////////////////
+    // Binance
+    ///////////////////
+    //////////////////
+
+
+    try {
+        // 1) Binance kapital u USDT
+        const binanceCapUsdt = await getBinanceCapital();
+
+        if (binanceCapUsdt !== null) {
+            console.log(`kapital(Binance) = ${binanceCapUsdt} USDT`);
+
+            // 2) USDT → CHF konverzija
+            //const binanceCapChf = await convertUsdtToChf(binanceCapUsdt);
+            const binanceCapChf = Number(binanceCapUsdt * 0.8).toFixed(2);
+            console.log(`kapital(Binance) = ${binanceCapChf} CHF (konverzija)`);
+            console.log("--------------------------------------");
+        } else {
+            console.log("kapital(Binance) = N/A");
+            console.log("--------------------------------------");
+        }
+
+    } catch (e) {
+        console.warn("Binance kapital greška:", e.message);
+    }
+
+
+    /*
+        // Binance kapital
+        const binanceCap = await getBinanceCapital();
+
+        if (binanceCap !== null) {
+            console.log(`kapital(Binance) = ${binanceCap} USDT`);
+            console.log("--------------------------------------");
+        }
+    */  
+
+      } catch (e) {
+        console.warn("refreshEquityTick error:", e.message);
+      }
+    
+
+
+
 }
 
 

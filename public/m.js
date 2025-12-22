@@ -57,7 +57,8 @@ const PORT_B = {
 const PORTFOLIOS = [PORT_A, PORT_B];
 
 
-let marginA = 107.52;
+//let marginA = 107.52; //do 22.12.2025.
+let marginA = 3.25; //od 22.12.2025. 15:25h
 let marginB = 6.15;
 const trzisteA = 290;
 const trzisteB = 290;
