@@ -60,7 +60,8 @@ const PORTFOLIOS = [PORT_A, PORT_B];
 //let marginA = 107.52; //do 22.12.2025.
 //let marginA = 73.25; //od 22.12.2025. 15:25h
 let marginA = 50.53; //od 22.12.2025. uveče
-let marginB = 6.15;
+//let marginB = 6.15; //do 23.12.2025. 08:47h
+let marginB = 73.23; //od 23.12.2025. 08:47h
 const trzisteA = 290;
 const trzisteB = 290;
 
