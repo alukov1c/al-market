@@ -86,7 +86,7 @@ function parseMyfxbookDate(str) {
   if (!datePart || !timePart) return null;
   const [month, day, year] = datePart.split("/").map(Number);
   const [hour, minute]      = timePart.split(":").map(Number);
-  return new Date(year, month - 1, day, hour || 0, minute || 0);
+  return new Date(year, month - 1, day, hour - 1 || 0, minute || 0);
 }
 
 function formatSerbianDate(dateObj) {
