@@ -59,11 +59,24 @@ const PORTFOLIOS = [PORT_A, PORT_B];
 
 //let marginA = 107.52; //do 22.12.2025.
 //let marginA = 73.25; //od 22.12.2025. 15:25h
-let marginA = 50.53; //od 22.12.2025. uveče
+//let marginA = 50.53; //od 22.12.2025. uveče
+
+//const trzisteA = 290;
+//const trzisteB = 290;
+
+let marginA = 15.11; //od 24.12.2025 01:45h
+let T_A_CHF = 5183.41; //24.12.2025. => trzisteA = 343,05
+let trzisteA = T_A_CHF / marginA;
+
+//------------------------------------------------
+//------  -------   --------   -------   -------
+//------------------------------------------------
+
 //let marginB = 6.15; //do 23.12.2025. 08:47h
-let marginB = 73.23; //od 23.12.2025. 08:47h
-const trzisteA = 290;
-const trzisteB = 290;
+//let marginB = 73.23; //od 23.12.2025. 08:47h
+let marginB = 6.04; //od 24.12.2025. 00:41h
+let T_B_AUD = 2586.64;
+let trzisteB = T_B_AUD / marginB;
 
 let chartPortfolioInfo = null;
 
