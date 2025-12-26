@@ -16,6 +16,13 @@ const app  = express();
 const PORT = process.env.PORT || 8080;
 const BASE = "https://www.myfxbook.com/api";
 
+let cachedAccounts = [];
+let cachedTs = 0;
+let refreshing = false;
+let backoffUntil = 0;
+const CACHE_TTL_MS = 15000; // 15s
+
+
 // indeks naloga se koristi u kod.js (INDEX = 2)
 const ACCOUNT_INDEX = parseInt(process.env.ACCOUNT_INDEX || "2", 10);
 
@@ -561,6 +568,30 @@ async function refreshEquityTick() {
 
 }
 
+async function ensureAccountsCache() {
+  const now = Date.now();
+  if (now < backoffUntil) return;          // ako smo blokirani, ne zovi Myfxbook
+  if (refreshing) return;                  // spreči paralelne pozive
+  if (cachedAccounts.length && (now - cachedTs) < CACHE_TTL_MS) return; // cache validan
+
+  refreshing = true;
+  try {
+    const data = await getMyAccounts();    // JEDINI poziv ka Myfxbook-u
+    cachedAccounts = data.accounts || [];
+    cachedTs = Date.now();
+  } catch (e) {
+    // Ako 403 → pauza 5 minuta
+    if (String(e.message || e).includes("403")) {
+      backoffUntil = Date.now() + 5 * 60 * 1000;
+      console.warn("Myfxbook 403 → backoff 5min");
+    }
+    throw e;
+  } finally {
+    refreshing = false;
+  }
+}
+
+
 
 // --------------------------------------------------
 // STATIC — front-end (market.html, kod.js, m.html, m.js, stil.css)
@@ -584,6 +615,7 @@ app.get("/m1", (_req, res) => {
 // --------------------------------------------------
 // /api/accounts — koristi getMyAccounts()
 // --------------------------------------------------
+/*
 app.get("/api/accounts", async (_req, res) => {
   try {
     const data = await getMyAccounts();
@@ -593,6 +625,18 @@ app.get("/api/accounts", async (_req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+*/
+
+app.get("/api/accounts", async (_req, res) => {
+  try {
+    await ensureAccountsCache();
+    res.json(cachedAccounts);
+  } catch (e) {
+    console.error("GET /api/accounts error:", e?.stack || e?.message);
+    res.status(500).json({ error: String(e?.message || e) });
+  }
+});
+
 
 // opcioni debug endpoint
 app.get("/api/debug-accounts", async (_req, res) => {
