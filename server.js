@@ -460,113 +460,23 @@ async function convertUsdtToChf(usdtAmount) {
 //---------------------------------------------------
 async function refreshEquityTick() {
   try {
-    const data = await getMyAccounts();
-    const accounts = data.accounts || [];
-    if (!accounts.length) {
-      console.warn("refreshEquityTick: nema naloga u accounts.");
+    await ensureAccountsCache();               // osveži cache po TTL-u
+    const accounts = cachedAccounts || [];
+
+    if (accounts.length <= 4) {
+      console.warn("refreshEquityTick: nema dovoljno naloga u cache-u.");
       return;
     }
 
-    // Indeksi koje sabiramo
-    const INDEX1 = 2;
-    const INDEX2 = 4;
+    const acc1 = accounts[2];
+    const acc2 = accounts[4];
 
-    if (INDEX1 >= accounts.length || INDEX2 >= accounts.length) {
-      console.warn(
-        `refreshEquityTick: indeksi 2 i/ili 4 su van opsega (max index = ${accounts.length - 1}).`
-      );
-      return;
-    }
-
-    const acc1 = accounts[INDEX1];
-    const acc2 = accounts[INDEX2];
-
-    // Kapital sa prvog naloga (pretpostavka: CHF nalog)
-    const eq1Raw = Number(acc1.equity || 0);
-    const cur1   = acc1.currency || "CHF";
-    const eq1Chf = Number(eq1Raw.toFixed(2));   // već u CHF
-
-    // Kapital sa drugog naloga (pretpostavka: AUD nalog)
-    const eq2Raw = Number(acc2.equity || 0);
-    const cur2   = acc2.currency || "AUD";
-    const eq2Aud = Number(eq2Raw.toFixed(2));   // ostaje u AUD za prikaz
-
-    // Konverzija: 1 CHF ≈ 2 AUD ⇒ 1 AUD ≈ 0.52 CHF
-    const AUD_TO_CHF = 0.52;
-    const eq2ChfConv = Number((eq2Aud * AUD_TO_CHF).toFixed(2));
-
-    const totalChf = Number((eq1Chf + eq2ChfConv).toFixed(2));
-
-    // Logovi u konzoli:
-    console.log("=== SABIRANJE PORTFOLIA [2] i [4] ===");
-    console.log(
-      `Nalog [${INDEX1}] -> equity=${eq1Chf} ${cur1} (pretpostavljeno CHF nalog)`
-    );
-    console.log(
-      `Nalog [${INDEX2}] -> equity=${eq2Aud} ${cur2} (ostaje AUD u prikazu)`
-    );
-    console.log(
-      `Konverzija: ${eq2Aud} ${cur2} ≈ ${eq2ChfConv} CHF (1 AUD ≈ 0.52 CHF)`
-    );
-    console.log(
-      `Ukupan kapital (nalog[${INDEX1}] + nalog[${INDEX2}]): ${totalChf} CHF`
-    );
-    console.log("======================================");
-
-    // Kka front-endu (SSE /api/stream-equity, /api/equity)
-    lastEquityTick = {
-      t: Date.now(),
-      equity: totalChf,   // zbir u CHF
-      currency: "CHF"
-    };
-
-    /////////////////////
-    ////////////////////
-    // Binance
-    ///////////////////
-    //////////////////
-
-
-    try {
-        // 1) Binance kapital u USDT
-        const binanceCapUsdt = await getBinanceCapital();
-
-        if (binanceCapUsdt !== null) {
-            console.log(`kapital(Binance) = ${binanceCapUsdt} USDT`);
-
-            // 2) USDT → CHF konverzija
-            //const binanceCapChf = await convertUsdtToChf(binanceCapUsdt);
-            const binanceCapChf = Number(binanceCapUsdt * 0.8).toFixed(2);
-            console.log(`kapital(Binance) = ${binanceCapChf} CHF (konverzija)`);
-            console.log("--------------------------------------");
-        } else {
-            console.log("kapital(Binance) = N/A");
-            console.log("--------------------------------------");
-        }
-
-    } catch (e) {
-        console.warn("Binance kapital greška:", e.message);
-    }
-
-
-    /*
-        // Binance kapital
-        const binanceCap = await getBinanceCapital();
-
-        if (binanceCap !== null) {
-            console.log(`kapital(Binance) = ${binanceCap} USDT`);
-            console.log("--------------------------------------");
-        }
-    */  
-
-      } catch (e) {
-        console.warn("refreshEquityTick error:", e.message);
-      }
-    
-
-
-
+    // ... isto kao sad računanje totalChf
+  } catch (e) {
+    console.warn("refreshEquityTick error:", e.message);
+  }
 }
+
 
 async function ensureAccountsCache() {
   const now = Date.now();
@@ -639,6 +549,7 @@ app.get("/api/accounts", async (_req, res) => {
 
 
 // opcioni debug endpoint
+/*
 app.get("/api/debug-accounts", async (_req, res) => {
   try {
     const data = await getMyAccounts();
@@ -648,6 +559,7 @@ app.get("/api/debug-accounts", async (_req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+*/
 
 // --------------------------------------------------
 // /api/equity — koristi lastEquityTick (za polling)
@@ -682,69 +594,21 @@ app.get("/api/stream-equity", (req, res) => {
 const LAST_TRADE_INDICES = [/*1,*/ 2, 4];
 
 app.get("/api/last-trades", async (_req, res) => {
-  const itemsRaw = [];
-
-  // 1) dohvati naloge jednom, da uzmemo i valutu po indeksu
-  let accounts = [];
   try {
-    const accData = await getMyfxbookAccountsSafe();
-    accounts = accData.accounts || [];
+    await ensureAccountsCache();
+    const accounts = cachedAccounts || [];
+
+    // ako nema naloga, vrati prazan rezultat umesto da pokušava login
+    if (!accounts.length) {
+      return res.json({ ok: false, reason: "No cached accounts (Myfxbook blocked?)", items: [] });
+    }
+
+    // ... dalje koristi accounts[index] umesto getMyfxbookAccountsSafe()
   } catch (e) {
-    console.warn("getMyfxbookAccountsSafe error:", e.message);
+    res.status(500).json({ ok: false, error: String(e?.message || e) });
   }
-
-  for (const index of LAST_TRADE_INDICES) {
-    let lastTrade = null;
-    let currency  = null;
-
-    try {
-      // valuta dolazi iz accounts[index].currency
-      if (index >= 0 && index < accounts.length) {
-        const acc = accounts[index];
-        currency = acc.currency || null;
-      } else {
-        console.warn(`account index ${index} je van opsega za currency.`);
-      }
-
-      // poslednji trejd
-      lastTrade = await getLastTradeByIndex(index);
-    } catch (e) {
-      console.warn(`getLastTradeByIndex error za index=${index}:`, e.message);
-      lastTrade = null;
-    }
-
-    itemsRaw.push({
-      index,
-      lastTrade,
-      currency
-    });
-  }
-
-  // log kompletnog niza (radi debuga)
-  console.log("Last trades raw array:\n", JSON.stringify(itemsRaw, null, 2));
-
-  // front-end: profit + formatiran datum + valuta
-  const response = itemsRaw.map(entry => {
-    const lt = entry.lastTrade;
-
-    let raw = lt ? (lt.closeTime || lt.openTime || null) : null;
-    let formatted = null;
-
-    if (raw) {
-      const parsed = parseMyfxbookDate(raw);
-      formatted = parsed ? formatSerbianDate(parsed) : raw;
-    }
-
-    return {
-      index: entry.index,
-      profit: lt ? lt.profit : null,
-      date: formatted,
-      currency: entry.currency // npr. "CHF", "USD", "AUD"
-    };
-  });
-
-  res.json({ ok: true, items: response });
 });
+
 
 
 
