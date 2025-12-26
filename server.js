@@ -258,7 +258,7 @@ async function getHistoryForAccountId(accountId) {
     throw new Error("get-history error: " + (data.message || "Unknown"));
   }
 
-  // vraćamo niz trejdova
+  // vraća se niz trejdova
   return data.history || [];
 }
 
@@ -537,6 +537,7 @@ app.get("/api/accounts", async (_req, res) => {
 });
 */
 
+/*
 app.get("/api/accounts", async (_req, res) => {
   try {
     await ensureAccountsCache();
@@ -545,6 +546,17 @@ app.get("/api/accounts", async (_req, res) => {
     console.error("GET /api/accounts error:", e?.stack || e?.message);
     res.status(500).json({ error: String(e?.message || e) });
   }
+});
+*/
+
+app.get("/api/accounts", async (_req, res) => {
+  try {
+    await ensureAccountsCache();
+  } catch (e) {
+    console.warn("/api/accounts fallback (serving cache):", e.message);
+    // namerno ne vraća 500 — front mora da radi i kad je Myfxbook blokiran
+  }
+  res.json(Array.isArray(cachedAccounts) ? cachedAccounts : []);
 });
 
 
@@ -591,26 +603,40 @@ app.get("/api/stream-equity", (req, res) => {
 });
 
 //željeni indeksi portfolija (1, 2, 4)
-const LAST_TRADE_INDICES = [/*1,*/ 2, 4];
+//const LAST_TRADE_INDICES = [/*1,*/ 2, 4];
+
+const LAST_TRADE_INDICES = [1, 2, 4];
 
 app.get("/api/last-trades", async (_req, res) => {
   try {
     await ensureAccountsCache();
-    const accounts = cachedAccounts || [];
+    const accounts = Array.isArray(cachedAccounts) ? cachedAccounts : [];
 
-    // ako nema naloga, vrati prazan rezultat umesto da pokušava login
-    if (!accounts.length) {
-      return res.json({ ok: false, reason: "No cached accounts (Myfxbook blocked?)", items: [] });
-    }
+    const items = LAST_TRADE_INDICES.map(index => {
+      const a = accounts[index];
+      return {
+        index,
+        profit: null,                 // za sada se ne preuzima istorija
+        date: null,
+        currency: a?.currency ?? null // currency iz cache-a
+      };
+    });
 
-    // ... dalje koristi accounts[index] umesto getMyfxbookAccountsSafe()
+    return res.json({
+      ok: true,
+      ts: Date.now(),
+      items
+    });
   } catch (e) {
-    res.status(500).json({ ok: false, error: String(e?.message || e) });
+    // nikad ne vraćaj 500, jer front onda puca formatom/HTTP-om
+    return res.json({
+      ok: false,
+      ts: Date.now(),
+      error: String(e?.message || e),
+      items: [] // obavezno niz
+    });
   }
 });
-
-
-
 
 
 // --------------------------------------------------

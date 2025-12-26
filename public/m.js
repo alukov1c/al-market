@@ -132,7 +132,7 @@ async function updatePortfolios() {
 
       const rest = Math.max(0, 100 - equityPercent);
 
-      // Ako grafikon ZA OVAJ portfolio još ne postoji → kreiraj ga
+      // Ako grafikon ZA OVAJ portfolio još ne postoji → kreirati
       if (!charts[chartId]) {
         const ctx = canvas.getContext("2d");
         charts[chartId] = new Chart(ctx, {
@@ -229,7 +229,7 @@ async function updatePortfolios() {
 
   } catch (err) {
     console.error("Greška u updatePortfolios():", err);
-    // Po želji: jednom prikaži alert, ali ne svaki put
+    // Po želji: jednom prikazati alert, ali ne svaki put
   }
 }
 
