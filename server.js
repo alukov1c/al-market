@@ -20,7 +20,7 @@ let cachedAccounts = [];
 let cachedTs = 0;
 let refreshing = false;
 let backoffUntil = 0;
-const CACHE_TTL_MS = 15000; // 15s
+const CACHE_TTL_MS = 60000; // 60s umesto 15s
 
 
 // indeks naloga se koristi u kod.js (INDEX = 2)
@@ -41,48 +41,97 @@ let lastEquityTick = {
 // --------------------------------------------------
 // Nova verzija
 
-let lastLoginTime = 0;
+let lastLoginAttemptAt = 0;     // poslednji POKUŠAJ logina
+let loginBlockedUntil = 0;      // backoff do kog se ne pokušava login
+let loginInFlight = null;       // Promise za single-flight
+
+const MIN_LOGIN_INTERVAL_MS = 60_000;      // 60s između pokušaja (povećati po potrebi)
+const FORBIDDEN_BACKOFF_MS  = 30 * 60_000; // 30 min backoff na HTTP 403
+const FAIL_BACKOFF_MS       = 2 * 60_000;  // 2 min backoff na druge greške (može 5 min)
 
 async function loginMyfxbook() {
+  // Ako sesija postoji, ne raditi ništa
+  if (SESSION) return SESSION;
 
   const now = Date.now();
-  if (now - lastLoginTime < 10000) {
-    throw new Error("Previše login pokušaja u kratkom vremenu");
+
+  // Ako je backoff, ne pokušavati ponovo
+  if (now < loginBlockedUntil) {
+    throw new Error(`Login blocked by backoff until ${new Date(loginBlockedUntil).toISOString()}`);
   }
 
-  lastLoginTime = now;
+  // Single-flight: ako je login već u toku, sačekati
+  if (loginInFlight) return loginInFlight;
 
-  const email    = process.env.MYFXBOOK_EMAIL;
-  const password = process.env.MYFXBOOK_PASSWORD;
+  // Minimum interval između pokušaja
+  if (now - lastLoginAttemptAt < MIN_LOGIN_INTERVAL_MS) {
+    throw new Error("Previše login pokušaja u kratkom vremenu (rate limit u aplikaciji).");
+  }
 
-  const url = `${BASE}/login.json?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`;
+  lastLoginAttemptAt = now;
 
-  const res = await fetch(url, {
-    method: "GET",
-    headers: {
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/124 Safari/537.36",
-      "Accept": "application/json"
+  loginInFlight = (async () => {
+    const email    = process.env.MYFXBOOK_EMAIL;
+    const password = process.env.MYFXBOOK_PASSWORD;
+
+    if (!email || !password) {
+      throw new Error("MYFXBOOK_EMAIL ili MYFXBOOK_PASSWORD nisu setovani.");
     }
-  });
 
-  console.log("Login HTTP status:", res.status);
+    const url = `${BASE}/login.json?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`;
 
-  if (!res.ok) {
-    throw new Error("Login HTTP error " + res.status);
-  }
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/124 Safari/537.36",
+        "Accept": "application/json,text/javascript,*/*;q=0.1",
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache"
+      }
+    });
 
-  const data = await res.json();
-  console.log("Login JSON:", data);
+    console.log("Login HTTP status:", res.status);
 
-  if (data.error) {
-    throw new Error("Login error: " + data.message);
-  }
+    // 403: najčešće WAF / previše pokušaja / zabranjen datacenter IP
+    if (res.status === 403) {
+      loginBlockedUntil = Date.now() + FORBIDDEN_BACKOFF_MS;
+      throw new Error(`Login HTTP 403 → backoff ${Math.round(FORBIDDEN_BACKOFF_MS/60000)} min`);
+    }
 
-  SESSION = decodeURIComponent(data.session);
-  console.log("SESSION =", SESSION);
+    if (!res.ok) {
+      // ostale greške: uvođenje kraćeg backoff-a
+      loginBlockedUntil = Date.now() + FAIL_BACKOFF_MS;
+      throw new Error("Login HTTP error " + res.status);
+    }
 
-  return SESSION;
+    const data = await res.json();
+    console.log("Login JSON:", data);
+
+    if (data.error) {
+      // označeno je kao greška sa backoff-om
+      loginBlockedUntil = Date.now() + FAIL_BACKOFF_MS;
+      throw new Error("Login error: " + (data.message || "Unknown"));
+    }
+
+    if (!data.session) {
+      loginBlockedUntil = Date.now() + FAIL_BACKOFF_MS;
+      throw new Error("Login OK ali nema session u odgovoru.");
+    }
+
+    // VAŽNO: bez dekodovanja sesije
+    SESSION = String(data.session).trim();
+
+    console.log("SESSION prefix:", SESSION.slice(0, 6) + "…");
+    return SESSION;
+  })()
+    .finally(() => {
+      // obavezno resetuj single-flight
+      loginInFlight = null;
+    });
+
+  return loginInFlight;
 }
+
 
 
 
@@ -114,79 +163,57 @@ function formatSerbianDate(dateObj) {
 // GET-MY-ACCOUNTS — Korak 3 (bez encodeURIComponent za session)
 // --------------------------------------------------
 async function getMyAccounts() {
-  // Ako nema sesije, prvo login
+  // Ako nema sesije, prvo login (ali loginMyfxbook već ima backoff)
   if (!SESSION) {
     console.log("SESSION je null → loginMyfxbook()");
     await loginMyfxbook();
   }
 
-  let url = `${BASE}/get-my-accounts.json?session=${SESSION}`;
-  console.log(">>> GET-MY-ACCOUNTS URL:", url);
+  let attempt = 0;
 
-  let res = await fetch(url, {
-    method: "GET",
-    headers: {
-      "Accept": "application/json,text/javascript,*/*;q=0.1",
-      "Accept-Language": "en-US,en;q=0.9",
-      "Cache-Control": "no-cache",
-      "Pragma": "no-cache",
-      "Connection": "keep-alive",
-      "User-Agent": "Node-Myfxbook-Client"
-    }
-  });
+  while (attempt < 2) {
+    attempt++;
 
-  if (!res.ok) {
-    throw new Error(`get-my-accounts HTTP error ${res.status}`);
-  }
+    const url = `${BASE}/get-my-accounts.json?session=${SESSION}`;
+    console.log(">>> GET-MY-ACCOUNTS URL:", url);
 
-  let data = await res.json();
-  //////////////////////////////////////
-  ///////////////////////////////////////
-  //JSON - portfolio
-  ///////////////////////////////////////
-  ///////////////////////////////////////
-  //console.log("get-my-accounts response JSON:", data);
-
-  // Jednostavan retry za "Invalid session"
-  if (data.error && (data.message || "").toLowerCase().includes("invalid session")) {
-    console.warn("⚠ Invalid session u getMyAccounts() → Relogin i ponovni pokušaj je u toku…");
-
-    SESSION = null;
-    await loginMyfxbook();
-
-    url = `${BASE}/get-my-accounts.json?session=${SESSION}`;
-    //console.log(">>> GET-MY-ACCOUNTS (after relogin) URL:", url);
-
-    res = await fetch(url, {
+    const res = await fetch(url, {
       method: "GET",
       headers: {
         "Accept": "application/json,text/javascript,*/*;q=0.1",
-        "Accept-Language": "en-US,en;q=0.9",
         "Cache-Control": "no-cache",
         "Pragma": "no-cache",
-        "Connection": "keep-alive",
         "User-Agent": "Node-Myfxbook-Client"
       }
     });
 
     if (!res.ok) {
-      throw new Error(`get-my-accounts HTTP error ${res.status} posle relogina`);
+      // Bez pokušaja relogin-a ako je 403 na accounts
+      throw new Error(`get-my-accounts HTTP error ${res.status}`);
     }
 
-    data = await res.json();
-    console.log("get-my-accounts response after relogin:", data);
+    const data = await res.json();
 
-    if (data.error) {
-      throw new Error("get-my-accounts posle relogina error: " + (data.message || "Unknown"));
+    if (data?.error) {
+      const msg = String(data.message || "").toLowerCase();
+
+      // Samo 1 retry za invalid session
+      if (msg.includes("invalid session") && attempt === 1) {
+        console.warn("⚠ Invalid session → relogin jednom pa retry…");
+        SESSION = null;
+        await loginMyfxbook(); // ovo je sad zaštićeno backoff-om
+        continue;
+      }
+
+      throw new Error("get-my-accounts error: " + (data.message || "Unknown"));
     }
+
+    return data;
   }
 
-  if (data.error) {
-    throw new Error("get-my-accounts error: " + (data.message || "Unknown"));
-  }
-
-  return data; // { error:false, accounts:[...] }
+  throw new Error("getMyAccounts failed after retry");
 }
+
 
 
 // helper: siguran wrap oko getMyAccounts da uvek vrati objekat {accounts:[]}
@@ -201,7 +228,6 @@ async function getMyfxbookAccountsSafe() {
   }
   return data;
 }
-
 
 
 //dohvatanje istorije za konkretan nalog po ID
@@ -258,7 +284,7 @@ async function getHistoryForAccountId(accountId) {
     throw new Error("get-history error: " + (data.message || "Unknown"));
   }
 
-  // vraća se niz trejdova
+  // vraćanje niza trejdova
   return data.history || [];
 }
 
@@ -267,7 +293,7 @@ async function getHistoryForAccountId(accountId) {
 //poslednji trejd za nalog po indeksu -> /api/accounts
 // poslednji *pravi trejd* za nalog po indeksu -> /api/accounts
 async function getLastTradeByIndex(index) {
-  // 1) dohvati naloge preko getMyAccounts()
+  // 1) dohvatanje naloge preko getMyAccounts()
   const accData  = await getMyfxbookAccountsSafe(); // vidi helper ispod
   const accounts = accData.accounts || [];
 
@@ -285,7 +311,7 @@ async function getLastTradeByIndex(index) {
     throw new Error(`getLastTradeByIndex: nalog[${index}] nema id.`);
   }
 
-  // 2) dohvati kompletnu istoriju za taj nalog
+  // 2) dohvatanje kompletne istorije za taj nalog
   const history = await getHistoryForAccountId(accountId);
   if (!Array.isArray(history) || !history.length) {
     console.warn(`getLastTradeByIndex: nema history zapisa za nalog index=${index}, id=${accountId}.`);
@@ -297,10 +323,10 @@ async function getLastTradeByIndex(index) {
     const action = (tr.action || "").toLowerCase();
     const symbol = (tr.symbol || "").trim();
 
-    // ignorisi zapise bez simbola (tipično depoziti, transferi, sl.)
+    //ne uzimati zapise bez simbola (tipično depoziti, transferi, sl.)
     if (!symbol) return false;
 
-    // zadrži samo stavke koje u action imaju "buy" ili "sell"
+    // zadržavanje samo stavki koje u action imaju "buy" ili "sell"
     if (!action.includes("buy") && !action.includes("sell")) return false;
 
     return true;
@@ -311,7 +337,7 @@ async function getLastTradeByIndex(index) {
     return null;
   }
 
-  // 4) sortiraj po closeTime (fallback na openTime) i uzmi poslednji
+  // 4) sortiranje po closeTime (fallback na openTime) i uzimanje poslednjeg
   const withParsed = onlyTrades.map(tr => {
     const close = parseMyfxbookDate(tr.closeTime);
     const open  = parseMyfxbookDate(tr.openTime);
@@ -460,7 +486,7 @@ async function convertUsdtToChf(usdtAmount) {
 //---------------------------------------------------
 async function refreshEquityTick() {
   try {
-    await ensureAccountsCache();               // osveži cache po TTL-u
+    await ensureAccountsCache();               // osvežavanje "cache" po TTL-u
     const accounts = cachedAccounts || [];
 
     if (accounts.length <= 4) {
@@ -480,26 +506,31 @@ async function refreshEquityTick() {
 
 async function ensureAccountsCache() {
   const now = Date.now();
-  if (now < backoffUntil) return;          // ako smo blokirani, ne zovi Myfxbook
-  if (refreshing) return;                  // spreči paralelne pozive
-  if (cachedAccounts.length && (now - cachedTs) < CACHE_TTL_MS) return; // cache validan
+  if (now < backoffUntil) return;
+  if (refreshing) return;
+  if (cachedAccounts.length && (now - cachedTs) < CACHE_TTL_MS) return;
 
   refreshing = true;
   try {
-    const data = await getMyAccounts();    // JEDINI poziv ka Myfxbook-u
+    const data = await getMyAccounts();    // jedini poziv ka Myfxbook-u
     cachedAccounts = data.accounts || [];
     cachedTs = Date.now();
   } catch (e) {
-    // Ako 403 → pauza 5 minuta
-    if (String(e.message || e).includes("403")) {
-      backoffUntil = Date.now() + 5 * 60 * 1000;
-      console.warn("Myfxbook 403 → backoff 5min");
+    const msg = String(e?.message || e);
+    if (msg.includes("403")) {
+      backoffUntil = Date.now() + 30 * 60 * 1000; // 30 min 
+      console.warn("Myfxbook 403 → backoff 30min");
+    } else {
+      backoffUntil = Date.now() + 2 * 60 * 1000; // 2 min za ostale greške
+      console.warn("Myfxbook error → backoff 2min:", msg);
     }
-    throw e;
+    // KLJUČNO: ne throw — samo izlaz
+    return;
   } finally {
     refreshing = false;
   }
 }
+
 
 
 
@@ -549,6 +580,7 @@ app.get("/api/accounts", async (_req, res) => {
 });
 */
 
+/*
 app.get("/api/accounts", async (_req, res) => {
   try {
     await ensureAccountsCache();
@@ -556,6 +588,12 @@ app.get("/api/accounts", async (_req, res) => {
     console.warn("/api/accounts fallback (serving cache):", e.message);
     // namerno ne vraća 500 — front mora da radi i kad je Myfxbook blokiran
   }
+  res.json(Array.isArray(cachedAccounts) ? cachedAccounts : []);
+});
+*/
+
+app.get("/api/accounts", async (_req, res) => {
+  await ensureAccountsCache();
   res.json(Array.isArray(cachedAccounts) ? cachedAccounts : []);
 });
 
@@ -628,7 +666,7 @@ app.get("/api/last-trades", async (_req, res) => {
       items
     });
   } catch (e) {
-    // nikad ne vraćaj 500, jer front onda puca formatom/HTTP-om
+    // bez vraćanja 500, jer front-end onda prestaje sa radom i formatom/HTTP-om
     return res.json({
       ok: false,
       ts: Date.now(),
