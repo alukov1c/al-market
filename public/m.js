@@ -381,7 +381,7 @@ function init() {
 
 
   updatePortfolios();              // prvo odmah
-  setInterval(updatePortfolios, 3000); // pa na svakih 3s
+  setInterval(updatePortfolios, 10000); // pa na svakih 10s
 
   updateLastTrades();  // poslednji trejd za sva tri portfolija
   // po želji može i periodično, npr. na 30 s da se API ne poziva često:
