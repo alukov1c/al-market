@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 import crypto from 'crypto';
+import fs from "fs";
 
 dotenv.config();
 
@@ -29,12 +30,44 @@ const ACCOUNT_INDEX = parseInt(process.env.ACCOUNT_INDEX || "2", 10);
 // GLOBAL SESSION (samo u memoriji)
 let SESSION = null;
 
+
+const SESSION_FILE = ".myfxbook_session.json";
+
+function loadSessionFromDisk() {
+  try {
+    if (fs.existsSync(SESSION_FILE)) {
+      const obj = JSON.parse(fs.readFileSync(SESSION_FILE, "utf8"));
+      if (obj?.session) {
+        SESSION = String(obj.session).trim();
+        console.log("Loaded session from disk. Prefix:", SESSION.slice(0,6) + "…");
+      }
+    }
+  } catch (e) {
+    console.warn("Could not load session file:", e.message);
+  }
+}
+
+function saveSessionToDisk() {
+  try {
+    fs.writeFileSync(SESSION_FILE, JSON.stringify({ session: SESSION, savedAt: Date.now() }, null, 2), "utf8");
+  } catch (e) {
+    console.warn("Could not save session file:", e.message);
+  }
+}
+
+// pozvati na boot:
+loadSessionFromDisk();
+
+
+
 // equity tick (za graf + input)
+/*
 let lastEquityTick = {
   t: Date.now(),
   equity: null,
   currency: "CHF"
 };
+*/
 
 // --------------------------------------------------
 // LOGIN — ekvivalent curl "…/login.json?email=...&password=..."
@@ -120,12 +153,12 @@ async function loginMyfxbook() {
 
     // VAŽNO: bez dekodovanja sesije
     SESSION = String(data.session).trim();
-
+    saveSessionToDisk();
     console.log("SESSION prefix:", SESSION.slice(0, 6) + "…");
     return SESSION;
   })()
     .finally(() => {
-      // obavezno resetuj single-flight
+      // obavezno resetovanje single-flight
       loginInFlight = null;
     });
 
@@ -201,7 +234,7 @@ async function getMyAccounts() {
       if (msg.includes("invalid session") && attempt === 1) {
         console.warn("⚠ Invalid session → relogin jednom pa retry…");
         SESSION = null;
-        await loginMyfxbook(); // ovo je sad zaštićeno backoff-om
+        await loginMyfxbook(); // sada je uključena zaštita backoff-om
         continue;
       }
 
@@ -441,7 +474,7 @@ async function convertUsdtToChf(usdtAmount) {
         if (!usdtAmount || usdtAmount <= 0) return 0;
 
         // Binance par USDTCHF MORA DA POSTOJI
-        // Ako ne postoji, koristi USDT → EUR → CHF
+        // Ako ne postoji, koristiti USDT → EUR → CHF
         const direct = await fetch("https://api.binance.com/api/v3/ticker/price?symbol=USDCHF");
         
         if (direct.ok) {
@@ -484,6 +517,91 @@ async function convertUsdtToChf(usdtAmount) {
 // + Binance
 //
 //---------------------------------------------------
+
+let lastEquityTick = {
+  t: Date.now(),
+  equityChf: null,
+  a: { index: 2, equity: null, currency: null },
+  b: { index: 4, equity: null, currency: null },
+  note: "init"
+};
+
+// Jednostavna FX mapa (primer). Kasnije može da se zameni realnim API-jem.
+const fxToChf = {
+  CHF: 1.0,
+  USD: 0.88,  // primer
+  EUR: 0.95,  // primer
+  GBP: 1.10,  // primer
+  RSD: 0.0082 // primer
+};
+
+function toNumber(x) {
+  const n = Number(x);
+  return Number.isFinite(n) ? n : null;
+}
+
+function convertToChf(amount, currency) {
+  if (amount == null) return null;
+  const cur = String(currency || "").toUpperCase().trim();
+  const rate = fxToChf[cur];
+  if (!rate) return null;
+  return amount * rate;
+}
+
+async function refreshEquityTick() {
+  try {
+    await ensureAccountsCache(); // osvežiti cache po TTL-u
+    const accounts = Array.isArray(cachedAccounts) ? cachedAccounts : [];
+
+    // Ako cache prazan, bez spamovanja log-ovima
+    if (!accounts.length) {
+      lastEquityTick = {
+        ...lastEquityTick,
+        t: Date.now(),
+        equityChf: null,
+        note: "no accounts in cache"
+      };
+      return;
+    }
+
+    // Bezbedno uzimanje naloga po indeksima (mogu da ne postoje)
+    const acc1 = accounts[2] || null;
+    const acc2 = accounts[4] || null;
+
+    const aEquity = acc1 ? toNumber(acc1.equity) : null;
+    const aCurr   = acc1 ? (acc1.currency || null) : null;
+
+    const bEquity = acc2 ? toNumber(acc2.equity) : null;
+    const bCurr   = acc2 ? (acc2.currency || null) : null;
+
+    // Konverzija u CHF (ako je već CHF, samo *1)
+    const aChf = convertToChf(aEquity, aCurr);
+    const bChf = convertToChf(bEquity, bCurr);
+
+    // Sabrati samo ono što postoji
+    const parts = [aChf, bChf].filter(v => typeof v === "number");
+    const totalChf = parts.length ? Number(parts.reduce((s, v) => s + v, 0).toFixed(2)) : null;
+
+    lastEquityTick = {
+      t: Date.now(),
+      equityChf: totalChf,
+      a: { index: 2, equity: aEquity, currency: aCurr, chf: aChf != null ? Number(aChf.toFixed(2)) : null },
+      b: { index: 4, equity: bEquity, currency: bCurr, chf: bChf != null ? Number(bChf.toFixed(2)) : null },
+      note: totalChf == null ? "missing fx rate or missing equities" : "ok"
+    };
+  } catch (e) {
+    console.warn("refreshEquityTick error:", e.message);
+    lastEquityTick = {
+      ...lastEquityTick,
+      t: Date.now(),
+      equityChf: null,
+      note: "error: " + e.message
+    };
+  }
+}
+
+
+/*
 async function refreshEquityTick() {
   try {
     await ensureAccountsCache();               // osvežavanje "cache" po TTL-u
@@ -502,10 +620,12 @@ async function refreshEquityTick() {
     console.warn("refreshEquityTick error:", e.message);
   }
 }
+*/
 
 
 async function ensureAccountsCache() {
   const now = Date.now();
+  if (now < loginBlockedUntil) return;
   if (now < backoffUntil) return;
   if (refreshing) return;
   if (cachedAccounts.length && (now - cachedTs) < CACHE_TTL_MS) return;
@@ -627,7 +747,7 @@ app.get("/api/stream-equity", (req, res) => {
   res.setHeader("Connection", "keep-alive");
   res.flushHeaders();
 
-  // pošalji trenutni tick odmah
+  // poslati trenutni tick odmah
   res.write(`data: ${JSON.stringify(lastEquityTick)}\n\n`);
 
   const intervalMs = 5000;
@@ -677,9 +797,42 @@ app.get("/api/last-trades", async (_req, res) => {
 });
 
 
+app.post("/api/set-session", (req, res) => {
+  const s = String(req.body?.session || "").trim();
+  if (!s || s.length < 10) {
+    return res.status(400).json({ ok: false, error: "Session missing/too short" });
+  }
+  SESSION = s;
+  loginBlockedUntil = 0; // reset backoff kad korisnik ubaci novu sesiju
+  backoffUntil = 0;
+  saveSessionToDisk();
+  res.json({ ok: true, sessionPrefix: SESSION.slice(0,6) + "…" });
+});
+
+
+
 // --------------------------------------------------
 // START SERVER
 // --------------------------------------------------
+
+app.listen(PORT, async () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+  console.log("Boot: start timers (best-effort).");
+
+  // pokušati odma sa osvežavanjem cache (ali bez rušenja)
+  await ensureAccountsCache();
+
+  // pokretanje timer-a uvek, čak i kad je login blokiran
+  setInterval(async () => {
+    await ensureAccountsCache();  // pokušaće login samo kad backoff istekne
+    await refreshEquityTick();    // koristi se cachedAccounts (ako ih ima)
+  }, 15000);
+
+  console.log("Tick loop started (15s).");
+});
+
+
+/*
 app.listen(PORT, async () => {
   console.log(`Server running on http://localhost:${PORT}`);
   console.log("Na početku: loginMyfxbook() + prvi refreshEquityTick…");
@@ -694,3 +847,5 @@ app.listen(PORT, async () => {
     console.error("Init error:", e.message);
   }
 });
+*/
+

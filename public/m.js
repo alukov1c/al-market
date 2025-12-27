@@ -114,7 +114,7 @@ async function updatePortfolios() {
       const canvas        = document.getElementById(chartId);
 
       if (index < 0 || index >= accounts.length) {
-        if (equityInput)   equityInput.value   = "N/A (nema naloga sa indeksom " + index + ")";
+        if (equityInput)   equityInput.value   = "N/A (čekanje servera #" + index + ")";
         if (currencyInput) currencyInput.value = "";
         return;
       }
