@@ -651,7 +651,7 @@ async function ensureAccountsCache() {
   }
 }
 
-
+setInterval(ensureAccountsCache, 30);
 
 
 // --------------------------------------------------
