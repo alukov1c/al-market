@@ -79,7 +79,7 @@ let loginBlockedUntil = 0;      // backoff do kog se ne pokušava login
 let loginInFlight = null;       // Promise za single-flight
 
 const MIN_LOGIN_INTERVAL_MS = 60_000;      // 60s između pokušaja (povećati po potrebi)
-const FORBIDDEN_BACKOFF_MS  = 60 * 60_000; // 30 min backoff na HTTP 403
+const FORBIDDEN_BACKOFF_MS  = 12 * 60 * 60_000; // 12 * 60 min backoff na HTTP 403
 const FAIL_BACKOFF_MS       = 5 * 60_000;  // 5 min backoff na druge greške
 
 async function loginMyfxbook() {
@@ -615,8 +615,8 @@ async function ensureAccountsCache() {
   } catch (e) {
     const msg = String(e?.message || e);
     if (msg.includes("403")) {
-      backoffUntil = Date.now() + 60 * 60 * 1000; // 60 min 
-      console.warn("Myfxbook 403 → backoff 60 min");
+      backoffUntil = Date.now() + 12 * 60 * 60 * 1000; // 12 * 60 min 
+      console.warn("Myfxbook 403 → backoff 12 * 60 min");
     } else {
       backoffUntil = Date.now() + 5 * 60 * 1000; // 5 min za ostale greške
       console.warn("Myfxbook error → backoff 5 min:", msg);
@@ -773,7 +773,7 @@ app.post("/api/set-session", (req, res) => {
 // --------------------------------------------------
 
 app.listen(PORT, async () => {
-  
+
   console.log(`Server je pokrenut na http://localhost:${PORT}`);
   console.log("Boot: pokretanje tajmera (best-effort).");
 
