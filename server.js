@@ -79,8 +79,8 @@ let loginBlockedUntil = 0;      // backoff do kog se ne pokušava login
 let loginInFlight = null;       // Promise za single-flight
 
 const MIN_LOGIN_INTERVAL_MS = 60_000;      // 60s između pokušaja (povećati po potrebi)
-const FORBIDDEN_BACKOFF_MS  = 30 * 60_000; // 30 min backoff na HTTP 403
-const FAIL_BACKOFF_MS       = 2 * 60_000;  // 2 min backoff na druge greške (može 5 min)
+const FORBIDDEN_BACKOFF_MS  = 60 * 60_000; // 30 min backoff na HTTP 403
+const FAIL_BACKOFF_MS       = 5 * 60_000;  // 5 min backoff na druge greške
 
 async function loginMyfxbook() {
   // Ako sesija postoji, ne raditi ništa
@@ -108,7 +108,7 @@ async function loginMyfxbook() {
     const password = process.env.MYFXBOOK_PASSWORD;
 
     if (!email || !password) {
-      throw new Error("MYFXBOOK_EMAIL ili MYFXBOOK_PASSWORD nisu setovani.");
+      throw new Error("MYFXBOOK_EMAIL ili MYFXBOOK_PASSWORD nisu podešeni.");
     }
 
     const url = `${BASE}/login.json?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`;
@@ -148,7 +148,7 @@ async function loginMyfxbook() {
 
     if (!data.session) {
       loginBlockedUntil = Date.now() + FAIL_BACKOFF_MS;
-      throw new Error("Login OK ali nema session u odgovoru.");
+      throw new Error("Login OK ali nema sesije u odgovoru.");
     }
 
     // VAŽNO: bez dekodovanja sesije
@@ -196,7 +196,7 @@ function formatSerbianDate(dateObj) {
 // GET-MY-ACCOUNTS — Korak 3 (bez encodeURIComponent za session)
 // --------------------------------------------------
 async function getMyAccounts() {
-  // Ako nema sesije, prvo login (ali loginMyfxbook već ima backoff)
+  // Ako nema sesije, prvo login (ali ako loginMyfxbook već ima backoff)
   if (!SESSION) {
     console.log("SESSION je null → loginMyfxbook()");
     await loginMyfxbook();
@@ -256,7 +256,7 @@ async function getMyfxbookAccountsSafe() {
     throw new Error("getMyfxbookAccountsSafe: getMyAccounts vratio neočekivan tip.");
   }
   if (!Array.isArray(data.accounts)) {
-    console.warn("getMyfxbookAccountsSafe: data.accounts nije niz, pravim prazan niz.");
+    console.warn("getMyfxbookAccountsSafe: data.accounts nije niz, kreiranje praznog niza.");
     return { accounts: [] };
   }
   return data;
@@ -473,7 +473,7 @@ async function convertUsdtToChf(usdtAmount) {
     try {
         if (!usdtAmount || usdtAmount <= 0) return 0;
 
-        // Binance par USDTCHF MORA DA POSTOJI
+        // Binance par USDTCHF
         // Ako ne postoji, koristiti USDT → EUR → CHF
         const direct = await fetch("https://api.binance.com/api/v3/ticker/price?symbol=USDCHF");
         
@@ -600,29 +600,6 @@ async function refreshEquityTick() {
   }
 }
 
-
-/*
-async function refreshEquityTick() {
-  try {
-    await ensureAccountsCache();               // osvežavanje "cache" po TTL-u
-    const accounts = cachedAccounts || [];
-
-    if (accounts.length <= 4) {
-      console.warn("refreshEquityTick: nema dovoljno naloga u cache-u.");
-      return;
-    }
-
-    const acc1 = accounts[2];
-    const acc2 = accounts[4];
-
-    // ... isto kao sad računanje totalChf
-  } catch (e) {
-    console.warn("refreshEquityTick error:", e.message);
-  }
-}
-*/
-
-
 async function ensureAccountsCache() {
   const now = Date.now();
   if (now < loginBlockedUntil) return;
@@ -638,11 +615,11 @@ async function ensureAccountsCache() {
   } catch (e) {
     const msg = String(e?.message || e);
     if (msg.includes("403")) {
-      backoffUntil = Date.now() + 30 * 60 * 1000; // 30 min 
-      console.warn("Myfxbook 403 → backoff 30min");
+      backoffUntil = Date.now() + 60 * 60 * 1000; // 60 min 
+      console.warn("Myfxbook 403 → backoff 60 min");
     } else {
-      backoffUntil = Date.now() + 2 * 60 * 1000; // 2 min za ostale greške
-      console.warn("Myfxbook error → backoff 2min:", msg);
+      backoffUntil = Date.now() + 5 * 60 * 1000; // 5 min za ostale greške
+      console.warn("Myfxbook error → backoff 5 min:", msg);
     }
     // KLJUČNO: ne throw — samo izlaz
     return;
@@ -674,43 +651,9 @@ app.get("/m1", (_req, res) => {
 
 
 // --------------------------------------------------
-// /api/accounts — koristi getMyAccounts()
+// /api/accounts — korišćenje getMyAccounts()
 // --------------------------------------------------
-/*
-app.get("/api/accounts", async (_req, res) => {
-  try {
-    const data = await getMyAccounts();
-    res.json(data.accounts || []);
-  } catch (e) {
-    console.error(">>> /api/accounts ERROR:", e);
-    res.status(500).json({ error: e.message });
-  }
-});
-*/
 
-/*
-app.get("/api/accounts", async (_req, res) => {
-  try {
-    await ensureAccountsCache();
-    res.json(cachedAccounts);
-  } catch (e) {
-    console.error("GET /api/accounts error:", e?.stack || e?.message);
-    res.status(500).json({ error: String(e?.message || e) });
-  }
-});
-*/
-
-/*
-app.get("/api/accounts", async (_req, res) => {
-  try {
-    await ensureAccountsCache();
-  } catch (e) {
-    console.warn("/api/accounts fallback (serving cache):", e.message);
-    // namerno ne vraća 500 — front mora da radi i kad je Myfxbook blokiran
-  }
-  res.json(Array.isArray(cachedAccounts) ? cachedAccounts : []);
-});
-*/
 
 app.get("/api/accounts", async (_req, res) => {
   await ensureAccountsCache();
@@ -744,21 +687,6 @@ app.get("/api/status", (_req, res) => {
     cachedTs
   });
 });
-
-
-
-// opcioni debug endpoint
-/*
-app.get("/api/debug-accounts", async (_req, res) => {
-  try {
-    const data = await getMyAccounts();
-    res.json(data);
-  } catch (e) {
-    console.error(">>> /api/debug-accounts ERROR:", e);
-    res.status(500).json({ error: e.message });
-  }
-});
-*/
 
 // --------------------------------------------------
 // /api/equity — koristi lastEquityTick (za polling)
@@ -832,7 +760,7 @@ app.post("/api/set-session", (req, res) => {
     return res.status(400).json({ ok: false, error: "Session missing/too short" });
   }
   SESSION = s;
-  loginBlockedUntil = 0; // reset backoff kad korisnik ubaci novu sesiju
+  loginBlockedUntil = 0; // reset backoff kada korisnik ubaci novu sesiju
   backoffUntil = 0;
   saveSessionToDisk();
   res.json({ ok: true, sessionPrefix: SESSION.slice(0,6) + "…" });
@@ -841,12 +769,13 @@ app.post("/api/set-session", (req, res) => {
 
 
 // --------------------------------------------------
-// START SERVER
+// POKRETANJE SERVERA
 // --------------------------------------------------
 
 app.listen(PORT, async () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-  console.log("Boot: start timers (best-effort).");
+  
+  console.log(`Server je pokrenut na http://localhost:${PORT}`);
+  console.log("Boot: pokretanje tajmera (best-effort).");
 
   // pokušati odma sa osvežavanjem cache (ali bez rušenja)
   await ensureAccountsCache();
@@ -857,24 +786,10 @@ app.listen(PORT, async () => {
     await refreshEquityTick();    // koristi se cachedAccounts (ako ih ima)
   }, 15000);
 
-  console.log("Tick loop started (15s).");
+  console.log("Tick petlja je pokrenuta (15s).");
+
 });
 
 
-/*
-app.listen(PORT, async () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-  console.log("Na početku: loginMyfxbook() + prvi refreshEquityTick…");
 
-  try {
-    await loginMyfxbook();
-    await refreshEquityTick();
-    // periodično osvežavanje equity-ja (isto 15 s kao kod.js polling)
-    setInterval(refreshEquityTick, 15000);
-    console.log("Equity tick refresher pokrenut na 15 s.");
-  } catch (e) {
-    console.error("Init error:", e.message);
-  }
-});
-*/
 
