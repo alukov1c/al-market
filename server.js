@@ -171,12 +171,24 @@ async function loginMyfxbook() {
 // Pomoćna funkcija: parsiranje Myfxbook formata "MM/DD/YYYY HH:mm"
 function parseMyfxbookDate(str) {
   if (!str) return null;
+
   const [datePart, timePart] = str.split(" ");
   if (!datePart || !timePart) return null;
+
   const [month, day, year] = datePart.split("/").map(Number);
-  const [hour, minute]      = timePart.split(":").map(Number);
-  return new Date(year, month - 1, day, hour || 0, minute || 0);
+  const [hour, minute]     = timePart.split(":").map(Number);
+
+  //Korekcija: -1 sat
+  return new Date(
+    year,
+    month - 1,
+    day,
+    (hour ?? 0) - 1,
+    minute ?? 0,
+    0
+  );
 }
+
 
 function formatSerbianDate(dateObj) {
   if (!dateObj || !(dateObj instanceof Date)) return null;
@@ -250,6 +262,7 @@ async function getMyAccounts() {
 
 
 // helper: siguran wrap oko getMyAccounts da uvek vrati objekat {accounts:[]}
+/*
 async function getMyfxbookAccountsSafe() {
   const data = await getMyAccounts();
   if (!data || typeof data !== "object") {
@@ -261,9 +274,10 @@ async function getMyfxbookAccountsSafe() {
   }
   return data;
 }
-
+*/
 
 //dohvatanje istorije za konkretan nalog po ID
+
 async function getHistoryForAccountId(accountId) {
   if (!SESSION) {
     await loginMyfxbook();
@@ -325,6 +339,7 @@ async function getHistoryForAccountId(accountId) {
 
 //poslednji trejd za nalog po indeksu -> /api/accounts
 // poslednji *pravi trejd* za nalog po indeksu -> /api/accounts
+/*
 async function getLastTradeByIndex(index) {
   // 1) dohvatanje naloge preko getMyAccounts()
   const accData  = await getMyfxbookAccountsSafe(); // vidi helper ispod
@@ -382,6 +397,7 @@ async function getLastTradeByIndex(index) {
 
   return last;
 }
+*/
 
 // -----------------------------------------------------
 //
@@ -722,36 +738,121 @@ app.get("/api/stream-equity", (req, res) => {
 
 const LAST_TRADE_INDICES = [1, 2, 4];
 
+function pickProfit(a) {
+  // prioritet: profit => daily → monthly 
+  const p = Number(a?.profit);
+  if (Number.isFinite(p)) return p;
+
+  const d = Number(a?.daily);
+  if (Number.isFinite(d)) return d;
+
+  const m = Number(a?.monthly);
+  if (Number.isFinite(m)) return m;
+
+  return null;
+}
+
+function pickDate(a) {
+  // “poslednja promena” naloga (najkorisnije za UI)
+  return a?.lastUpdateDate || a?.creationDate || null;
+}
+
+// --- History cache (da ne spamuje Myfxbook) ---
+const HISTORY_TTL_MS = 60_000; // 60s dovoljno; po želji 2-5 min
+const historyCache = new Map(); // accountId(string) -> { ts, items }
+
+function isTradeAction(actionRaw) {
+  const a = String(actionRaw || "").toLowerCase().trim();
+
+  // izbaci depozite / povlačenja / balans akcije
+  if (a.includes("deposit")) return false;
+  if (a.includes("withdraw")) return false;
+  if (a.includes("balance")) return false;
+  if (a.includes("credit")) return false;
+  if (a.includes("rebate")) return false;
+
+  // trade akcije (mogu da se uključe i varijacije tipa "buy limit", "sell stop", itd.)
+  return a.includes("buy") || a.includes("sell");
+}
+
+// Myfxbook get-history.json (vraća poslednjih ~50 transakcija) :contentReference[oaicite:1]{index=1}
+// --- History cache (da ne spamuje Myfxbook) ---
+//const HISTORY_TTL_MS = 60_000; // 60s (po želji 2-5 min)
+//const historyCache = new Map(); // accountId -> { ts, items }
+
+async function getHistoryCached(accountId) {
+  const key = String(accountId);
+  const now = Date.now();
+
+  const hit = historyCache.get(key);
+  if (hit && (now - hit.ts) < HISTORY_TTL_MS) return hit.items;
+
+  // ✅ koristi postojeći wrapper, bez apiGet()
+  const items = await getHistoryForAccountId(key); // očekuje niz "history" zapisa
+  const arr = Array.isArray(items) ? items : [];
+
+  historyCache.set(key, { ts: now, items: arr });
+  return arr;
+}
+
+
+function pickLastClosedTrade(historyArr) {
+  // filtriranje  trade-ove (buy/sell...) i vraćanje poslednjeg po closeTime
+  const trades = historyArr.filter(t => isTradeAction(t.action));
+
+  if (!trades.length) return null;
+
+  // Myfxbook format je string, ali pošto su svi istog formata,
+  // najjednostavnije: uzeti prvi nakon sort-a po closeTime/opentime
+  // (closeTime je najbolji za "zatvoren trade")
+  trades.sort((a, b) => String(a.closeTime || "").localeCompare(String(b.closeTime || "")));
+  return trades[trades.length - 1] || null;
+}
+
+
+//const LAST_TRADE_INDICES = [1, 2, 4];
+
 app.get("/api/last-trades", async (_req, res) => {
   try {
     await ensureAccountsCache();
     const accounts = Array.isArray(cachedAccounts) ? cachedAccounts : [];
 
-    const items = LAST_TRADE_INDICES.map(index => {
-      const a = accounts[index];
-      return {
-        index,
-        profit: null,                 // za sada se ne preuzima istorija
-        date: null,
-        currency: a?.currency ?? null // currency iz cache-a
-      };
-    });
+    const items = await Promise.all(
+      LAST_TRADE_INDICES.map(async (index) => {
+        const a = accounts[index];
+        const accountId = a?.id;              // Myfxbook entity id (koristi se za get-history) :contentReference[oaicite:2]{index=2}
+        const currency  = a?.currency ?? null;
 
-    return res.json({
-      ok: true,
-      ts: Date.now(),
-      items
-    });
+        if (!accountId) {
+          return { index, profit: null, date: null, currency, action: null, symbol: null };
+        }
+
+        const history = await getHistoryCached(accountId);
+        const last = pickLastClosedTrade(history);
+
+        return {
+          index,
+          profit: last?.profit ?? null,
+          date:   last?.closeTime ?? null,    // zatvaranje pozicije
+          currency,
+          action: last?.action ?? null,       // Buy / Sell / Buy Limit ...
+          symbol: last?.symbol ?? null
+        };
+      })
+    );
+
+    return res.json({ ok: true, ts: Date.now(), items });
   } catch (e) {
-    // bez vraćanja 500, jer front-end onda prestaje sa radom i formatom/HTTP-om
     return res.json({
       ok: false,
       ts: Date.now(),
       error: String(e?.message || e),
-      items: [] // obavezno niz
+      items: []
     });
   }
 });
+
+
 
 
 app.post("/api/set-session", (req, res) => {

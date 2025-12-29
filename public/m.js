@@ -315,10 +315,37 @@ async function updateLastTrades() {
     const res = await fetch("/api/last-trades");
     if (!res.ok) throw new Error("HTTP " + res.status);
 
-    const data = await res.json();
-    if (!data.ok || !Array.isArray(data.items)) {
-      throw new Error("Neočekivan format /api/last-trades odgovora.");
-    }
+  const data = await res.json();
+
+  // uvek se očekuje items kao niz (server ga već šalje), ali nemoj da rušiš UI
+  if (!data || !Array.isArray(data.items)) {
+    console.warn("last-trades: loš JSON shape", data);
+    return;
+  }
+
+  if (!data.ok) {
+    // Myfxbook privremeno blokira / nema history / backoff itd.
+    data.items.forEach(item => {
+      const cfg = PORTFOLIO_CONFIGS.find(c => c.index === item.index);
+      if (!cfg) return;
+
+      const profitEl = document.getElementById(cfg.profitId);
+      const dateEl   = document.getElementById(cfg.dateId);
+
+      if (profitEl) profitEl.textContent = "Myfxbook privremeno blokira API — podaci će se pojaviti automatski";
+      if (dateEl)   //dateEl.textContent   = "—"; 
+
+      if (item.date) {
+        const d = new Date(item.date);
+        dateEl.textContent = formatSerbianDate(d);
+      } else {
+        dateEl.textContent = "—";
+      }
+
+    });
+    return;
+  }
+
 
     // data.items: [{ index, profit, date, currency }, ...]
     data.items.forEach(item => {
