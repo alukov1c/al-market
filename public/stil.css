@@ -71,6 +71,25 @@ input{
 
 }
 
+  .sneg{
+    position: fixed; inset: 0;
+    pointer-events: none;
+    background-image:
+      radial-gradient(2px 2px at 20px 30px, #17b2d5 50%, transparent 1%),
+      radial-gradient(1px 1px at 40px 70px, #17b2d5 50%, transparent 1%),
+      radial-gradient(1.5px 1.5px at 90px 40px, #17b2d5 50%, transparent 1%);
+    background-size: 100px 100px;
+    opacity: .9;
+    filter: drop-shadow(0 0 1px rgb(77, 90, 84));
+    animation: snowMove 8s linear infinite;
+  }
+
+  @keyframes snowMove{
+    from { transform: translateY(-120px); }
+    to   { transform: translateY(120px); }
+  }
+
+
 @media screen and (max-width: 1080px){
 
     body{

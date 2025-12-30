@@ -317,7 +317,7 @@ async function updateLastTrades() {
 
   const data = await res.json();
 
-  // uvek se očekuje items kao niz (server ga već šalje), ali nemoj da rušiš UI
+  // uvek se očekuje items kao niz (server ga već šalje), ali bez rušenja UI
   if (!data || !Array.isArray(data.items)) {
     console.warn("last-trades: loš JSON shape", data);
     return;

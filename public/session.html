@@ -1,12 +1,18 @@
 <!doctype html>
 <html>
-<head><meta charset="utf-8"><title>Set Myfxbook Session</title></head>
+<head>
+  
+  <meta charset="utf-8"><title>Set Myfxbook Session</title>
+  <link rel="stylesheet" href="stil.css">
+</head>
 <body style="font-family:system-ui;max-width:720px;margin:40px auto">
+
   <h2>Postavka Myfxbook sesije</h2>
   <p>Otvoriti Myfxbook login URL u pregledaču i nalepiti <code>session</code> iz JSON-a ovde.</p>
   <textarea id="s" rows="4" style="width:100%"></textarea>
   <button id="btn" style="margin-top:10px">Sačuvaj</button>
   <pre id="out"></pre>
+  <div class="sneg" aria-hidden="false"></div>
 
   <script>
     document.getElementById("btn").onclick = async () => {

@@ -277,7 +277,6 @@ async function getMyfxbookAccountsSafe() {
 */
 
 //dohvatanje istorije za konkretan nalog po ID
-
 async function getHistoryForAccountId(accountId) {
   if (!SESSION) {
     await loginMyfxbook();
@@ -334,70 +333,6 @@ async function getHistoryForAccountId(accountId) {
   // vraćanje niza trejdova
   return data.history || [];
 }
-
-
-
-//poslednji trejd za nalog po indeksu -> /api/accounts
-// poslednji *pravi trejd* za nalog po indeksu -> /api/accounts
-/*
-async function getLastTradeByIndex(index) {
-  // 1) dohvatanje naloge preko getMyAccounts()
-  const accData  = await getMyfxbookAccountsSafe(); // vidi helper ispod
-  const accounts = accData.accounts || [];
-
-  if (!Array.isArray(accounts) || !accounts.length) {
-    throw new Error("getLastTradeByIndex: nema naloga u accounts.");
-  }
-
-  if (index < 0 || index >= accounts.length) {
-    throw new Error(`getLastTradeByIndex: indeks ${index} je van opsega (0..${accounts.length - 1}).`);
-  }
-
-  const account   = accounts[index];
-  const accountId = account.id;
-  if (!accountId) {
-    throw new Error(`getLastTradeByIndex: nalog[${index}] nema id.`);
-  }
-
-  // 2) dohvatanje kompletne istorije za taj nalog
-  const history = await getHistoryForAccountId(accountId);
-  if (!Array.isArray(history) || !history.length) {
-    console.warn(`getLastTradeByIndex: nema history zapisa za nalog index=${index}, id=${accountId}.`);
-    return null;
-  }
-
-  // 3) FILTRIRANJE — ostaju samo "pravi" trejdovi (buy/sell), bez Deposit/Withdrawal/Balance
-  const onlyTrades = history.filter(tr => {
-    const action = (tr.action || "").toLowerCase();
-    const symbol = (tr.symbol || "").trim();
-
-    //ne uzimati zapise bez simbola (tipično depoziti, transferi, sl.)
-    if (!symbol) return false;
-
-    // zadržavanje samo stavki koje u action imaju "buy" ili "sell"
-    if (!action.includes("buy") && !action.includes("sell")) return false;
-
-    return true;
-  });
-
-  if (!onlyTrades.length) {
-    console.warn(`getLastTradeByIndex: nema pravih buy/sell trejdova za nalog index=${index}, id=${accountId}.`);
-    return null;
-  }
-
-  // 4) sortiranje po closeTime (fallback na openTime) i uzimanje poslednjeg
-  const withParsed = onlyTrades.map(tr => {
-    const close = parseMyfxbookDate(tr.closeTime);
-    const open  = parseMyfxbookDate(tr.openTime);
-    return { ...tr, _ts: close ? close.getTime() : (open ? open.getTime() : 0) };
-  });
-
-  withParsed.sort((a, b) => a._ts - b._ts);
-  const last = withParsed[withParsed.length - 1];
-
-  return last;
-}
-*/
 
 // -----------------------------------------------------
 //
@@ -787,7 +722,7 @@ async function getHistoryCached(accountId) {
   const hit = historyCache.get(key);
   if (hit && (now - hit.ts) < HISTORY_TTL_MS) return hit.items;
 
-  // ✅ koristi postojeći wrapper, bez apiGet()
+  //korišćenje postojećeg wrapper-a, bez apiGet()
   const items = await getHistoryForAccountId(key); // očekuje niz "history" zapisa
   const arr = Array.isArray(items) ? items : [];
 
@@ -803,7 +738,7 @@ function pickLastClosedTrade(historyArr) {
   if (!trades.length) return null;
 
   // Myfxbook format je string, ali pošto su svi istog formata,
-  // najjednostavnije: uzeti prvi nakon sort-a po closeTime/opentime
+  // najjednostavnije: uzeti prvi nakon sortiranja po closeTime/opentime
   // (closeTime je najbolji za "zatvoren trade")
   trades.sort((a, b) => String(a.closeTime || "").localeCompare(String(b.closeTime || "")));
   return trades[trades.length - 1] || null;
@@ -878,7 +813,7 @@ app.listen(PORT, async () => {
   console.log(`Server je pokrenut na http://localhost:${PORT}`);
   console.log("Boot: pokretanje tajmera (best-effort).");
 
-  // pokušati odma sa osvežavanjem cache (ali bez rušenja)
+  // pokušati odmah sa osvežavanjem "cache" (ali bez rušenja)
   await ensureAccountsCache();
 
   // pokretanje timer-a uvek, čak i kad je login blokiran
