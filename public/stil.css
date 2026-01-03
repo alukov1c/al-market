@@ -134,7 +134,7 @@ input{
     }
 
     #naslov{
-        transform: scale(0.63);  
+        transform: scale(0.62);  
     }
 
     /* 2. Portfolio → 3 kolone */
@@ -145,7 +145,7 @@ input{
         grid-template-columns: repeat(3, 1fr); /* A | A+B | B */
         gap: 10px;
         align-items: start;
-        transform: scale(0.63);        /* ključno skaliranje */
+        transform: scale(0.62);        /* ključno skaliranje */
         transform-origin: top center;  /* prirodno skupljanje */
     }
 
