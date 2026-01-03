@@ -94,12 +94,26 @@ input{
 
     body{
         overflow: auto;
+        
     }
-    
+
     #portfolio{
 
         display: flex;
         flex-direction: column;
+
+    }
+
+    #portfolio div{
+
+        
+        width: 80%;
+        margin: 0 auto 0 auto;
+        /* max-height: 820px; */
+        max-height: none;
+        overflow: visible;
+
+        padding: 0.4em;
 
     }
 
@@ -110,3 +124,40 @@ input{
 
 }
 
+@media screen and (min-width: 700px) and (max-width: 1000px){
+
+
+
+    /* 1. Nema skrola – sve mora stati */
+    body{
+        overflow: hidden;
+    }
+
+    /* 2. Portfolio → 3 kolone */
+    #portfolio{
+        width: 100%;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr); /* A | A+B | B */
+        gap: 10px;
+        align-items: start;
+        transform: scale(0.92);        /* ključno skaliranje */
+        transform-origin: top center;  /* prirodno skupljanje */
+    }
+
+    /* 3. Kolone – bez sečenja */
+    #portfolio div{
+        width: 100%;
+        margin: 0;
+        max-height: none;
+        overflow: visible;
+        padding: 0.4em;
+        box-sizing: border-box;
+    }
+
+    /* 4. Ulazna polja malo uža */
+    input{
+        width: 8.8em;
+    }
+
+}
