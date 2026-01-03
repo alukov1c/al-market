@@ -133,6 +133,10 @@ input{
         overflow: hidden ; /* hidden / visible */
     }
 
+    #naslov{
+        transform: scale(0.70);  
+    }
+
     /* 2. Portfolio → 3 kolone */
     #portfolio{
         width: 100%;
