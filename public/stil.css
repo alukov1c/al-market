@@ -128,9 +128,9 @@ input{
 
 
 
-    /* 1. Nema skrola – sve mora stati */
+    /* 1. Nema/ima skrola */
     body{
-        overflow: hidden;
+        overflow: hidden ; /* hidden / visible */
     }
 
     /* 2. Portfolio → 3 kolone */
@@ -141,7 +141,7 @@ input{
         grid-template-columns: repeat(3, 1fr); /* A | A+B | B */
         gap: 10px;
         align-items: start;
-        transform: scale(0.92);        /* ključno skaliranje */
+        transform: scale(0.70);        /* ključno skaliranje */
         transform-origin: top center;  /* prirodno skupljanje */
     }
 
