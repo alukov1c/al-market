@@ -64,9 +64,12 @@ const PORTFOLIOS = [PORT_A, PORT_B];
 //const trzisteA = 290;
 //const trzisteB = 290;
 
-let marginA = 15.11; //od 24.12.2025 01:45h
+//let marginA = 15.11; //od 24.12.2025 01:45h
+let marginA = 16.64; //od 12.1.2026. 17:02h
+
 //let T_A_CHF = 5183.41; //24.12.2025. => trzisteA = 343,05
-let T_A_CHF = 5309.61; //31.12.2025.
+//let T_A_CHF = 5309.61; //31.12.2025.
+let T_A_CHF = 6399.78; //od 12.1.2026. 20:35h
 let trzisteA = T_A_CHF / marginA;
 
 //------------------------------------------------
@@ -77,7 +80,8 @@ let trzisteA = T_A_CHF / marginA;
 //let marginB = 73.23; //od 23.12.2025. 08:47h
 let marginB = 6.04; //od 24.12.2025. 00:41h
 //let T_B_AUD = 2586.64; //24.12.2025.
-let T_B_AUD = 2627.57; //31.12.2025.
+//let T_B_AUD = 2627.57; //31.12.2025.
+let T_B_AUD = 2734.51; //12.1.2026. 20:36h
 let trzisteB = T_B_AUD / marginB;
 
 let chartPortfolioInfo = null;
