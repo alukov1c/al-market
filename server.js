@@ -730,7 +730,7 @@ async function getHistoryCached(accountId) {
   return arr;
 }
 
-
+/*
 function pickLastClosedTrade(historyArr) {
   // filtriranje  trade-ove (buy/sell...) i vraćanje poslednjeg po closeTime
   const trades = historyArr.filter(t => isTradeAction(t.action));
@@ -742,6 +742,39 @@ function pickLastClosedTrade(historyArr) {
   // (closeTime je najbolji za "zatvoren trade")
   trades.sort((a, b) => String(a.closeTime || "").localeCompare(String(b.closeTime || "")));
   return trades[trades.length - 1] || null;
+}
+*/
+
+function pickLastClosedTrade(historyArr) {
+  const trades = (historyArr || []).filter(tr => {
+    const action = String(tr.action || "").toLowerCase();
+    const symbol = String(tr.symbol || "").trim();
+
+    // samo pravi trejdovi
+    if (!symbol) return false;
+    if (!action.includes("buy") && !action.includes("sell")) return false;
+
+    // ukloniti deposit/withdraw/balance (dodatna sigurnost)
+    if (action.includes("deposit") || action.includes("withdraw") || action.includes("balance")) return false;
+
+    return true;
+  });
+
+  if (!trades.length) return null;
+
+  let best = null;
+  let bestTs = -1;
+
+  for (const tr of trades) {
+    const d = parseMyfxbookDate(tr.closeTime) || parseMyfxbookDate(tr.openTime);
+    const ts = d ? d.getTime() : -1;
+    if (ts > bestTs) {
+      bestTs = ts;
+      best = tr;
+    }
+  }
+
+  return best;
 }
 
 
