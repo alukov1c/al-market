@@ -798,10 +798,14 @@ app.get("/api/last-trades", async (_req, res) => {
         const history = await getHistoryCached(accountId);
         const last = pickLastClosedTrade(history);
 
+        const dateObj = parseMyfxbookDate(last.closeTime);
+        const formattedDate = formatSerbianDate(dateObj);
+
         return {
           index,
           profit: last?.profit ?? null,
-          date:   last?.closeTime ?? null,    // zatvaranje pozicije
+          //date:   last?.closeTime ?? null,    // zatvaranje pozicije
+          date: formattedDate,
           currency,
           action: last?.action ?? null,       // Buy / Sell / Buy Limit ...
           symbol: last?.symbol ?? null
