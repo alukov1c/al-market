@@ -25,7 +25,7 @@ const CACHE_TTL_MS = 60000; // 60s umesto 15s
 
 
 // indeks naloga se koristi u kod.js (INDEX = 1)
-const ACCOUNT_INDEX = parseInt(process.env.ACCOUNT_INDEX || "3", 10);
+const ACCOUNT_INDEX = parseInt(process.env.ACCOUNT_INDEX || "0", 10);
 
 // GLOBAL SESSION (samo u memoriji)
 let SESSION = null;
@@ -462,7 +462,7 @@ async function convertUsdtToChf(usdtAmount) {
 // PERIODIČNO OSVEŽAVANJE TRENUTNOG KAPITALA (CHF)
 // --------------------------------------------------
 // --------------------------------------------------
-// SABIRANJE KAPITALA SA NALOGA [1] i [3] => zamenjeni indeksi 1 -> 3 i 3 -> 2
+// SABIRANJE KAPITALA SA NALOGA [0] i [2] => promena indeksa
 // --------------------------------------------------
 //
 // + Binance
@@ -472,7 +472,7 @@ async function convertUsdtToChf(usdtAmount) {
 let lastEquityTick = {
   t: Date.now(),
   equityChf: null,
-  a: { index: 3, equity: null, currency: null },
+  a: { index: 0, equity: null, currency: null },
   b: { index: 2, equity: null, currency: null },
   note: "init"
 };
@@ -516,7 +516,7 @@ async function refreshEquityTick() {
     }
 
     // Bezbedno uzimanje naloga po indeksima (mogu da ne postoje)
-    const acc1 = accounts[3] || null;
+    const acc1 = accounts[0] || null;
     const acc2 = accounts[2] || null;
 
     const aEquity = acc1 ? toNumber(acc1.equity) : null;
@@ -536,7 +536,7 @@ async function refreshEquityTick() {
     lastEquityTick = {
       t: Date.now(),
       equityChf: totalChf,
-      a: { index: 3, equity: aEquity, currency: aCurr, chf: aChf != null ? Number(aChf.toFixed(2)) : null },
+      a: { index: 0, equity: aEquity, currency: aCurr, chf: aChf != null ? Number(aChf.toFixed(2)) : null },
       b: { index: 2, equity: bEquity, currency: bCurr, chf: bChf != null ? Number(bChf.toFixed(2)) : null },
       note: totalChf == null ? "missing fx rate or missing equities" : "ok"
     };
@@ -671,7 +671,7 @@ app.get("/api/stream-equity", (req, res) => {
 //željeni indeksi portfolija (1, 3)
 //const LAST_TRADE_INDICES = [/*1,*/ 2, 4];
 
-const LAST_TRADE_INDICES = [3, 2];
+const LAST_TRADE_INDICES = [0, 2];
 
 function pickProfit(a) {
   // prioritet: profit => daily → monthly 

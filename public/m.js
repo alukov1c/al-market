@@ -5,7 +5,7 @@ const PORTFOLIO_CONFIGS = [
 
 
   {
-    index: 3,
+    index: 0,
     chartId: "chartP2",
     equityInputId: "procenatKapitalaPA",
     currencyInputId: "valutaPA",
@@ -35,7 +35,7 @@ const PORTFOLIO_CONFIGS = [
 ];
 
 const PORT_A = {
-    index: 3,
+    index: 0,
     chartId: "chartP2",
     equityInputId: "procenatKapitalaPA",
     currencyInputId: "valutaPA",
@@ -202,7 +202,7 @@ async function updatePortfolios() {
             eq = eq * 0.54; // konverzija AUD → CHF
         }
 
-        if (cfg.index === 3) equityA = eq;
+        if (cfg.index === 0) equityA = eq;
         if (cfg.index === 2) equityB = eq;
     });
 
@@ -219,7 +219,7 @@ async function updatePortfolios() {
         const equity = Number(acc.equity || 0);
 
         let marginVal = 0;
-        if (cfg.index === 3) {
+        if (cfg.index === 0) {
 
           marginVal = marginA;
           trziste = trzisteA;
