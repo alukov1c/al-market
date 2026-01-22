@@ -1,11 +1,11 @@
-// m.js — tri portfolija (indeksi [1], [2], [4]) + real-time osvežavanje na 3 s
+// m.js — tri portfolija (indeksi [1], [3]) + real-time osvežavanje na 3 s
 
 // Koje indekse iz /api/accounts želimo:
 const PORTFOLIO_CONFIGS = [
 
 
   {
-    index: 2,
+    index: 1,
     chartId: "chartP2",
     equityInputId: "procenatKapitalaPA",
     currencyInputId: "valutaPA",
@@ -25,7 +25,7 @@ const PORTFOLIO_CONFIGS = [
   */
 
   {
-    index: 4,
+    index: 3,
     chartId: "chartPB",
     equityInputId: "procenatKapitalaPB",
     currencyInputId: "valutaPB",
@@ -35,7 +35,7 @@ const PORTFOLIO_CONFIGS = [
 ];
 
 const PORT_A = {
-    index: 2,
+    index: 1,
     chartId: "chartP2",
     equityInputId: "procenatKapitalaPA",
     currencyInputId: "valutaPA",
@@ -45,7 +45,7 @@ const PORT_A = {
 };
 
 const PORT_B = {
-    index: 4,
+    index: 3,
     chartId: "chartPB",
     equityInputId: "procenatKapitalaPB",
     currencyInputId: "valutaPB",
