@@ -668,10 +668,10 @@ app.get("/api/stream-equity", (req, res) => {
   });
 });
 
-//željeni indeksi portfolija (1, 2, 4)
+//željeni indeksi portfolija (1, 3)
 //const LAST_TRADE_INDICES = [/*1,*/ 2, 4];
 
-const LAST_TRADE_INDICES = [1, 2, 4];
+const LAST_TRADE_INDICES = [1, 3];
 
 function pickProfit(a) {
   // prioritet: profit => daily → monthly 

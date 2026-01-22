@@ -321,7 +321,7 @@ function updatePortfolioInfoChart(totalChf) {
 }
 
 
-// Učitavanje poslednjih trejdova za indekse 1, 2, 4
+// Učitavanje poslednjih trejdova za indekse 1 i 3
 async function updateLastTrades() {
   try {
     const res = await fetch("/api/last-trades");
