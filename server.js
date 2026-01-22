@@ -462,7 +462,7 @@ async function convertUsdtToChf(usdtAmount) {
 // PERIODIČNO OSVEŽAVANJE TRENUTNOG KAPITALA (CHF)
 // --------------------------------------------------
 // --------------------------------------------------
-// SABIRANJE KAPITALA SA NALOGA [2] i [4]
+// SABIRANJE KAPITALA SA NALOGA [1] i [3]
 // --------------------------------------------------
 //
 // + Binance
@@ -472,8 +472,8 @@ async function convertUsdtToChf(usdtAmount) {
 let lastEquityTick = {
   t: Date.now(),
   equityChf: null,
-  a: { index: 2, equity: null, currency: null },
-  b: { index: 4, equity: null, currency: null },
+  a: { index: 1, equity: null, currency: null },
+  b: { index: 3, equity: null, currency: null },
   note: "init"
 };
 
@@ -504,7 +504,7 @@ async function refreshEquityTick() {
     await ensureAccountsCache(); // osvežiti cache po TTL-u
     const accounts = Array.isArray(cachedAccounts) ? cachedAccounts : [];
 
-    // Ako cache prazan, bez spamovanja log-ovima
+    // Ako je "cache" prazan, bez spamovanja log-ovima
     if (!accounts.length) {
       lastEquityTick = {
         ...lastEquityTick,
@@ -516,8 +516,8 @@ async function refreshEquityTick() {
     }
 
     // Bezbedno uzimanje naloga po indeksima (mogu da ne postoje)
-    const acc1 = accounts[2] || null;
-    const acc2 = accounts[4] || null;
+    const acc1 = accounts[1] || null;
+    const acc2 = accounts[3] || null;
 
     const aEquity = acc1 ? toNumber(acc1.equity) : null;
     const aCurr   = acc1 ? (acc1.currency || null) : null;
@@ -536,8 +536,8 @@ async function refreshEquityTick() {
     lastEquityTick = {
       t: Date.now(),
       equityChf: totalChf,
-      a: { index: 2, equity: aEquity, currency: aCurr, chf: aChf != null ? Number(aChf.toFixed(2)) : null },
-      b: { index: 4, equity: bEquity, currency: bCurr, chf: bChf != null ? Number(bChf.toFixed(2)) : null },
+      a: { index: 1, equity: aEquity, currency: aCurr, chf: aChf != null ? Number(aChf.toFixed(2)) : null },
+      b: { index: 3, equity: bEquity, currency: bCurr, chf: bChf != null ? Number(bChf.toFixed(2)) : null },
       note: totalChf == null ? "missing fx rate or missing equities" : "ok"
     };
   } catch (e) {
