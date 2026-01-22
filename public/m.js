@@ -199,11 +199,11 @@ async function updatePortfolios() {
 
         const curr = (acc.currency || "").toUpperCase();
         if (curr === "AUD") {
-            eq = eq * 0.52; // konverzija AUD → CHF
+            eq = eq * 0.54; // konverzija AUD → CHF
         }
 
-        if (cfg.index === 2) equityA = eq;
-        if (cfg.index === 4) equityB = eq;
+        if (cfg.index === 1) equityA = eq;
+        if (cfg.index === 3) equityB = eq;
     });
 
     const totalChf = equityA + equityB;
@@ -219,13 +219,13 @@ async function updatePortfolios() {
         const equity = Number(acc.equity || 0);
 
         let marginVal = 0;
-        if (cfg.index === 2) {
+        if (cfg.index === 1) {
 
           marginVal = marginA;
           trziste = trzisteA;
 
         }
-        if (cfg.index === 4) {
+        if (cfg.index === 3) {
           
           marginVal = marginB;
           trziste = trzisteB;

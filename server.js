@@ -479,11 +479,11 @@ let lastEquityTick = {
 
 // Jednostavna FX mapa (primer). Kasnije može da se zameni realnim API-jem.
 const fxToChf = {
-  CHF: 1.0,
-  USD: 0.88,  // primer
-  EUR: 0.95,  // primer
-  GBP: 1.10,  // primer
-  RSD: 0.0082 // primer
+  CHF: 1.00,
+  USD: 0.790,  // 
+  EUR: 0.928,  // prier
+  GBP: 1.07,  // 
+  RSD: 0.0079 // 
 };
 
 function toNumber(x) {
@@ -778,7 +778,7 @@ function pickLastClosedTrade(historyArr) {
 }
 
 
-//const LAST_TRADE_INDICES = [1, 2, 4];
+//const LAST_TRADE_INDICES = [1, 3];
 
 app.get("/api/last-trades", async (_req, res) => {
   try {
