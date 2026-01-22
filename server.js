@@ -24,8 +24,8 @@ let backoffUntil = 0;
 const CACHE_TTL_MS = 60000; // 60s umesto 15s
 
 
-// indeks naloga se koristi u kod.js (INDEX = 2)
-const ACCOUNT_INDEX = parseInt(process.env.ACCOUNT_INDEX || "2", 10);
+// indeks naloga se koristi u kod.js (INDEX = 1)
+const ACCOUNT_INDEX = parseInt(process.env.ACCOUNT_INDEX || "1", 10);
 
 // GLOBAL SESSION (samo u memoriji)
 let SESSION = null;
