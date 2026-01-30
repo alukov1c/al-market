@@ -239,7 +239,7 @@ async function updatePortfolios() {
 
         const jacina = calcJacina(equity, marginVal, trziste);
         const el = document.getElementById(cfg.jacinaId);
-        if (el) el.value = jacina.toFixed(2) + " ± 2%";
+        if (el) el.value = jacina.toFixed(2) + " ± 2 %";
 
     });
 
