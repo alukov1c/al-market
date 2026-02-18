@@ -69,14 +69,16 @@ const PORTFOLIOS = [PORT_A, PORT_B];
 //let marginA = 16.4; //21.1.2026.
 //let marginA = 16.74; //28.1.2026.
 let marginA = 18.42; //18.2.2026.
-
+//let marginA = 
 
 //let T_A_CHF = 5183.41; //24.12.2025. => trzisteA = 343,05
 //let T_A_CHF = 5309.61; //31.12.2025.
 //let T_A_CHF = 6399.78; //od 12.1.2026. 20:35h
 //let T_A_CHF = 5987.62; //21.1.2026.
 //let T_A_CHF = 5877.84; //28.1.2026. 11:14h
-let T_A_CF = 0.77268 * (6615.6 + 0.17 * 1938); //18.2.2026. 21:04h => 5,336.31
+let T_A_CHF = 0.77268 * (6615.6 + 0.17 * 1938); //18.2.2026. 21:04h => 5,336.31
+//let T_A_CHF =
+
 
 let trzisteA = T_A_CHF / marginA;
 
@@ -90,6 +92,7 @@ let trzisteA = T_A_CHF / marginA;
 //let marginB = 78.06; //od 21.1.2026. 14:55h
 //let marginB = 81.10; //28.1.2026.
 let marginB = 83.51; //18.2.2026.
+//let marginB =
 
 //let T_B_AUD = 2586.64; //24.12.2025.
 //let T_B_AUD = 2627.57; //31.12.2025.
@@ -97,6 +100,8 @@ let marginB = 83.51; //18.2.2026.
 //let T_B_AUD = 1.48 * (2 * 893.49 + 4861.87); //9840.298;
 //let T_B_AUD = 1.427 * (2 * 893.17 + 5278.04); //28.1.2025. 11:17h => 10,080.87
 let T_B_AUD = 1.420 * (2 * 0.01 * 66175.10 + 4984.22); //18.2.2026. 21:07h =>  8,956.97
+//let T_B_AUD =
+
 let trzisteB = T_B_AUD / marginB;
 
 let chartPortfolioInfo = null;
