@@ -3,6 +3,7 @@ body {
     font-family: system-ui, sans-serif; margin: 24px; 
     text-align: center;
     overflow: hidden;
+    color: rgba(0, 0, 0, 0.8);
 
 }
 
