@@ -185,6 +185,10 @@ input{
         transform: scale(0.65);  
     }
 
+    #prviMeni div{
+        font-size: smaller;
+    }
+
     /* 2. Portfolio → 3 kolone */
     #portfolio{
         width: 100%;
