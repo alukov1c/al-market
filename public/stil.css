@@ -201,7 +201,7 @@ input{
         grid-template-columns: repeat(3, 1fr); /* A | A+B | B */
         gap: 10px;
         align-items: start;
-        transform: scale(0.68);    /* ključno skaliranje: pretodno: 0.62, pa 0.70 */
+        transform: scale(0.60);    /* ključno skaliranje: pretodno: 0.62, pa 0.70 */
         transform-origin: top center;  /* prirodno skupljanje */
     }
 
