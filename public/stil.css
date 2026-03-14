@@ -124,7 +124,7 @@ input{
 @media screen and (max-width: 700px /* umesto 1080 */){
 
     #prviMeni div{
-        scale: 0.70;
+        scale: 0.55;
     }
 
     body{
