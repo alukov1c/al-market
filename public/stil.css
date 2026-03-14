@@ -11,6 +11,20 @@ body {
     
 }
 
+#prviMeni {
+
+    width: 80%;
+    margin: 0 auto 0 auto;
+    color: rgb(121, 119, 119);
+    border: 1px solid rgba(165, 165, 165, 0.3); 
+    border-radius: 1em;
+    margin-bottom: 1em;
+    padding: 1.2em;
+    display: flex;
+    flex-direction: row;
+    
+}
+
 #odabirAplikacije /*, .opcije */{
 
     width: 80%;
@@ -21,6 +35,22 @@ body {
     margin-bottom: 1em;
     padding: 1.2em;
     
+}
+
+#prviMeni div{
+
+    width: 10em;
+    /* border: 1px solid rgb(124, 122, 122);
+    border-radius: 15px; */
+    padding: 0.5em;
+    margin: 0 auto 0 auto;
+    display: flex;
+    flex-direction: row;
+
+}
+
+#prviMeni div img{
+    width: 9%;
 }
 
 a{
