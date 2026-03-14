@@ -121,9 +121,17 @@ input{
   }
 
 
+  #zacelje{
+
+    padding: 1em;
+    font-size: 90%;
+    color: rgb(66, 65, 65);
+    
+}
+
 @media screen and (max-width: 700px /* umesto 1080 */){
 
-    #prviMeni div{
+    #prviMeni{
         transform: scale(0.8);
     }
 
