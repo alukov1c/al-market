@@ -127,7 +127,7 @@ input{
     font-size: 90%;
     color: rgb(66, 65, 65);
     
-}
+    }
 
 @media screen and (max-width: 700px /* umesto 1080 */){
 
@@ -141,7 +141,7 @@ input{
     }
 
     #prviMeni div img{
-        transform: scale(1.50);
+        transform: scale(5);
     }
 
     body{
@@ -201,7 +201,7 @@ input{
         grid-template-columns: repeat(3, 1fr); /* A | A+B | B */
         gap: 10px;
         align-items: start;
-        transform: scale(0.60);    /* ključno skaliranje: pretodno: 0.62, pa 0.70 */
+        transform: scale(0.70);    /* ključno skaliranje: pretodno: 0.62, pa 0.70 */
         transform-origin: top center;  /* prirodno skupljanje */
     }
 
