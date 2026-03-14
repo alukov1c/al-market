@@ -141,7 +141,7 @@ input{
     }
 
     #prviMeni div img{
-        transform: scale(5);
+        transform: scale(3);
     }
 
     body{
@@ -218,6 +218,10 @@ input{
     /* 4. Ulazna polja malo uža */
     input{
         width: 8.8em;
+    }
+
+    #zacelje{
+        visibility: visible;
     }
 
 }
