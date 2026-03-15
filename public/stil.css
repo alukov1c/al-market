@@ -182,7 +182,7 @@ input{
 
     /* 1. Nema/ima skrola */
     body{
-        overflow: hidden ; /* hidden / visible */
+        overflow: visible ; /* hidden / visible */
     }
 
     #naslov{
