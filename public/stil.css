@@ -138,11 +138,14 @@ input{
 
     #prviMeni{
         /* transform: scale(0.8); */
-        width: 80%;
+        width: 85%;
     }
 
     #prviMeni div{
+
         transform: scale(0.80);
+        font-size: smaller;
+        
     }
 
     /*
