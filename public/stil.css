@@ -50,7 +50,12 @@ body {
 }
 
 #prviMeni div img{
-    width: 9%;
+
+    /* width: 9%; */
+    height: 0.75em;
+    width: auto;
+    vertical-align: middle;
+    
 }
 
 a{
@@ -140,9 +145,11 @@ input{
         transform: scale(0.85);
     }
 
+    /*
     #prviMeni div img{
         transform: scale(1.6);
     }
+    */
 
     body{
         overflow: auto;
