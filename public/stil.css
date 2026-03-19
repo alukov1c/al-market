@@ -2,7 +2,7 @@ body {
 
     font-family: system-ui, sans-serif; margin: 24px; 
     text-align: center;
-    overflow: hidden;
+    overflow: visible; /*hidden*/
     color: rgba(0, 0, 0, 0.8);
 
 }
@@ -134,107 +134,150 @@ input{
     
     }
 
-@media screen and (max-width: 700px /* umesto 1080 */){
 
-    #prviMeni{
-        /* transform: scale(0.8); */
-        width: 85%;
-    }
+    #analiza{
 
-    #prviMeni div{
-
-        transform: scale(0.80);
-        font-size: smaller;
-        
-    }
-
-    /*
-    #prviMeni div img{
-        transform: scale(1.6);
-    }
-    */
-
-    body{
-        overflow: auto;
-        
-    }
-
-    #portfolio{
-
-        display: flex;
-        flex-direction: column;
-
-    }
-
-    #portfolio div{
-
-        
         width: 80%;
         margin: 0 auto 0 auto;
-        /* max-height: 820px; */
-        max-height: none;
-        overflow: visible;
 
-        padding: 0.4em;
+        /* border: 1px solid rgb(134, 133, 133);
+        border-radius: 10px; */
 
-    }
-
-    input {
-        width: 11.6em;
-    }
-
-
-}
-
-@media screen and (min-width: 701px) and (max-width: 1000px){
-
-
-
-    /* 1. Nema/ima skrola */
-    body{
-        overflow: visible ; /* hidden / visible */
-    }
-
-    #naslov{
-        transform: scale(0.65);  
-    }
-
-    #prviMeni div{
+        display: flex;
+        flex-direction: row;
+        text-align: left;
         font-size: smaller;
+        padding: 0.6em;
     }
 
-    /* 2. Portfolio → 3 kolone */
-    #portfolio{
+    #analiza div{
+
         width: 100%;
-        margin: 0 auto;
-        display: grid;
-        grid-template-columns: repeat(3, 1fr); /* A | A+B | B */
-        gap: 10px;
-        align-items: start;
-        transform: scale(0.80);    /* ključno skaliranje: pretodno: 0.62, pa 0.70 */
-        transform-origin: top center;  /* prirodno skupljanje */
-        /* border: 1px solid black;
-        border-radius: 15px; */
+        margin-right: 0.6em;
+        border: 1px solid rgb(175, 173, 173);
+        margin: 0 auto 0.6 auto;
+        border-radius: 10px;
+        padding: 1em;
 
     }
 
-    /* 3. Kolone – bez sečenja */
-    #portfolio div{
-        width: 100%;
-        margin: 0;
-        max-height: none;
-        overflow: visible;
-        padding: 0.3em;
-        box-sizing: border-box;
+    @media screen and (max-width: 700px /* umesto 1080 */){
+
+        #prviMeni{
+            /* transform: scale(0.8); */
+            width: 85%;
+        }
+
+        #prviMeni div{
+
+            transform: scale(0.80);
+            font-size: smaller;
+            
+        }
+
+        /*
+        #prviMeni div img{
+            transform: scale(1.6);
+        }
+        */
+
+        body{
+            overflow: auto;
+            
+        }
+
+        #portfolio{
+
+            display: flex;
+            flex-direction: column;
+
+        }
+
+        #portfolio div{
+
+            
+            width: 80%;
+            margin: 0 auto 0 auto;
+            /* max-height: 820px; */
+            max-height: none;
+            overflow: visible;
+
+            padding: 0.4em;
+
+        }
+
+        input {
+            width: 11.6em;
+        }
+
+        #analiza{
+
+            display: flex;
+            flex-direction: column;
+
+        }
+
     }
 
-    /* 4. Ulazna polja malo uža */
-    input{
-        width: 8.8em;
-    }
+    @media screen and (min-width: 701px) and (max-width: 1000px){
 
-    #zacelje{
-        visibility: visible;
-    }
 
-}
+
+        /* 1. Nema/ima skrola */
+        body{
+            overflow: visible ; /* hidden / visible */
+        }
+
+        #naslov{
+            transform: scale(0.65);  
+        }
+
+        #prviMeni div{
+            font-size: smaller;
+        }
+
+        /* 2. Portfolio → 3 kolone */
+        #portfolio{
+            width: 100%;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* A | A+B | B */
+            gap: 10px;
+            align-items: start;
+            transform: scale(0.80);    /* ključno skaliranje: pretodno: 0.62, pa 0.70 */
+            transform-origin: top center;  /* prirodno skupljanje */
+            /* border: 1px solid black;
+            border-radius: 15px; */
+
+        }
+
+        /* 3. Kolone – bez sečenja */
+        #portfolio div{
+            width: 100%;
+            margin: 0;
+            max-height: none;
+            overflow: visible;
+            padding: 0.3em;
+            box-sizing: border-box;
+        }
+
+        /* 4. Ulazna polja malo uža */
+        input{
+            width: 8.8em;
+        }
+
+        #analiza{
+
+            display: flex;
+            flex-direction: column;
+            
+        }
+
+        #zacelje{
+            visibility: visible;
+        }
+
+
+
+
+    }
