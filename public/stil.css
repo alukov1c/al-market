@@ -145,7 +145,7 @@ input{
 
         display: flex;
         flex-direction: row;
-        text-align: left;
+        text-align: justify;
         font-size: smaller;
         padding: 0.6em;
     }
@@ -269,7 +269,7 @@ input{
         #analiza{
 
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             
         }
 
