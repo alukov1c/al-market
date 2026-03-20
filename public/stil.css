@@ -79,10 +79,12 @@ a{
 }
 
 #chartPortfolioInfo {
+
     width: 100%;
     height: 180px !important;
     max-height: 180px !important;
     /* display: block; */
+
 }
 
 
@@ -109,6 +111,7 @@ input{
 }
 
   .sneg{
+
     position: fixed; inset: 0;
     pointer-events: none;
     background-image:
@@ -119,11 +122,14 @@ input{
     opacity: .9;
     filter: drop-shadow(0 0 1px rgb(77, 90, 84));
     animation: snowMove 8s linear infinite;
+
   }
 
   @keyframes snowMove{
+
     from { transform: translateY(-120px); }
     to   { transform: translateY(120px); }
+
   }
 
   #market{
@@ -244,10 +250,10 @@ input{
 
     #zacelje{
 
-    padding: 1em;
-    font-size: 90%;
-    color: rgb(66, 65, 65);
-    
+        padding: 1em;
+        font-size: 90%;
+        color: rgb(66, 65, 65);
+        
     }
 
     @media screen and (max-width: 700px /* umesto 1080 */){
@@ -333,6 +339,7 @@ input{
 
         /* 2. Portfolio → 3 kolone */
         #portfolio{
+
             width: 100%;
             margin: 0 auto;
             display: grid;
@@ -348,12 +355,14 @@ input{
 
         /* 3. Kolone – bez sečenja */
         #portfolio div{
+
             width: 100%;
             margin: 0;
             max-height: none;
             overflow: visible;
             padding: 0.3em;
             box-sizing: border-box;
+            
         }
 
         /* 4. Ulazna polja malo uža */
@@ -376,8 +385,6 @@ input{
         #zacelje{
             visibility: visible;
         }
-
-
 
 
     }
