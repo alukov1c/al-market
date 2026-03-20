@@ -74,7 +74,7 @@ a{
     border-radius: 10px; */
     display: flex;
     flex-direction: row;
-    transform: scale(0.9);
+    transform: scale(0.87);
 
 }
 
@@ -362,7 +362,7 @@ input{
             overflow: visible;
             padding: 0.3em;
             box-sizing: border-box;
-            
+
         }
 
         /* 4. Ulazna polja malo uža */
