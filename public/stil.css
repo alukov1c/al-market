@@ -151,12 +151,14 @@ input{
   }
 
   .instrument {
-  width: 100%;
-  padding: 0.7em;
-  border: 1px solid rgba(165, 165, 165, 0.15);
-  border-radius: 0.8em;
-  text-align: center;
-}
+
+    width: 100%;
+    padding: 0.7em;
+    border: 1px solid rgba(165, 165, 165, 0.15);
+    border-radius: 0.8em;
+    text-align: center;
+    
+    }
 
     .up {
     color: #16a34a;
@@ -170,6 +172,25 @@ input{
     color: #aaa;
     }
 
+    price-value {
+    color: black;
+    }
+
+    .change-value {
+    font-weight: bold;
+    }
+
+    .change-up {
+    color: #16a34a;
+    }
+
+    .change-down {
+    color: #dc2626;
+    }
+
+    .change-flat {
+    color: #6b7280;
+    }
 
     #analiza{
 

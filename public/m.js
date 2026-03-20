@@ -443,37 +443,41 @@ function formatMarketPrice(value) {
 }
 
 function updateMarketInstrument(symbol, price, changePercent) {
-  const priceEl = document.getElementById(`${symbol}Price`);
-  const changeEl = document.getElementById(`${symbol}Change`);
+  const priceEl = document.querySelector(`#${symbol}Price .price-value`);
+  const changeEl = document.querySelector(`#${symbol}Change .change-value`);
 
   if (!priceEl || !changeEl) return;
 
-  priceEl.textContent = `Cena: ${formatMarketPrice(price)}`;
+  // --- CENA (uvek neutralna) ---
+  if (!Number.isFinite(price) || price <= 0) {
+    priceEl.textContent = "—";
+  } else {
+    priceEl.textContent = Number(price).toLocaleString("sr-RS", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  }
 
-  priceEl.classList.remove("up", "down", "flat");
-  changeEl.classList.remove("up", "down", "flat");
+  // --- PROMENA ---
+  changeEl.classList.remove("change-up", "change-down", "change-flat");
 
-  const pct = Number(changePercent);
-
-  if (!Number.isFinite(pct)) {
-    changeEl.textContent = "Promena...";
-    priceEl.classList.add("flat");
-    changeEl.classList.add("flat");
+  if (!Number.isFinite(changePercent)) {
+    changeEl.textContent = "—";
+    changeEl.classList.add("change-flat");
     return;
   }
 
+  const pct = Number(changePercent);
   const prefix = pct > 0 ? "+" : "";
-  changeEl.textContent = `Promena: ${prefix}${pct.toFixed(2)}%`;
+
+  changeEl.textContent = `${prefix}${pct.toFixed(2)}%`;
 
   if (pct > 0) {
-    priceEl.classList.add("up");
-    changeEl.classList.add("up");
+    changeEl.classList.add("change-up");
   } else if (pct < 0) {
-    priceEl.classList.add("down");
-    changeEl.classList.add("down");
+    changeEl.classList.add("change-down");
   } else {
-    priceEl.classList.add("flat");
-    changeEl.classList.add("flat");
+    changeEl.classList.add("change-flat");
   }
 }
 
