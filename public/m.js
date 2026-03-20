@@ -427,7 +427,112 @@ async function updateLastTrades() {
   }
 }
 
+//////////////////////////////////////////////
+//////////////////////////////////////////////
+///////           Market           ///////////
+//////////////////////////////////////////////
+//////////////////////////////////////////////
 
+function formatMarketPrice(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "Cena...";
+  return n.toLocaleString("sr-RS", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
+function updateMarketInstrument(symbol, price, changePercent) {
+  const priceEl = document.getElementById(`${symbol}Price`);
+  const changeEl = document.getElementById(`${symbol}Change`);
+
+  if (!priceEl || !changeEl) return;
+
+  priceEl.textContent = `Cena: ${formatMarketPrice(price)}`;
+
+  priceEl.classList.remove("up", "down", "flat");
+  changeEl.classList.remove("up", "down", "flat");
+
+  const pct = Number(changePercent);
+
+  if (!Number.isFinite(pct)) {
+    changeEl.textContent = "Promena...";
+    priceEl.classList.add("flat");
+    changeEl.classList.add("flat");
+    return;
+  }
+
+  const prefix = pct > 0 ? "+" : "";
+  changeEl.textContent = `Promena: ${prefix}${pct.toFixed(2)}%`;
+
+  if (pct > 0) {
+    priceEl.classList.add("up");
+    changeEl.classList.add("up");
+  } else if (pct < 0) {
+    priceEl.classList.add("down");
+    changeEl.classList.add("down");
+  } else {
+    priceEl.classList.add("flat");
+    changeEl.classList.add("flat");
+  }
+}
+
+async function loadInitialMarket() {
+  try {
+    const res = await fetch("/api/market");
+    if (!res.ok) throw new Error("HTTP " + res.status);
+
+    const data = await res.json();
+
+    if (data?.btc) {
+      updateMarketInstrument("btc", data.btc.price, data.btc.changePercent);
+    }
+
+    if (data?.eth) {
+      updateMarketInstrument("eth", data.eth.price, data.eth.changePercent);
+    }
+  } catch (err) {
+    console.error("Greška u loadInitialMarket():", err);
+  }
+}
+
+function initMarketSocket() {
+  const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+  const socket = new WebSocket(`${protocol}://${window.location.host}`);
+
+  socket.addEventListener("open", () => {
+    console.log("Market WebSocket povezan.");
+  });
+
+  socket.addEventListener("message", (event) => {
+    try {
+      const msg = JSON.parse(event.data);
+
+      if (msg.type !== "market" || !msg.data) return;
+
+      const market = msg.data;
+
+      if (market.btc) {
+        updateMarketInstrument("btc", market.btc.price, market.btc.changePercent);
+      }
+
+      if (market.eth) {
+        updateMarketInstrument("eth", market.eth.price, market.eth.changePercent);
+      }
+    } catch (err) {
+      console.error("WS message parse error:", err);
+    }
+  });
+
+  socket.addEventListener("close", () => {
+    console.warn("Market WebSocket zatvoren. Reconnect za 3s...");
+    setTimeout(initMarketSocket, 3000);
+  });
+
+  socket.addEventListener("error", (err) => {
+    console.error("Market WebSocket greška:", err);
+  });
+}
 
 // Pokretanje na load + interval na 3 s
 function init() {
@@ -440,6 +545,8 @@ function init() {
   // po želji može i periodično, npr. na 30 s da se API ne poziva često:
   setInterval(updateLastTrades, 30000);
 
+  loadInitialMarket();
+  initMarketSocket();
 
 }
 

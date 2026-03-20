@@ -7,6 +7,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 import crypto from 'crypto';
 import fs from "fs";
+import http from "http";
+import { WebSocketServer, WebSocket } from "ws";
 
 dotenv.config();
 
@@ -14,6 +16,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
 
 const app  = express();
+const server = http.createServer(app);
 const PORT = process.env.PORT || 8080;
 const BASE = "https://www.myfxbook.com/api";
 
@@ -579,7 +582,117 @@ async function ensureAccountsCache() {
   }
 }
 
-setInterval(ensureAccountsCache, 30);
+setInterval(ensureAccountsCache, 30000);
+
+
+// -----------------------------------------------------
+//
+// MARKET WS (BTC + ETH preko Binance, pa broadcast klijentima)
+//
+// -----------------------------------------------------
+
+const wss = new WebSocketServer({ server });
+
+let marketTick = {
+  t: Date.now(),
+  btc: {
+    price: null,
+    changePercent: null
+  },
+  eth: {
+    price: null,
+    changePercent: null
+  },
+  note: "init"
+};
+
+function broadcastMarketTick() {
+  const payload = JSON.stringify({
+    type: "market",
+    data: marketTick
+  });
+
+  for (const client of wss.clients) {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(payload);
+    }
+  }
+}
+
+wss.on("connection", (ws) => {
+  console.log("WS klijent povezan.");
+
+  ws.send(JSON.stringify({
+    type: "market",
+    data: marketTick
+  }));
+
+  ws.on("close", () => {
+    console.log("WS klijent diskonektovan.");
+  });
+
+  ws.on("error", (err) => {
+    console.warn("WS client error:", err.message);
+  });
+});
+
+let binanceWs = null;
+let reconnectTimer = null;
+
+function connectBinanceMarketStream() {
+  if (binanceWs && (binanceWs.readyState === WebSocket.OPEN || binanceWs.readyState === WebSocket.CONNECTING)) {
+    return;
+  }
+
+  const url = "wss://stream.binance.com:9443/stream?streams=btcusdt@ticker/ethusdt@ticker";
+  binanceWs = new WebSocket(url);
+
+  binanceWs.on("open", () => {
+    console.log("Binance market WS povezan.");
+  });
+
+  binanceWs.on("message", (raw) => {
+    try {
+      const msg = JSON.parse(raw.toString());
+      const data = msg?.data;
+
+      if (!data || !data.s) return;
+
+      const symbol = data.s;
+      const price = Number(data.c);
+      const changePercent = Number(data.P);
+
+      marketTick.t = Date.now();
+      marketTick.note = "ok";
+
+      if (symbol === "BTCUSDT") {
+        marketTick.btc.price = Number.isFinite(price) ? price : null;
+        marketTick.btc.changePercent = Number.isFinite(changePercent) ? changePercent : null;
+      }
+
+      if (symbol === "ETHUSDT") {
+        marketTick.eth.price = Number.isFinite(price) ? price : null;
+        marketTick.eth.changePercent = Number.isFinite(changePercent) ? changePercent : null;
+      }
+
+      broadcastMarketTick();
+    } catch (e) {
+      console.warn("Binance WS parse error:", e.message);
+    }
+  });
+
+  binanceWs.on("close", () => {
+    console.warn("Binance market WS zatvoren. Reconnect za 3s...");
+    marketTick.note = "binance socket closed";
+
+    if (reconnectTimer) clearTimeout(reconnectTimer);
+    reconnectTimer = setTimeout(connectBinanceMarketStream, 3000);
+  });
+
+  binanceWs.on("error", (err) => {
+    console.warn("Binance market WS error:", err.message);
+  });
+}
 
 
 // --------------------------------------------------
@@ -825,8 +938,6 @@ app.get("/api/last-trades", async (_req, res) => {
 });
 
 
-
-
 app.post("/api/set-session", (req, res) => {
   const s = String(req.body?.session || "").trim();
   if (!s || s.length < 10) {
@@ -839,13 +950,15 @@ app.post("/api/set-session", (req, res) => {
   res.json({ ok: true, sessionPrefix: SESSION.slice(0,6) + "…" });
 });
 
-
+app.get("/api/market", (_req, res) => {
+  res.json(marketTick);
+});
 
 // --------------------------------------------------
 // POKRETANJE SERVERA
 // --------------------------------------------------
 
-app.listen(PORT, async () => {
+server.listen(PORT, async () => {
 
   console.log(`Server je pokrenut na http://localhost:${PORT}`);
   console.log("Boot: pokretanje tajmera (best-effort).");
@@ -859,7 +972,10 @@ app.listen(PORT, async () => {
     await refreshEquityTick();    // koristi se cachedAccounts (ako ih ima)
   }, 15000);
 
+  connectBinanceMarketStream();
+
   console.log("Tick petlja je pokrenuta (15s).");
+  console.log("Market WS je pokrenut. ");
 
 });
 

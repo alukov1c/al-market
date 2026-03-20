@@ -126,12 +126,48 @@ input{
   }
 
 
-  #zacelje{
 
-    padding: 1em;
-    font-size: 90%;
-    color: rgb(66, 65, 65);
-    
+
+  #market{
+
+    width: 80%;
+    margin: 0 auto 0 auto;
+
+    display: flex;
+    flex-direction: row;
+    border: 1px solid rgba(165, 165, 165, 0.3); 
+    border-radius: 1em;
+
+    padding: 0.6em;
+    font-size: smaller;
+
+  }
+
+
+  #market div{
+
+    width: 100%;
+
+  }
+
+  .instrument {
+  width: 100%;
+  padding: 0.7em;
+  border: 1px solid rgba(165, 165, 165, 0.15);
+  border-radius: 0.8em;
+  text-align: center;
+}
+
+    .up {
+    color: #16a34a;
+    }
+
+    .down {
+    color: #dc2626;
+    }
+
+    .flat {
+    color: #aaa;
     }
 
 
@@ -154,11 +190,20 @@ input{
 
         width: 100%;
         margin-right: 0.6em;
-        border: 1px solid rgb(175, 173, 173);
+        border: 1px solid rgba(165, 165, 165, 0.3); 
+        border-radius: 1em;
         margin: 0 auto 0.6 auto;
-        border-radius: 10px;
         padding: 1em;
 
+    }
+
+
+    #zacelje{
+
+    padding: 1em;
+    font-size: 90%;
+    color: rgb(66, 65, 65);
+    
     }
 
     @media screen and (max-width: 700px /* umesto 1080 */){
