@@ -143,53 +143,74 @@ input{
 
   }
 
-
-  #market div{
-
-    width: 100%;
-
-  }
-
-  .instrument {
+    #market div{
 
     width: 100%;
-    padding: 0.7em;
-    border: 1px solid rgba(165, 165, 165, 0.15);
-    border-radius: 0.8em;
-    text-align: center;
-    
+
+    }
+
+    .instrument {
+
+        width: 100%;
+        padding: 0.7em;
+        border: 1px solid rgba(165, 165, 165, 0.15);
+        border-radius: 0.8em;
+        text-align: center;
+
+    }
+
+    .instrument-title {
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4em;
+
+    }
+
+    .instrument-title p {
+        margin: 0;
+    }
+
+    .coin-icon {
+
+        width: 18px;
+        height: 18px;
+        object-fit: contain;
+        display: inline-block;
+
     }
 
     .up {
-    color: #16a34a;
+        color: #16a34a;
     }
 
     .down {
-    color: #dc2626;
+        color: #dc2626;
     }
 
     .flat {
-    color: #aaa;
+        color: #aaa;
     }
 
     price-value {
-    color: black;
+        color: black;
     }
 
     .change-value {
-    font-weight: bold;
+        font-weight: bold;
     }
 
     .change-up {
-    color: #16a34a;
+        color: #16a34a;
     }
 
     .change-down {
-    color: #dc2626;
+        color: #dc2626;
     }
 
     .change-flat {
-    color: #6b7280;
+        color: #6b7280;
     }
 
     #analiza{
@@ -261,7 +282,6 @@ input{
 
         #portfolio div{
 
-            
             width: 80%;
             margin: 0 auto 0 auto;
             /* max-height: 820px; */
