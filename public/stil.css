@@ -224,6 +224,9 @@ input{
         text-align: justify;
         font-size: smaller;
         padding: 0.6em;
+
+        transform: scale(0.95);
+        
     }
 
     #analiza div{
