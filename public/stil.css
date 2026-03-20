@@ -74,7 +74,7 @@ a{
     border-radius: 10px; */
     display: flex;
     flex-direction: row;
-    transform: scale(0.92);
+    transform: scale(0.9);
 
 }
 
@@ -139,7 +139,7 @@ input{
     padding: 0.6em;
     font-size: smaller;
 
-    transform: scale(0.95);
+    transform: scale(0.92);
 
   }
 
