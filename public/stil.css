@@ -139,6 +139,8 @@ input{
     padding: 0.6em;
     font-size: smaller;
 
+    transform: scale(0.95);
+
   }
 
     #market div{
@@ -225,8 +227,6 @@ input{
         font-size: smaller;
         padding: 0.6em;
 
-        transform: scale(0.95);
-        
     }
 
     #analiza div{
@@ -235,8 +235,9 @@ input{
         margin-right: 0.6em;
         border: 1px solid rgba(165, 165, 165, 0.3); 
         border-radius: 1em;
-        margin: 0 auto 0.6 auto;
+        margin: 0 auto 0.6em auto;
         padding: 1em;
+        box-sizing: border-box;
 
     }
 
