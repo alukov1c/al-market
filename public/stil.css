@@ -74,7 +74,7 @@ a{
     border-radius: 10px; */
     display: flex;
     flex-direction: row;
-    transform: scale(0.97);
+    transform: scale(0.95);
 
 }
 
@@ -125,9 +125,6 @@ input{
     from { transform: translateY(-120px); }
     to   { transform: translateY(120px); }
   }
-
-
-
 
   #market{
 
@@ -303,9 +300,8 @@ input{
             margin : 0 auto 0 auto;
             display: flex;
             flex-direction: column;
-            margin-left: 0;
             padding: 0;
-            
+
         }
 
     }
