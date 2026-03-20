@@ -74,6 +74,7 @@ a{
     border-radius: 10px; */
     display: flex;
     flex-direction: row;
+    transform: scale(0.97);
 
 }
 
@@ -302,7 +303,9 @@ input{
             margin : 0 auto 0 auto;
             display: flex;
             flex-direction: column;
-
+            margin-left: 0;
+            padding: 0;
+            
         }
 
     }
