@@ -644,7 +644,9 @@ function connectBinanceMarketStream() {
     return;
   }
 
-  const url = "wss://stream.binance.com:9443/stream?streams=btcusdt@ticker/ethusdt@ticker";
+  //const url = "wss://stream.binance.com:9443/stream?streams=btcusdt@ticker/ethusdt@ticker";
+  const url = "wss://data-stream.binance.vision/stream?streams=btcusdt@ticker/ethusdt@ticker";
+  
   binanceWs = new WebSocket(url);
 
   binanceWs.on("open", () => {
