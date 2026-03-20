@@ -215,7 +215,7 @@ input{
 
     #analiza{
 
-        width: 80%;
+        width: 90%;
         margin: 0 auto 0 auto;
 
         /* border: 1px solid rgb(134, 133, 133);
@@ -299,7 +299,7 @@ input{
         }
 
         #market{
-            /* width: 90%; */
+            width: 90%;
         }
 
         #analiza{
@@ -361,8 +361,13 @@ input{
             width: 8.8em;
         }
 
+        #market{
+            width: 90%;
+        }
+
         #analiza{
 
+            width: 90%;
             display: flex;
             flex-direction: row;
             
