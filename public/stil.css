@@ -74,7 +74,7 @@ a{
     border-radius: 10px; */
     display: flex;
     flex-direction: row;
-    transform: scale(0.95);
+    transform: scale(0.92);
 
 }
 
@@ -128,7 +128,7 @@ input{
 
   #market{
 
-    width: 80%;
+    width: 90%;
     margin: 0 auto 0 auto;
 
     display: flex;
@@ -298,9 +298,13 @@ input{
             width: 11.6em;
         }
 
+        #market{
+            /* width: 90%; */
+        }
+
         #analiza{
 
-            width: 80%;
+            width: 90%;
             margin : 0 auto 0 auto;
             display: flex;
             flex-direction: column;
