@@ -7,10 +7,6 @@ body {
 
 }
 
-#glavniDiv{
-    
-}
-
 #prviMeni {
 
     width: 80%;
@@ -337,11 +333,21 @@ input{
         }
 
         #market{
-
             width: 90%;
-            box-sizing: border-box;
-            
         }
+
+        #market /*, #market .instrument */{
+            box-sizing: border-box;
+        }
+
+        /*
+        #market .instrument{
+
+            overflow-wrap: break-word;
+            word-break: break-word;
+
+        }
+        */
 
         #analiza{
 
