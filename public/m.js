@@ -567,6 +567,8 @@ let btnMinus = document.querySelector('#btnMinus');
 let btnNoc = document.querySelector('#btnNoc');
 
 let market = document.querySelector('#market');
+let btcIco = document.querySelector('#btcIco');
+let ethIco = document.querySelector('#ethIco');
 let marketZoom = 0;
 
 /* 
@@ -587,11 +589,26 @@ btnPlus.addEventListener('click', () => {
     if(marketZoom === 0){
 
       market.style.fontSize = 'xx-large';
+
+      btcIco.style.width = '25px';
+      btcIco.style.height = '25px';
+
+      ethIco.style.width = '25px';
+      ethIco.style.height = '25px';
+
       marketZoom = 1;
+
 
     } else {
       
       market.style.fontSize = 'xxx-large';
+
+      btcIco.style.width = '36px';
+      btcIco.style.height = '36px';
+
+      ethIco.style.width = '36px';
+      ethIco.style.height = '36px';
+
       marketZoom = 2;
 
     }
@@ -604,6 +621,13 @@ btnPlus.addEventListener('click', () => {
 btnMinus.addEventListener('click', () => {
 
     market.style.fontSize = 'smaller';
+
+    btcIco.style.width = '18px';
+    btcIco.style.height = '18px';
+
+    ethIco.style.width = '18px';
+    ethIco.style.height = '18px';
+
     marketZoom = 0;
     
 });
