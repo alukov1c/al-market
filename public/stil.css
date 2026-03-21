@@ -336,7 +336,7 @@ input{
             width: 90%;
         }
 
-        #market /*, #market .instrument */{
+        #market, #market .instrument{
             box-sizing: border-box;
         }
 
