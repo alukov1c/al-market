@@ -569,6 +569,10 @@ let btnNoc = document.querySelector('#btnNoc');
 let market = document.querySelector('#market');
 let btcIco = document.querySelector('#btcIco');
 let ethIco = document.querySelector('#ethIco');
+
+let naslovBTC = document.querySelector('#naslovBTC');
+let naslovETH = document.querySelector('#naslovETH');
+
 let marketZoom = 0;
 
 /* 
@@ -579,6 +583,8 @@ btnDan.addEventListener('click', () => {
   document.body.style.color = "rgba(0, 0, 0, 0.8)";
 });
 */ 
+
+
 
 btnPlus.addEventListener('click', () => {
   
@@ -599,7 +605,40 @@ btnPlus.addEventListener('click', () => {
       marketZoom = 1;
 
 
+    } else if((window.innerWidth >= 701) && (window.innerWidth <= 1000)){
+
+      if(marketZoom === 0){
+
+      market.style.fontSize = 'xx-large';
+
+      btcIco.style.width = '25px';
+      btcIco.style.height = '25px';
+
+      ethIco.style.width = '25px';
+      ethIco.style.height = '25px';
+
+      marketZoom = 1;
+
     } else {
+      
+      market.style.fontSize = 'xxx-large';
+
+      naslovBTC.innerHTML = 'BTC';
+      naslovETH.innerHTML = 'ETH';
+
+      btcIco.style.width = '36px';
+      btcIco.style.height = '36px';
+
+      ethIco.style.width = '36px';
+      ethIco.style.height = '36px';
+
+      marketZoom = 2;
+
+    } 
+        } 
+    
+    
+    else {
       
       market.style.fontSize = 'xxx-large';
 
