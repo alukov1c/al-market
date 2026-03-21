@@ -573,6 +573,8 @@ let ethIco = document.querySelector('#ethIco');
 let naslovBTC = document.querySelector('#naslovBTC');
 let naslovETH = document.querySelector('#naslovETH');
 
+let ethPrice = document.querySelector('#ethPrice');
+
 let marketZoom = 0;
 
 /* 
@@ -639,8 +641,7 @@ btnPlus.addEventListener('click', () => {
         
         market.style.fontSize = 'xxx-large';
 
-        naslovBTC.innerHTML = 'BTC';
-        naslovETH.innerHTML = 'ETH';
+
 
         btcIco.style.width = '36px';
         btcIco.style.height = '36px';
@@ -649,6 +650,19 @@ btnPlus.addEventListener('click', () => {
         ethIco.style.height = '36px';
 
         marketZoom = 2;
+
+        if(marketZoom === 2){
+
+          naslovBTC.innerHTML = 'BTC';
+          naslovETH.innerHTML = 'ETH';
+          ethPrice = ethPrice + '/n';
+
+        } else {
+
+          naslovBTC.innerHTML = 'Bitkoin - BTC';
+          naslovETH.innerHTML = 'Eterijum - ETH';
+
+        }
 
       } 
       } 
