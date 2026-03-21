@@ -639,7 +639,7 @@ btnPlus.addEventListener('click', () => {
 
       } else {
         
-        market.style.fontSize = 'xxx-large';
+        market.style.fontSize = '40px';
 
         btcIco.style.width = '36px';
         btcIco.style.height = '36px';
