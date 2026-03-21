@@ -584,76 +584,94 @@ btnDan.addEventListener('click', () => {
 });
 */ 
 
+function keepMarketPosition(callback){
 
+  const rect = market.getBoundingClientRect();
+  const offsetTop = rect.top;
+
+  callback();
+
+  requestAnimationFrame(() => {
+    const newRect = market.getBoundingClientRect();
+    const delta = newRect.top - offsetTop;
+
+    window.scrollBy(0, delta);
+  });
+
+}
 
 btnPlus.addEventListener('click', () => {
-  
+
+  keepMarketPosition(() => {
+
   if(window.innerWidth <= 700){
     market.style.fontSize = 'x-large';
   } else {
 
-    if(marketZoom === 0){
-
-      market.style.fontSize = 'xx-large';
-
-      btcIco.style.width = '25px';
-      btcIco.style.height = '25px';
-
-      ethIco.style.width = '25px';
-      ethIco.style.height = '25px';
-
-      marketZoom = 1;
-
-
-    } else if((window.innerWidth >= 701) && (window.innerWidth <= 1000)){
-
       if(marketZoom === 0){
 
-      market.style.fontSize = 'xx-large';
+        market.style.fontSize = 'xx-large';
 
-      btcIco.style.width = '25px';
-      btcIco.style.height = '25px';
+        btcIco.style.width = '25px';
+        btcIco.style.height = '25px';
 
-      ethIco.style.width = '25px';
-      ethIco.style.height = '25px';
+        ethIco.style.width = '25px';
+        ethIco.style.height = '25px';
 
-      marketZoom = 1;
+        marketZoom = 1;
 
-    } else {
-      
-      market.style.fontSize = 'xxx-large';
 
-      naslovBTC.innerHTML = 'BTC';
-      naslovETH.innerHTML = 'ETH';
+      } else if((window.innerWidth >= 701) && (window.innerWidth <= 1000)){
 
-      btcIco.style.width = '36px';
-      btcIco.style.height = '36px';
+        if(marketZoom === 0){
 
-      ethIco.style.width = '36px';
-      ethIco.style.height = '36px';
+        market.style.fontSize = 'xx-large';
 
-      marketZoom = 2;
+        btcIco.style.width = '25px';
+        btcIco.style.height = '25px';
 
-    } 
-        } 
+        ethIco.style.width = '25px';
+        ethIco.style.height = '25px';
+
+        marketZoom = 1;
+
+      } else {
+        
+        market.style.fontSize = 'xxx-large';
+
+        naslovBTC.innerHTML = 'BTC';
+        naslovETH.innerHTML = 'ETH';
+
+        btcIco.style.width = '36px';
+        btcIco.style.height = '36px';
+
+        ethIco.style.width = '36px';
+        ethIco.style.height = '36px';
+
+        marketZoom = 2;
+
+      } 
+      } 
     
-    
-    else {
-      
-      market.style.fontSize = 'xxx-large';
+      else {
+        
+        market.style.fontSize = 'xxx-large';
 
-      btcIco.style.width = '36px';
-      btcIco.style.height = '36px';
+        btcIco.style.width = '36px';
+        btcIco.style.height = '36px';
 
-      ethIco.style.width = '36px';
-      ethIco.style.height = '36px';
+        ethIco.style.width = '36px';
+        ethIco.style.height = '36px';
 
-      marketZoom = 2;
+        marketZoom = 2;
 
-    }
+      }
 
     //market.style.fontSize = 'xx-large';
   }
+
+  });
+  
 
 });
 
