@@ -567,6 +567,8 @@ let btnMinus = document.querySelector('#btnMinus');
 let btnNoc = document.querySelector('#btnNoc');
 
 let market = document.querySelector('#market');
+let marketZoom = 0;
+
 /* 
 btnDan.addEventListener('click', () => {
 
@@ -581,13 +583,29 @@ btnPlus.addEventListener('click', () => {
   if(window.innerWidth <= 700){
     market.style.fontSize = 'x-large';
   } else {
-    market.style.fontSize = 'xxx-large';
+
+    if(marketZoom === 0){
+
+      market.style.fontSize = 'xx-large';
+      marketZoom = 1;
+
+    } else {
+      
+      market.style.fontSize = 'xxx-large';
+      marketZoom = 2;
+
+    }
+
+    //market.style.fontSize = 'xx-large';
   }
 
 });
 
 btnMinus.addEventListener('click', () => {
+
     market.style.fontSize = 'smaller';
+    marketZoom = 0;
+    
 });
 
 /*
