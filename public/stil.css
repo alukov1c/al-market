@@ -415,10 +415,10 @@ input{
             width: 90%;
         }
 
-        #market div{
-            transform: scale(0.90);
+        .instrument{
+            transform: scale(0.80);
         }
-        
+
         #analiza{
 
             width: 90%;
