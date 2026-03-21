@@ -641,8 +641,6 @@ btnPlus.addEventListener('click', () => {
         
         market.style.fontSize = 'xxx-large';
 
-
-
         btcIco.style.width = '36px';
         btcIco.style.height = '36px';
 
@@ -650,12 +648,13 @@ btnPlus.addEventListener('click', () => {
         ethIco.style.height = '36px';
 
         marketZoom = 2;
-
+        
+        /*
         if(marketZoom === 2){
 
           naslovBTC.innerHTML = 'BTC';
           naslovETH.innerHTML = 'ETH';
-          ethPrice = ethPrice + '/n';
+          //ethPrice = ethPrice + '/n';
 
         } else {
 
@@ -663,6 +662,8 @@ btnPlus.addEventListener('click', () => {
           naslovETH.innerHTML = 'Eterijum - ETH';
 
         }
+      */
+
 
       } 
       } 

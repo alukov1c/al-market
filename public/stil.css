@@ -348,7 +348,7 @@ input{
 
         }
         */
-        
+
         #analiza{
 
             width: 90%;
@@ -415,6 +415,10 @@ input{
             width: 90%;
         }
 
+        #market div{
+            transform: scale(0.90);
+        }
+        
         #analiza{
 
             width: 90%;
