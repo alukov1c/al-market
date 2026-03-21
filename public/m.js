@@ -559,3 +559,37 @@ if (document.readyState === "loading") {
 } else {
   init();
 }
+
+
+let btnDan = document.querySelector('#btnDan');
+let btnPlus = document.querySelector('#btnPlus');
+let btnMinus = document.querySelector('#btnMinus');
+let btnNoc = document.querySelector('#btnNoc');
+
+let market = document.querySelector('#market');
+/* 
+btnDan.addEventListener('click', () => {
+
+  console.log('Dnevna tema!');
+  document.body.style.backgroundColor = "white";
+  document.body.style.color = "rgba(0, 0, 0, 0.8)";
+});
+*/ 
+
+btnPlus.addEventListener('click', () => {
+    market.style.fontSize = 'xx-large';
+});
+
+btnMinus.addEventListener('click', () => {
+    market.style.fontSize = 'smaller';
+});
+
+/*
+btnNoc.addEventListener('click', () => {
+
+  console.log('Noćna tema');
+  document.body.style.backgroundColor = "rgba(20, 20, 20, 0.8)";
+  document.body.style.color = "white";
+
+});
+*/

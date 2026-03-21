@@ -219,6 +219,38 @@ input{
         color: #6b7280;
     }
 
+
+    #opcije{
+
+        width: 50%;
+        margin: 0 auto 0 auto;
+        /* border: 1px solid rgba(165, 165, 165, 0.3); 
+        border-radius: 1em; */
+        display: flex;
+        flex-direction: row;
+
+    }
+
+    #opcije div{
+
+        width: 90%;
+        margin: 0 auto 0 auto;
+        /* border: 1px solid rgba(165, 165, 165, 0.3); 
+        border-radius: 1em; */
+        padding: 0.6em;
+
+    }
+
+    button{
+
+        width: 50%;
+        background-color: white;
+        border: 2px solid rgb(54, 172, 188);
+        border-radius: 1em;
+        padding: 0.6em;
+
+    }
+
     #analiza{
 
         width: 90%;
@@ -232,7 +264,7 @@ input{
         text-align: justify;
         font-size: smaller;
         padding: 0.6em;
-
+        
     }
 
     #analiza div{
