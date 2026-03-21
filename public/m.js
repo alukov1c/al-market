@@ -581,7 +581,7 @@ btnPlus.addEventListener('click', () => {
   if(window.innerWidth <= 700){
     market.style.fontSize = 'x-large';
   } else {
-    market.style.fontSize = 'xx-large';
+    market.style.fontSize = 'xxx-large';
   }
 
 });
