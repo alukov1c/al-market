@@ -340,15 +340,13 @@ input{
             box-sizing: border-box;
         }
 
-        /*
         #market .instrument{
 
             overflow-wrap: break-word;
             word-break: break-word;
 
         }
-        */
-
+        
         #analiza{
 
             width: 90%;
