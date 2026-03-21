@@ -340,6 +340,14 @@ input{
             box-sizing: border-box;
         }
 
+        #opcije{
+            width: 50%;
+        }
+
+        button{
+            width: 100%;
+        }
+
         /*
         #market .instrument{
 

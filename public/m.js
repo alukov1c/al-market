@@ -609,8 +609,6 @@ btnPlus.addEventListener('click', () => {
   if(window.innerWidth <= 700){
 
     market.style.fontSize = 'x-large';
-    btnPlus.style.width = '80%';
-    btnMinus.style.width = '80%';
 
   } else {
 
