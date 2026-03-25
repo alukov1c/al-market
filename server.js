@@ -957,7 +957,7 @@ app.get("/api/market", (_req, res) => {
 });
 
 async function fetch7dBasePrice(symbol) {
-  const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1d&limit=8`;
+  const url = `https://data-api.binance.com/api/v3/klines?symbol=${symbol}&interval=1d&limit=8`;
 
   const res = await fetch(url, {
     headers: {
