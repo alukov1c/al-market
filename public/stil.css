@@ -247,7 +247,7 @@ input{
 
     }
 
-    #analiza{
+    #analiza, #analiza-r{
 
         width: 90%;
         margin: 0 auto 0 auto;
@@ -263,7 +263,11 @@ input{
         
     }
 
-    #analiza div{
+    #analiza{
+        text-align: left;
+    }
+
+    #analiza div, #analiza-r div{
 
         width: 100%;
         margin-right: 0.6em;
@@ -273,6 +277,10 @@ input{
         padding: 1em;
         box-sizing: border-box;
 
+    }
+
+    .analiza-r-naslov{
+        text-align: center;
     }
 
 

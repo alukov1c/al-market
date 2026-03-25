@@ -489,11 +489,17 @@ async function loadInitialMarket() {
     const data = await res.json();
 
     if (data?.btc) {
+
       updateMarketInstrument("btc", data.btc.price, data.btc.changePercent);
+      analysisState.btcCurrent = Number(market.btc.price);
+
     }
 
     if (data?.eth) {
+
       updateMarketInstrument("eth", data.eth.price, data.eth.changePercent);
+      analysisState.ethCurrent = Number(market.eth.price);
+      
     }
   } catch (err) {
     console.error("Greška u loadInitialMarket():", err);
@@ -517,12 +523,21 @@ function initMarketSocket() {
       const market = msg.data;
 
       if (market.btc) {
+
         updateMarketInstrument("btc", market.btc.price, market.btc.changePercent);
+        analysisState.btcCurrent = Number(market.btc.price);
+
       }
 
       if (market.eth) {
+
         updateMarketInstrument("eth", market.eth.price, market.eth.changePercent);
+        analysisState.ethCurrent = Number(market.eth.price);
+
       }
+
+      refresh7dAnalysis();
+
     } catch (err) {
       console.error("WS message parse error:", err);
     }
@@ -550,6 +565,7 @@ function init() {
   setInterval(updateLastTrades, 30000);
 
   loadInitialMarket();
+  load7dBasePrices();
   initMarketSocket();
 
 }
@@ -715,3 +731,82 @@ btnNoc.addEventListener('click', () => {
 
 });
 */
+
+
+//analiza-u-realnom-vremenu
+
+const analysisState = {
+  btcCurrent: null,
+  ethCurrent: null,
+  btc7dBase: null,
+  eth7dBase: null
+};
+
+function formatPercentSR(value) {
+  return Number(value).toLocaleString("sr-RS", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }) + "%";
+}
+
+function updateAnalysisItem(symbol, pct) {
+  const pctEl = document.getElementById(`${symbol}7dChange`);
+  const trendEl = document.getElementById(`${symbol}TrendText`);
+
+  if (!pctEl || !trendEl || !Number.isFinite(pct)) return;
+
+  pctEl.classList.remove("change-up", "change-down", "change-flat");
+
+  if (pct > 0) {
+    trendEl.textContent = "porasla";
+    pctEl.textContent = `+${formatPercentSR(pct)}`;
+    pctEl.classList.add("change-up");
+  } else if (pct < 0) {
+    trendEl.textContent = "opala";
+    pctEl.textContent = formatPercentSR(pct);
+    pctEl.classList.add("change-down");
+  } else {
+    trendEl.textContent = "ostala nepromenjena";
+    pctEl.textContent = formatPercentSR(pct);
+    pctEl.classList.add("change-flat");
+  }
+}
+
+function refresh7dAnalysis() {
+  if (
+    Number.isFinite(analysisState.btcCurrent) &&
+    Number.isFinite(analysisState.btc7dBase) &&
+    analysisState.btc7dBase > 0
+  ) {
+    const btcPct =
+      ((analysisState.btcCurrent - analysisState.btc7dBase) / analysisState.btc7dBase) * 100;
+    updateAnalysisItem("btc", btcPct);
+  }
+
+  if (
+    Number.isFinite(analysisState.ethCurrent) &&
+    Number.isFinite(analysisState.eth7dBase) &&
+    analysisState.eth7dBase > 0
+  ) {
+    const ethPct =
+      ((analysisState.ethCurrent - analysisState.eth7dBase) / analysisState.eth7dBase) * 100;
+    updateAnalysisItem("eth", ethPct);
+  }
+}
+
+async function load7dBasePrices() {
+  try {
+    const res = await fetch("/api/market-7d");
+    if (!res.ok) throw new Error("HTTP " + res.status);
+
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || "market-7d error");
+
+    analysisState.btc7dBase = Number(data.btcBase);
+    analysisState.eth7dBase = Number(data.ethBase);
+
+    refresh7dAnalysis();
+  } catch (err) {
+    console.error("Greška u load7dBasePrices():", err);
+  }
+}

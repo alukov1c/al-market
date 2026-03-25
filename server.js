@@ -956,6 +956,61 @@ app.get("/api/market", (_req, res) => {
   res.json(marketTick);
 });
 
+async function fetch7dBasePrice(symbol) {
+  const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1d&limit=8`;
+
+  const res = await fetch(url, {
+    headers: {
+      "Accept": "application/json"
+    }
+  });
+
+  if (!res.ok) {
+    throw new Error(`Binance klines HTTP ${res.status} za ${symbol}`);
+  }
+
+  const rows = await res.json();
+
+  if (!Array.isArray(rows) || rows.length < 8) {
+    throw new Error(`Nedovoljno kline podataka za ${symbol}`);
+  }
+
+  // rows[0] je najstarija od poslednjih 8 dnevnih sveća
+  // uzima se cena zatvaranja (close) od pre ~7 dana kao osnova (baza)
+  const baseClose = Number(rows[0][4]);
+
+  if (!Number.isFinite(baseClose) || baseClose <= 0) {
+    throw new Error(`Neispravna 7d baza za ${symbol}`);
+  }
+
+  return baseClose;
+}
+
+app.get("/api/market-7d", async (_req, res) => {
+  try {
+    const [btcBase, ethBase] = await Promise.all([
+      fetch7dBasePrice("BTCUSDT"),
+      fetch7dBasePrice("ETHUSDT")
+    ]);
+
+    res.json({
+      ok: true,
+      ts: Date.now(),
+      btcBase,
+      ethBase
+    });
+  } catch (err) {
+    res.status(500).json({
+      ok: false,
+      ts: Date.now(),
+      error: String(err?.message || err),
+      btcBase: null,
+      ethBase: null
+    });
+  }
+});
+
+
 // --------------------------------------------------
 // POKRETANJE SERVERA
 // --------------------------------------------------
