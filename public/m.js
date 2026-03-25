@@ -758,11 +758,11 @@ function updateAnalysisItem(symbol, pct) {
   pctEl.classList.remove("change-up", "change-down", "change-flat");
 
   if (pct > 0) {
-    trendEl.textContent = "je porasla";
+    trendEl.textContent = "porasla je";
     pctEl.textContent = `+${formatPercentSR(pct)}`;
     pctEl.classList.add("change-up");
   } else if (pct < 0) {
-    trendEl.textContent = "je opala";
+    trendEl.textContent = "opala je";
     pctEl.textContent = formatPercentSR(pct);
     pctEl.classList.add("change-down");
   } else {
