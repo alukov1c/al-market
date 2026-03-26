@@ -488,19 +488,17 @@ async function loadInitialMarket() {
 
     const data = await res.json();
 
-    if (data?.btc) {
-
-      updateMarketInstrument("btc", data.btc.price, data.btc.changePercent);
-      analysisState.btcCurrent = Number(market.btc.price);
-
+    if (data?.btc && Number.isFinite(Number(data.btc.price))) {
+      updateMarketInstrument("btc", Number(data.btc.price), Number(data.btc.changePercent));
+      analysisState.btcCurrent = Number(data.btc.price);
     }
 
-    if (data?.eth) {
-
-      updateMarketInstrument("eth", data.eth.price, data.eth.changePercent);
-      analysisState.ethCurrent = Number(market.eth.price);
-      
+    if (data?.eth && Number.isFinite(Number(data.eth.price))) {
+      updateMarketInstrument("eth", Number(data.eth.price), Number(data.eth.changePercent));
+      analysisState.ethCurrent = Number(data.eth.price);
     }
+
+    refresh7dAnalysis();
   } catch (err) {
     console.error("Greška u loadInitialMarket():", err);
   }
