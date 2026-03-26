@@ -249,18 +249,22 @@ input{
 
 
     #liveStatus {
+
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 0.3em;
         font-size: 0.9em;
         margin-left: 0.5em;
-        opacity: 1; /* default: offline */
+        
     }
 
     /* tekst */
     .live-text {
-        font-weight: bold;
+
+        font-weight: normal;
+        opacity: 1 /* Default: OFF */;
+
     }
 
     /* animacija tačke */
@@ -275,7 +279,7 @@ input{
     }
 
     /* 🟢 ON stanje + blink */
-    .live-on {
+    .live-on, :live-dot {
         opacity: 1;
     }
 
