@@ -284,6 +284,23 @@ input{
     }
 
 
+    .volatility-value {
+    font-weight: bold;
+    }
+
+    .vol-high {
+    color: #dc2626;
+    }
+
+    .vol-medium {
+    color: #f59e0b; /*#ea580c; */
+    }
+
+    .vol-low {
+    color: #16a34a;
+    }
+
+
     #zacelje{
 
         padding: 1em;

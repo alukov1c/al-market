@@ -731,7 +731,73 @@ btnNoc.addEventListener('click', () => {
 */
 
 
-//analiza-u-realnom-vremenu
+/////////////////////////////////////////
+/////////////////////////////////////////
+////////proračun volatilnosti////////////
+/////////////////////////////////////////
+/////////////////////////////////////////
+
+function updateVolatilityLabel(level) {
+  const el = document.getElementById("volatilityText");
+  if (!el) return;
+
+  el.classList.remove("vol-high", "vol-medium", "vol-low");
+
+  if (level === "visoka") {
+    el.textContent = "visoka";
+    el.classList.add("vol-high");
+  } else if (level === "umerena") {
+    el.textContent = "umerena";
+    el.classList.add("vol-medium");
+  } else {
+    el.textContent = "niska";
+    el.classList.add("vol-low");
+  }
+}
+
+function refreshVolatility() {
+  const btcReady =
+    Number.isFinite(analysisState.btcCurrent) &&
+    Number.isFinite(analysisState.btc7dBase) &&
+    analysisState.btc7dBase > 0;
+
+  const ethReady =
+    Number.isFinite(analysisState.ethCurrent) &&
+    Number.isFinite(analysisState.eth7dBase) &&
+    analysisState.eth7dBase > 0;
+
+  if (!btcReady || !ethReady) return;
+
+  const btcPct = ((analysisState.btcCurrent - analysisState.btc7dBase) / analysisState.btc7dBase) * 100;
+  const ethPct = ((analysisState.ethCurrent - analysisState.eth7dBase) / analysisState.eth7dBase) * 100;
+
+  const maxAbsMove = Math.max(Math.abs(btcPct), Math.abs(ethPct));
+  const avgAbsMove = (Math.abs(btcPct) + Math.abs(ethPct)) / 2;
+
+  if (maxAbsMove >= 8) {
+    updateVolatilityLabel("visoka");
+  } else if (maxAbsMove >= 3) {
+    updateVolatilityLabel("umerena");
+  } else {
+    updateVolatilityLabel("niska");
+  }
+}
+
+/////////////////////////////////////////
+/////////////////////////////////////////
+////////proračun volatilnosti////////////
+/////////////////////////////////////////
+/////////////////////////////////////////
+
+
+//-------------------------------------//
+
+//////////////////////////////////////////
+//////////////////////////////////////////
+/////////analiza-u-realnom-vremenu////////
+//////////////////////////////////////////
+//////////////////////////////////////////
+
 
 const analysisState = {
   btcCurrent: null,
@@ -790,6 +856,9 @@ function refresh7dAnalysis() {
       ((analysisState.ethCurrent - analysisState.eth7dBase) / analysisState.eth7dBase) * 100;
     updateAnalysisItem("eth", ethPct);
   }
+
+  refreshVolatility();
+
 }
 
 async function load7dBasePrices() {
@@ -808,3 +877,9 @@ async function load7dBasePrices() {
     console.error("Greška u load7dBasePrices():", err);
   }
 }
+
+//////////////////////////////////////////
+//////////////////////////////////////////
+/////////analiza-u-realnom-vremenu////////
+//////////////////////////////////////////
+//////////////////////////////////////////
