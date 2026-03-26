@@ -559,15 +559,10 @@ function initMarketSocket() {
 
   });
 
-
-
-
-
 }
 
 // Pokretanje na load + interval na 3 s
 function init() {
-
 
   updatePortfolios();              // prvo odmah
   setInterval(updatePortfolios, 10000); // pa na svakih 10s
@@ -898,16 +893,26 @@ async function load7dBasePrices() {
 //////////////////////////////////////////
 //////////////////////////////////////////
 
-
 function setLiveStatus(isOnline) {
+
     const el = document.getElementById("liveStatus");
-    if (!el) return;
+    const text = el?.querySelector(".live-text");
+
+    if (!el || !text) return;
 
     el.classList.remove("live-on", "live-off");
 
     if (isOnline) {
+
         el.classList.add("live-on");
+        text.textContent = "Live (24/7)";
+
     } else {
+
         el.classList.add("live-off");
+        text.textContent = "Offline";
+        text.style.opacity = '0.5';
+
     }
+
 }

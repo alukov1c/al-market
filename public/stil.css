@@ -274,13 +274,19 @@ input{
 
     /* 🔴 OFF stanje */
     .live-off .live-dot {
+
         filter: grayscale(1);
         opacity: 0.5;
+        color: #6b7280;
+
     }
 
     /* 🟢 ON stanje + blink */
-    .live-on, :live-dot {
+    .live-on, .live-dot, .live-text {
+
         opacity: 1;
+        color: black;
+
     }
 
     .live-on .live-dot {
