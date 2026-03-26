@@ -509,7 +509,10 @@ function initMarketSocket() {
   const socket = new WebSocket(`${protocol}://${window.location.host}`);
 
   socket.addEventListener("open", () => {
+
     console.log("Market WebSocket povezan.");
+    setLiveStatus(true);
+
   });
 
   socket.addEventListener("message", (event) => {
@@ -542,13 +545,24 @@ function initMarketSocket() {
   });
 
   socket.addEventListener("close", () => {
+
     console.warn("Market WebSocket zatvoren. Reconnect za 3s...");
+    setLiveStatus(false);
     setTimeout(initMarketSocket, 3000);
+
   });
 
   socket.addEventListener("error", (err) => {
+
     console.error("Market WebSocket greška:", err);
+    setLiveStatus(false);
+
   });
+
+
+
+
+
 }
 
 // Pokretanje na load + interval na 3 s
@@ -883,3 +897,17 @@ async function load7dBasePrices() {
 /////////analiza-u-realnom-vremenu////////
 //////////////////////////////////////////
 //////////////////////////////////////////
+
+
+function setLiveStatus(isOnline) {
+    const el = document.getElementById("liveStatus");
+    if (!el) return;
+
+    el.classList.remove("live-on", "live-off");
+
+    if (isOnline) {
+        el.classList.add("live-on");
+    } else {
+        el.classList.add("live-off");
+    }
+}

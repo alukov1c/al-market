@@ -247,6 +247,50 @@ input{
 
     }
 
+
+    #liveStatus {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.3em;
+        font-size: 0.9em;
+        margin-left: 0.5em;
+        opacity: 1; /* default: offline */
+    }
+
+    /* tekst */
+    .live-text {
+        font-weight: bold;
+    }
+
+    /* animacija tačke */
+    .live-dot {
+        display: inline-block;
+    }
+
+    /* 🔴 OFF stanje */
+    .live-off .live-dot {
+        filter: grayscale(1);
+        opacity: 0.5;
+    }
+
+    /* 🟢 ON stanje + blink */
+    .live-on {
+        opacity: 1;
+    }
+
+    .live-on .live-dot {
+        animation: blinkLive 3s infinite;
+    }
+
+    /* animacija svake 2 sekunde */
+    @keyframes blinkLive {
+        0%   { opacity: 1; transform: scale(1); }
+        50%  { opacity: 0.3; transform: scale(0.85); }
+        100% { opacity: 1; transform: scale(1); }
+    }
+
+
     #analiza, #analiza-r{
 
         width: 90%;
