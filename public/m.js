@@ -13,16 +13,16 @@ const PORTFOLIO_CONFIGS = [
     dateId: "lastDatePA"
   },
 
-    /*
-  {
-    index: 1,
-    chartId: "chartPI",
-    equityInputId: "procenatKapitalaPI",
-    currencyInputId: "valutaPI",
-    profitId: "lastProfitPI",
-    dateId: "lastDatePI"
-  },
-  */
+  /*
+{
+  index: 1,
+  chartId: "chartPI",
+  equityInputId: "procenatKapitalaPI",
+  currencyInputId: "valutaPI",
+  profitId: "lastProfitPI",
+  dateId: "lastDatePI"
+},
+*/
 
   {
     index: 2,
@@ -35,23 +35,23 @@ const PORTFOLIO_CONFIGS = [
 ];
 
 const PORT_A = {
-    index: 0,
-    chartId: "chartP2",
-    equityInputId: "procenatKapitalaPA",
-    currencyInputId: "valutaPA",
-    profitId: "lastProfitPA",
-    dateId: "lastDatePA",
-    jacinaId: "jacinaPozicijeA"
+  index: 0,
+  chartId: "chartP2",
+  equityInputId: "procenatKapitalaPA",
+  currencyInputId: "valutaPA",
+  profitId: "lastProfitPA",
+  dateId: "lastDatePA",
+  jacinaId: "jacinaPozicijeA"
 };
 
 const PORT_B = {
-    index: 2,
-    chartId: "chartPB",
-    equityInputId: "procenatKapitalaPB",
-    currencyInputId: "valutaPB",
-    profitId: "lastProfitPB",
-    dateId: "lastDatePB",
-    jacinaId: "jacinaPozicijeB"
+  index: 2,
+  chartId: "chartPB",
+  equityInputId: "procenatKapitalaPB",
+  currencyInputId: "valutaPB",
+  profitId: "lastProfitPB",
+  dateId: "lastDatePB",
+  jacinaId: "jacinaPozicijeB"
 };
 
 const PORTFOLIOS = [PORT_A, PORT_B];
@@ -108,9 +108,9 @@ let chartPortfolioInfo = null;
 
 
 function calcJacina(equity, margin, trziste) {
-    if (margin <= 0) return 0;
-    const pozicija = equity / margin;
-    return (pozicija / trziste) * 100;   // procenat
+  if (margin <= 0) return 0;
+  const pozicija = equity / margin;
+  return (pozicija / trziste) * 100;   // procenat
 }
 
 
@@ -135,12 +135,12 @@ async function updatePortfolios() {
     PORTFOLIO_CONFIGS.forEach((cfg) => {
       const { index, chartId, equityInputId, currencyInputId } = cfg;
 
-      const equityInput   = document.getElementById(equityInputId);
+      const equityInput = document.getElementById(equityInputId);
       const currencyInput = document.getElementById(currencyInputId);
-      const canvas        = document.getElementById(chartId);
+      const canvas = document.getElementById(chartId);
 
       if (index < 0 || index >= accounts.length) {
-        if (equityInput)   equityInput.value   = "N/A (čekanje servera #" + index + ")";
+        if (equityInput) equityInput.value = "N/A (čekanje servera #" + index + ")";
         if (currencyInput) currencyInput.value = "";
         return;
       }
@@ -148,10 +148,10 @@ async function updatePortfolios() {
       const acc = accounts[index];
 
       const equityPercentRaw = Number(acc.equityPercent || 0);
-      const equityPercent    = Number(equityPercentRaw.toFixed(2));
-      const currency         = acc.currency || "";
+      const equityPercent = Number(equityPercentRaw.toFixed(2));
+      const currency = acc.currency || "";
 
-      if (equityInput)   equityInput.value   = fmtPercent(equityPercent);
+      if (equityInput) equityInput.value = fmtPercent(equityPercent);
       if (currencyInput) currencyInput.value = currency;
 
       if (!canvas || !canvas.getContext) return;
@@ -173,7 +173,7 @@ async function updatePortfolios() {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-              tooltip: {enabled: false},
+              tooltip: { enabled: false },
               legend: {
                 display: true /* true */,
                 position: "bottom"
@@ -205,19 +205,19 @@ async function updatePortfolios() {
     let equityB = 0;
 
     PORTFOLIOS.forEach(cfg => {
-        const acc = accounts[cfg.index];
-        if (!acc) return;
+      const acc = accounts[cfg.index];
+      if (!acc) return;
 
-        let eq = Number(acc.equity || 0);
-        //let eq = Number(parseFloat(acc.equity).toFixed(4));
+      let eq = Number(acc.equity || 0);
+      //let eq = Number(parseFloat(acc.equity).toFixed(4));
 
-        const curr = (acc.currency || "").toUpperCase();
-        if (curr === "AUD") {
-            eq = eq * 0.54; // konverzija AUD → CHF
-        }
+      const curr = (acc.currency || "").toUpperCase();
+      if (curr === "AUD") {
+        eq = eq * 0.54; // konverzija AUD → CHF
+      }
 
-        if (cfg.index === 0) equityA = eq;
-        if (cfg.index === 2) equityB = eq;
+      if (cfg.index === 0) equityA = eq;
+      if (cfg.index === 2) equityB = eq;
     });
 
     const totalChf = equityA + equityB;
@@ -227,29 +227,29 @@ async function updatePortfolios() {
 
     // --- računanje jačine pozicije A i B ---
     PORTFOLIOS.forEach(cfg => {
-        const acc = accounts[cfg.index];
-        if (!acc) return;
+      const acc = accounts[cfg.index];
+      if (!acc) return;
 
-        const equity = Number(acc.equity || 0);
+      const equity = Number(acc.equity || 0);
 
-        let marginVal = 0;
-        if (cfg.index === 0) {
+      let marginVal = 0;
+      if (cfg.index === 0) {
 
-          marginVal = marginA;
-          trziste = trzisteA;
+        marginVal = marginA;
+        trziste = trzisteA;
 
-        }
-        if (cfg.index === 2) {
-          
-          marginVal = marginB;
-          trziste = trzisteB;
+      }
+      if (cfg.index === 2) {
+
+        marginVal = marginB;
+        trziste = trzisteB;
 
 
-        };
+      };
 
-        const jacina = calcJacina(equity, marginVal, trziste);
-        const el = document.getElementById(cfg.jacinaId);
-        if (el) el.value = jacina.toFixed(2) + " ± 2 %";
+      const jacina = calcJacina(equity, marginVal, trziste);
+      const el = document.getElementById(cfg.jacinaId);
+      if (el) el.value = jacina.toFixed(2) + " ± 2 %";
 
     });
 
@@ -266,72 +266,72 @@ function fmtNumber2(n) {
 
 // Line chart: Portfolio A + Portfolio B (equity zbir u CHF)
 function updatePortfolioInfoChart(totalChf) {
-    const canvas = document.getElementById("chartPortfolioInfo");
-    if (!canvas || !canvas.getContext) return;
+  const canvas = document.getElementById("chartPortfolioInfo");
+  if (!canvas || !canvas.getContext) return;
 
-    const ctx = canvas.getContext("2d");
-    const now = new Date();
+  const ctx = canvas.getContext("2d");
+  const now = new Date();
 
-    // Ako chart već postoji → obrisati ga pre pravljenja novog
-    if (!chartPortfolioInfo) {
-        chartPortfolioInfo = new Chart(ctx, {
-            type: "scatter",
-            data: {
-                datasets: [{
+  // Ako chart već postoji → obrisati ga pre pravljenja novog
+  if (!chartPortfolioInfo) {
+    chartPortfolioInfo = new Chart(ctx, {
+      type: "scatter",
+      data: {
+        datasets: [{
 
-                    label: "Ukupno (CHF)",
-                    data: [{ x: now, y: totalChf }],
-                    showLine: false,
-                    stepped: true,
-                    borderWidth: 2,
-                    tension: 0 /* 0.25 */,
-                    pointRadius: 2,
-                    pointHoverRadius: 4
+          label: "Ukupno (CHF)",
+          data: [{ x: now, y: totalChf }],
+          showLine: false,
+          stepped: true,
+          borderWidth: 2,
+          tension: 0 /* 0.25 */,
+          pointRadius: 2,
+          pointHoverRadius: 4
 
-                }]
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        parsing: false,
+        plugins: {
+          tooltip: { enabled: false },
+          legend: { display: true },
+        },
+        scales: {
+          x: {
+
+            type: "time",
+            time: { unit: "minute" },
+            title: { display: true, text: "Vreme" }
+
+          },
+          y: {
+            title: /* { display: true, text: "CHF" }, */ { display: false },
+            ticks: {
+              display: false,
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                parsing: false,
-                plugins: {
-                  tooltip: {enabled: false},
-                  legend: {display: true},
-                },
-                scales: {
-                    x: {
+            /* grid: {display: false} */
 
-                        type: "time",
-                        time: { unit: "minute" },
-                        title: { display: true, text: "Vreme" }
+            suggestedMin: totalChf - 5,
+            suggestedMax: totalChf + 5
 
-                    },
-                    y: {
-                        title: /* { display: true, text: "CHF" }, */ {display: false},
-                        ticks: {
-                          display: false,
-                        }, 
-                        /* grid: {display: false} */
+          }
+        }
+      }
+    });
+    return;
+  }
 
-                        suggestedMin: totalChf - 5,
-                        suggestedMax: totalChf + 5
+  // BEZ NOVOG KREIRANJA – samo update postojećeg grafikona
+  const data = chartPortfolioInfo.data.datasets[0].data;
 
-                    }
-                }
-            }
-        });
-        return;
-    }
+  data.push({ x: now, y: totalChf });
 
-    // BEZ NOVOG KREIRANJA – samo update postojećeg grafikona
-    const data = chartPortfolioInfo.data.datasets[0].data;
+  const cutoff = Date.now() - 12 * 60 * 60 * 1000;
+  while (data.length && +data[0].x < cutoff) data.shift();
 
-    data.push({ x: now, y: totalChf });
-
-    const cutoff = Date.now() - 12 * 60 * 60 * 1000;
-    while (data.length && +data[0].x < cutoff) data.shift();
-
-    chartPortfolioInfo.update("none");
+  chartPortfolioInfo.update("none");
 }
 
 
@@ -341,36 +341,36 @@ async function updateLastTrades() {
     const res = await fetch("/api/last-trades");
     if (!res.ok) throw new Error("HTTP " + res.status);
 
-  const data = await res.json();
+    const data = await res.json();
 
-  // uvek se očekuje items kao niz (server ga već šalje), ali bez rušenja UI
-  if (!data || !Array.isArray(data.items)) {
-    console.warn("last-trades: loš JSON shape", data);
-    return;
-  }
+    // uvek se očekuje items kao niz (server ga već šalje), ali bez rušenja UI
+    if (!data || !Array.isArray(data.items)) {
+      console.warn("last-trades: loš JSON shape", data);
+      return;
+    }
 
-  if (!data.ok) {
-    // Myfxbook privremeno blokira / nema history / backoff itd.
-    data.items.forEach(item => {
-      const cfg = PORTFOLIO_CONFIGS.find(c => c.index === item.index);
-      if (!cfg) return;
+    if (!data.ok) {
+      // Myfxbook privremeno blokira / nema history / backoff itd.
+      data.items.forEach(item => {
+        const cfg = PORTFOLIO_CONFIGS.find(c => c.index === item.index);
+        if (!cfg) return;
 
-      const profitEl = document.getElementById(cfg.profitId);
-      const dateEl   = document.getElementById(cfg.dateId);
+        const profitEl = document.getElementById(cfg.profitId);
+        const dateEl = document.getElementById(cfg.dateId);
 
-      if (profitEl) profitEl.textContent = "Myfxbook privremeno blokira API — podaci će se pojaviti automatski";
-      if (dateEl)   //dateEl.textContent   = "—"; 
+        if (profitEl) profitEl.textContent = "Myfxbook privremeno blokira API — podaci će se pojaviti automatski";
+        if (dateEl)   //dateEl.textContent   = "—"; 
 
-      if (item.date) {
-        const d = new Date(item.date);
-        dateEl.textContent = formatSerbianDate(d);
-      } else {
-        dateEl.textContent = "—";
-      }
+          if (item.date) {
+            const d = new Date(item.date);
+            dateEl.textContent = formatSerbianDate(d);
+          } else {
+            dateEl.textContent = "—";
+          }
 
-    });
-    return;
-  }
+      });
+      return;
+    }
 
 
     // data.items: [{ index, profit, date, currency }, ...]
@@ -379,40 +379,40 @@ async function updateLastTrades() {
       if (!cfg) return;
 
       const profitEl = document.getElementById(cfg.profitId);
-      const dateEl   = document.getElementById(cfg.dateId);
+      const dateEl = document.getElementById(cfg.dateId);
 
-    if (profitEl) {
-    if (item.profit == null) {
-        profitEl.textContent = "—";
-        profitEl.style.color = "#6b7280"; // sivo
-    } else {
-        const profitNum = Number(item.profit);
-        const curr      = item.currency || "";
+      if (profitEl) {
+        if (item.profit == null) {
+          profitEl.textContent = "—";
+          profitEl.style.color = "#6b7280"; // sivo
+        } else {
+          const profitNum = Number(item.profit);
+          const curr = item.currency || "";
 
-        // Format broja
-        const formatted = fmtNumber2(Math.abs(profitNum));
+          // Format broja
+          const formatted = fmtNumber2(Math.abs(profitNum));
 
-        if (profitNum > 0) {
+          if (profitNum > 0) {
 
             profitEl.textContent = `+${formatted} ${curr}`;
             profitEl.style.color = "#16a34a"; // green-600
             profitEl.style.fontWeight = 'bold';
 
-        } else if (profitNum < 0) {
+          } else if (profitNum < 0) {
 
             profitEl.textContent = `-${formatted} ${curr}`;
             profitEl.style.color = "#dc2626"; // red-600
             profitEl.style.fontWeight = 'bold';
 
-        } else {
+          } else {
 
             profitEl.textContent = `0.00 ${curr}`;
             profitEl.style.color = "#6b7280"; // neutralno sivo
             profitEl.style.fontWeight = 'bold';
 
+          }
         }
-    }
-    }
+      }
 
 
       if (dateEl) {
@@ -442,23 +442,36 @@ function formatMarketPrice(value) {
   });
 }
 
+function getAdjustedMarketPrice(symbol, rawPrice) {
+
+  const price = Number(rawPrice);
+  if (!Number.isFinite(price)) return null;
+
+  if (symbol === "btc") return price - 70;
+  if (symbol === "eth") return price - 3;
+
+  return price;
+
+}
+
 function updateMarketInstrument(symbol, price, changePercent) {
+
   const priceEl = document.querySelector(`#${symbol}Price .price-value`);
   const changeEl = document.querySelector(`#${symbol}Change .change-value`);
 
   if (!priceEl || !changeEl) return;
 
-  // --- CENA (uvek neutralna) ---
-  if (!Number.isFinite(price) || price <= 0) {
+  const adjustedPrice = getAdjustedMarketPrice(symbol, price);
+
+  if (!Number.isFinite(adjustedPrice) || adjustedPrice <= 0) {
     priceEl.textContent = "—";
   } else {
-    priceEl.textContent = Number(price).toLocaleString("sr-RS", {
+    priceEl.textContent = adjustedPrice.toLocaleString("sr-RS", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     });
   }
 
-  // --- PROMENA ---
   changeEl.classList.remove("change-up", "change-down", "change-flat");
 
   if (!Number.isFinite(changePercent)) {
@@ -479,6 +492,7 @@ function updateMarketInstrument(symbol, price, changePercent) {
   } else {
     changeEl.classList.add("change-flat");
   }
+
 }
 
 async function loadInitialMarket() {
@@ -607,9 +621,9 @@ btnDan.addEventListener('click', () => {
   document.body.style.backgroundColor = "white";
   document.body.style.color = "rgba(0, 0, 0, 0.8)";
 });
-*/ 
+*/
 
-function keepMarketPosition(callback){
+function keepMarketPosition(callback) {
 
   const rect = market.getBoundingClientRect();
   const offsetTop = rect.top;
@@ -629,28 +643,13 @@ btnPlus.addEventListener('click', () => {
 
   keepMarketPosition(() => {
 
-  if(window.innerWidth <= 700){
+    if (window.innerWidth <= 700) {
 
-    market.style.fontSize = 'x-large';
+      market.style.fontSize = 'x-large';
 
-  } else {
+    } else {
 
-      if(marketZoom === 0){
-
-        market.style.fontSize = 'xx-large';
-
-        btcIco.style.width = '25px';
-        btcIco.style.height = '25px';
-
-        ethIco.style.width = '25px';
-        ethIco.style.height = '25px';
-
-        marketZoom = 1;
-
-
-      } else if((window.innerWidth >= 701) && (window.innerWidth <= 1000)){
-
-        if(marketZoom === 0){
+      if (marketZoom === 0) {
 
         market.style.fontSize = 'xx-large';
 
@@ -662,39 +661,54 @@ btnPlus.addEventListener('click', () => {
 
         marketZoom = 1;
 
-      } else {
-        
-        market.style.fontSize = '40px';
 
-        btcIco.style.width = '36px';
-        btcIco.style.height = '36px';
+      } else if ((window.innerWidth >= 701) && (window.innerWidth <= 1000)) {
 
-        ethIco.style.width = '36px';
-        ethIco.style.height = '36px';
+        if (marketZoom === 0) {
 
-        marketZoom = 2;
-        
-        /*
-        if(marketZoom === 2){
+          market.style.fontSize = 'xx-large';
 
-          naslovBTC.innerHTML = 'BTC';
-          naslovETH.innerHTML = 'ETH';
-          //ethPrice = ethPrice + '/n';
+          btcIco.style.width = '25px';
+          btcIco.style.height = '25px';
+
+          ethIco.style.width = '25px';
+          ethIco.style.height = '25px';
+
+          marketZoom = 1;
 
         } else {
 
-          naslovBTC.innerHTML = 'Bitkoin - BTC';
-          naslovETH.innerHTML = 'Eterijum - ETH';
+          market.style.fontSize = '40px';
+
+          btcIco.style.width = '36px';
+          btcIco.style.height = '36px';
+
+          ethIco.style.width = '36px';
+          ethIco.style.height = '36px';
+
+          marketZoom = 2;
+
+          /*
+          if(marketZoom === 2){
+  
+            naslovBTC.innerHTML = 'BTC';
+            naslovETH.innerHTML = 'ETH';
+            //ethPrice = ethPrice + '/n';
+  
+          } else {
+  
+            naslovBTC.innerHTML = 'Bitkoin - BTC';
+            naslovETH.innerHTML = 'Eterijum - ETH';
+  
+          }
+        */
+
 
         }
-      */
+      }
 
-
-      } 
-      } 
-    
       else {
-        
+
         market.style.fontSize = 'xxx-large';
 
         btcIco.style.width = '36px';
@@ -707,26 +721,26 @@ btnPlus.addEventListener('click', () => {
 
       }
 
-    //market.style.fontSize = 'xx-large';
-  }
+      //market.style.fontSize = 'xx-large';
+    }
 
   });
-  
+
 
 });
 
 btnMinus.addEventListener('click', () => {
 
-    market.style.fontSize = 'smaller';
+  market.style.fontSize = 'smaller';
 
-    btcIco.style.width = '18px';
-    btcIco.style.height = '18px';
+  btcIco.style.width = '18px';
+  btcIco.style.height = '18px';
 
-    ethIco.style.width = '18px';
-    ethIco.style.height = '18px';
+  ethIco.style.width = '18px';
+  ethIco.style.height = '18px';
 
-    marketZoom = 0;
-    
+  marketZoom = 0;
+
 });
 
 /*
@@ -823,6 +837,7 @@ function formatPercentSR(value) {
 }
 
 function updateAnalysisItem(symbol, pct) {
+
   const pctEl = document.getElementById(`${symbol}7dChange`);
   const trendEl = document.getElementById(`${symbol}TrendText`);
 
@@ -843,6 +858,7 @@ function updateAnalysisItem(symbol, pct) {
     pctEl.textContent = formatPercentSR(pct);
     pctEl.classList.add("change-flat");
   }
+
 }
 
 function refresh7dAnalysis() {
@@ -871,6 +887,7 @@ function refresh7dAnalysis() {
 }
 
 async function load7dBasePrices() {
+
   try {
     const res = await fetch("/api/market-7d");
     if (!res.ok) throw new Error("HTTP " + res.status);
@@ -885,6 +902,7 @@ async function load7dBasePrices() {
   } catch (err) {
     console.error("Greška u load7dBasePrices():", err);
   }
+
 }
 
 //////////////////////////////////////////
@@ -895,24 +913,25 @@ async function load7dBasePrices() {
 
 function setLiveStatus(isOnline) {
 
-    const el = document.getElementById("liveStatus");
-    const text = el?.querySelector(".live-text");
+  const el = document.getElementById("liveStatus");
+  const text = el?.querySelector(".live-text");
 
-    if (!el || !text) return;
+  if (!el || !text) return;
 
-    el.classList.remove("live-on", "live-off");
+  el.classList.remove("live-on", "live-off");
 
-    if (isOnline) {
+  if (isOnline) {
 
-        el.classList.add("live-on");
-        text.textContent = "Live (24/7)";
+    el.classList.add("live-on");
+    text.textContent = "Live (24/7)";
 
-    } else {
+  } else {
 
-        el.classList.add("live-off");
-        text.textContent = "Offline";
-        text.style.opacity = '0.5';
+    el.classList.add("live-off");
+    text.textContent = "Offline";
+    text.style.opacity = '0.5';
 
-    }
+  }
 
 }
+
