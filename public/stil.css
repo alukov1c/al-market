@@ -1,8 +1,10 @@
 body {
 
-    font-family: system-ui, sans-serif; margin: 24px; 
+    font-family: system-ui, sans-serif;
+    margin: 24px;
     text-align: center;
-    overflow: visible; /*hidden*/
+    overflow: visible;
+    /*hidden*/
     color: rgba(0, 0, 0, 0.8);
 
 }
@@ -12,28 +14,31 @@ body {
     width: 80%;
     margin: 0 auto 0 auto;
     color: rgb(121, 119, 119);
-    border: 1px solid rgba(165, 165, 165, 0.3); 
+    border: 1px solid rgba(165, 165, 165, 0.3);
     border-radius: 1em;
     margin-bottom: 1em;
     padding: 1.2em;
     display: flex;
     flex-direction: row;
-    
+
 }
 
-#odabirAplikacije /*, .opcije */{
+#odabirAplikacije
+
+/*, .opcije */
+    {
 
     width: 80%;
     margin: 0 auto 0 auto;
     color: rgb(121, 119, 119);
-    border: 1px solid rgba(165, 165, 165, 0.3); 
+    border: 1px solid rgba(165, 165, 165, 0.3);
     border-radius: 1em;
     margin-bottom: 1em;
     padding: 1.2em;
-    
+
 }
 
-#prviMeni div{
+#prviMeni div {
 
     width: 10em;
     /* border: 1px solid rgb(124, 122, 122);
@@ -45,24 +50,24 @@ body {
 
 }
 
-#prviMeni div img{
+#prviMeni div img {
 
     /* width: 9%; */
     height: 0.75em;
     width: auto;
     vertical-align: middle;
-    
+
 }
 
-a{
+a {
 
     text-decoration: none;
     font-family: 'Maven Pro', sans-serif;
     color: rgb(33, 153, 73);
-    
+
 }
 
-#portfolio{
+#portfolio {
 
     width: 90%;
     margin: 0 auto 0 auto;
@@ -84,7 +89,7 @@ a{
 }
 
 
-#portfolio div{
+#portfolio div {
 
     width: 80%;
     margin: 0 auto 0 auto;
@@ -96,7 +101,7 @@ a{
 
 }
 
-input{
+input {
 
     width: 10em;
     border: 2px solid rgba(13, 131, 228, 0.8);
@@ -106,36 +111,42 @@ input{
 
 }
 
-  .sneg{
+.sneg {
 
-    position: fixed; inset: 0;
+    position: fixed;
+    inset: 0;
     pointer-events: none;
     background-image:
-      radial-gradient(2px 2px at 20px 30px, #17b2d5 50%, transparent 1%),
-      radial-gradient(1px 1px at 40px 70px, #17b2d5 50%, transparent 1%),
-      radial-gradient(1.5px 1.5px at 90px 40px, #17b2d5 50%, transparent 1%);
+        radial-gradient(2px 2px at 20px 30px, #17b2d5 50%, transparent 1%),
+        radial-gradient(1px 1px at 40px 70px, #17b2d5 50%, transparent 1%),
+        radial-gradient(1.5px 1.5px at 90px 40px, #17b2d5 50%, transparent 1%);
     background-size: 100px 100px;
     opacity: .9;
     filter: drop-shadow(0 0 1px rgb(77, 90, 84));
     animation: snowMove 8s linear infinite;
 
-  }
+}
 
-  @keyframes snowMove{
+@keyframes snowMove {
 
-    from { transform: translateY(-120px); }
-    to   { transform: translateY(120px); }
+    from {
+        transform: translateY(-120px);
+    }
 
-  }
+    to {
+        transform: translateY(120px);
+    }
 
-  #market{
+}
+
+#market {
 
     width: 90%;
     margin: 0 auto 0 auto;
 
     display: flex;
     flex-direction: row;
-    border: 1px solid rgba(165, 165, 165, 0.3); 
+    border: 1px solid rgba(165, 165, 165, 0.3);
     border-radius: 1em;
 
     padding: 0.6em;
@@ -143,291 +154,312 @@ input{
 
     transform: scale(0.87);
 
-  }
+}
 
-    #market div{
+#market div {
 
     width: 100%;
 
-    }
+}
 
-    .instrument {
+.instrument {
 
-        width: 100%;
-        padding: 0.7em;
-        border: 1px solid rgba(165, 165, 165, 0.15);
-        border-radius: 0.8em;
-        text-align: center;
+    width: 100%;
+    padding: 0.7em;
+    border: 1px solid rgba(165, 165, 165, 0.15);
+    border-radius: 0.8em;
+    text-align: center;
 
-    }
+}
 
-    .instrument-title {
+.instrument-title {
 
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.4em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4em;
 
-    }
+}
 
-    .instrument-title p {
-        margin: 0;
-    }
+.instrument-title p {
+    margin: 0;
+}
 
-    .coin-icon {
+.coin-icon {
 
-        width: 18px;
-        height: 18px;
-        object-fit: contain;
-        display: inline-block;
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    display: inline-block;
 
-    }
+}
 
-    .up {
-        color: #16a34a;
-    }
+.up {
+    color: #16a34a;
+}
 
-    .down {
-        color: #dc2626;
-    }
+.down {
+    color: #dc2626;
+}
 
-    .flat {
-        color: #aaa;
-    }
+.flat {
+    color: #aaa;
+}
 
-    price-value {
-        color: black;
-    }
+price-value {
+    color: black;
+}
 
-    .change-value {
-        font-weight: bold;
-    }
+.change-value {
+    font-weight: bold;
+}
 
-    .change-up {
-        color: #16a34a;
-    }
+.change-up {
+    color: #16a34a;
+}
 
-    .change-down {
-        color: #dc2626;
-    }
+.change-down {
+    color: #dc2626;
+}
 
-    .change-flat {
-        color: #6b7280;
-    }
+.change-flat {
+    color: #6b7280;
+}
 
 
-    #opcije{
+#opcije {
 
-        width: 30%;
-        margin: 0 auto 0 auto;
-        /* border: 1px solid rgba(165, 165, 165, 0.3); 
+    width: 30%;
+    margin: 0 auto 0 auto;
+    /* border: 1px solid rgba(165, 165, 165, 0.3); 
         border-radius: 1em; */
-        display: flex;
-        flex-direction: row;
+    display: flex;
+    flex-direction: row;
 
-    }
+}
 
-    #opcije div{
+#opcije div {
 
-        width: 90%;
-        margin: 0 auto 0 auto;
-        /* border: 1px solid rgba(165, 165, 165, 0.3); 
+    width: 90%;
+    margin: 0 auto 0 auto;
+    /* border: 1px solid rgba(165, 165, 165, 0.3); 
         border-radius: 1em; */
-        padding: 0.3em;
+    padding: 0.3em;
 
-    }
+}
 
-    button{
+button {
 
-        width: 50%;
-        background-color: white;
-        border: 1px solid rgb(54, 172, 188);
-        border-radius: 1em;
-        padding: 0.6em;
+    width: 50%;
+    background-color: white;
+    border: 1px solid rgb(54, 172, 188);
+    border-radius: 1em;
+    padding: 0.6em;
 
-    }
+}
 
 
-    #liveStatus {
+#liveStatus {
 
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.3em;
-        font-size: 0.9em;
-        margin-left: 0.5em;
-        
-    }
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3em;
+    font-size: 0.9em;
+    margin-left: 0.5em;
 
-    /* tekst */
-    .live-text {
+}
 
-        font-weight: normal;
-        opacity: 1 /* Default: OFF */;
+/* tekst */
+.live-text {
 
-    }
+    font-weight: normal;
+    opacity: 1
+        /* Default: OFF */
+    ;
 
-    /* animacija tačke */
-    .live-dot {
-        display: inline-block;
-    }
+}
 
-    /* 🔴 OFF stanje */
-    .live-off .live-dot {
+/* animacija tačke */
+.live-dot {
+    display: inline-block;
+}
 
-        filter: grayscale(1);
-        opacity: 0.5;
-        color: #6b7280;
+/* 🔴 OFF stanje */
+.live-off .live-dot {
 
-    }
+    filter: grayscale(1);
+    opacity: 0.5;
+    color: #6b7280;
 
-    /* 🟢 ON stanje + blink */
-    .live-on, .live-dot, .live-text {
+}
 
+/* 🟢 ON stanje + blink */
+.live-on,
+.live-dot,
+.live-text {
+
+    opacity: 1;
+    color: black;
+
+}
+
+.live-on .live-dot {
+    animation: blinkLive 3s infinite;
+}
+
+/* animacija svake 2 sekunde */
+@keyframes blinkLive {
+    0% {
         opacity: 1;
-        color: black;
-
+        transform: scale(1);
     }
 
-    .live-on .live-dot {
-        animation: blinkLive 3s infinite;
+    50% {
+        opacity: 0.3;
+        transform: scale(0.85);
     }
 
-    /* animacija svake 2 sekunde */
-    @keyframes blinkLive {
-        0%   { opacity: 1; transform: scale(1); }
-        50%  { opacity: 0.3; transform: scale(0.85); }
-        100% { opacity: 1; transform: scale(1); }
+    100% {
+        opacity: 1;
+        transform: scale(1);
     }
+}
 
 
-    #analiza, #analiza-r{
+#analiza,
+#analiza-r {
 
-        width: 90%;
-        margin: 0 auto 0 auto;
+    width: 90%;
+    margin: 0 auto 0 auto;
 
-        /* border: 1px solid rgb(134, 133, 133);
+    /* border: 1px solid rgb(134, 133, 133);
         border-radius: 10px; */
 
-        display: flex;
-        flex-direction: row;
-        text-align: justify;
-        font-size: smaller;
-        padding: 0.6em;
-        
-    }
+    display: flex;
+    flex-direction: row;
+    text-align: justify;
+    font-size: smaller;
+    padding: 0.6em;
 
-    #analiza{
-        text-align: left;
-    }
+}
 
-    #analiza div, #analiza-r div{
+#analiza {
+    text-align: left;
+}
 
-        width: 100%;
-        margin-right: 0.6em;
-        border: 1px solid rgba(165, 165, 165, 0.3); 
-        border-radius: 1em;
-        margin: 0 auto 0.6em auto;
-        padding: 1em;
-        box-sizing: border-box;
+#analiza div,
+#analiza-r div {
 
-    }
+    width: 100%;
+    margin-right: 0.6em;
+    border: 1px solid rgba(165, 165, 165, 0.3);
+    border-radius: 1em;
+    margin: 0 auto 0.6em auto;
+    padding: 1em;
+    box-sizing: border-box;
 
-    .analiza-r-naslov{
-        text-align: center;
-    }
+}
+
+.analiza-r-naslov {
+    text-align: center;
+}
 
 
-    .volatility-value {
+.volatility-value {
     font-weight: bold;
-    }
+}
 
-    .vol-high {
+.vol-high {
     color: #dc2626;
-    }
+}
 
-    .vol-medium {
-    color: #f59e0b; /*#ea580c; */
-    }
+.vol-medium {
+    color: #f59e0b;
+    /*#ea580c; */
+}
 
-    .vol-low {
+.vol-low {
     color: #16a34a;
+}
+
+
+#zacelje {
+
+    padding: 1em;
+    font-size: 90%;
+    color: rgb(66, 65, 65);
+
+}
+
+@media screen and (max-width: 700px
+    /* umesto 1080 */
+) {
+
+    #prviMeni {
+        /* transform: scale(0.8); */
+        width: 85%;
     }
 
+    #prviMeni div {
 
-    #zacelje{
+        transform: scale(0.80);
+        font-size: smaller;
 
-        padding: 1em;
-        font-size: 90%;
-        color: rgb(66, 65, 65);
-        
     }
 
-    @media screen and (max-width: 700px /* umesto 1080 */){
-
-        #prviMeni{
-            /* transform: scale(0.8); */
-            width: 85%;
-        }
-
-        #prviMeni div{
-
-            transform: scale(0.80);
-            font-size: smaller;
-            
-        }
-
-        /*
+    /*
         #prviMeni div img{
             transform: scale(1.6);
         }
         */
 
-        body{
-            overflow: auto;
-            
-        }
+    body {
+        overflow: auto;
 
-        #portfolio{
+    }
 
-            display: flex;
-            flex-direction: column;
+    #portfolio {
 
-        }
+        display: flex;
+        flex-direction: column;
 
-        #portfolio div{
+    }
 
-            width: 80%;
-            margin: 0 auto 0 auto;
-            /* max-height: 820px; */
-            max-height: none;
-            overflow: visible;
+    #portfolio div {
 
-            padding: 0.4em;
+        width: 80%;
+        margin: 0 auto 0 auto;
+        /* max-height: 820px; */
+        max-height: none;
+        overflow: visible;
 
-        }
+        padding: 0.4em;
 
-        input {
-            width: 11.6em;
-        }
+    }
 
-        #market{
-            width: 90%;
-        }
+    input {
+        width: 11.6em;
+    }
 
-        #market, #market .instrument{
-            box-sizing: border-box;
-        }
+    #market {
+        width: 90%;
+    }
 
-        #opcije{
-            width: 50%;
-        }
+    #market,
+    #market .instrument {
+        box-sizing: border-box;
+    }
 
-        button{
-            width: 75%;
-        }
+    #opcije {
+        width: 50%;
+    }
 
-        /*
+    button {
+        width: 75%;
+    }
+
+    /*
         #market .instrument{
 
             overflow-wrap: break-word;
@@ -436,83 +468,87 @@ input{
         }
         */
 
-        #analiza{
+    #analiza {
 
-            width: 90%;
-            margin : 0 auto 0 auto;
-            display: flex;
-            flex-direction: column;
-            padding: 0;
-
-        }
+        width: 90%;
+        margin: 0 auto 0 auto;
+        display: flex;
+        flex-direction: column;
+        padding: 0;
 
     }
 
-    @media screen and (min-width: 701px) and (max-width: 1000px){
+}
+
+@media screen and (min-width: 701px) and (max-width: 1000px) {
 
 
 
-        /* 1. Nema/ima skrola */
-        body{
-            overflow: visible ; /* hidden / visible */
-        }
+    /* 1. Nema/ima skrola */
+    body {
+        overflow: visible;
+        /* hidden / visible */
+    }
 
-        #naslov{
-            transform: scale(0.65);  
-        }
+    #naslov {
+        transform: scale(0.65);
+    }
 
-        #prviMeni div{
-            font-size: smaller;
-        }
+    #prviMeni div {
+        font-size: smaller;
+    }
 
-        /* 2. Portfolio → 3 kolone */
-        #portfolio{
+    /* 2. Portfolio → 3 kolone */
+    #portfolio {
 
-            width: 100%;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr); /* A | A+B | B */
-            gap: 10px;
-            align-items: start;
-            transform: scale(0.80);    /* ključno skaliranje: pretodno: 0.62, pa 0.70 */
-            transform-origin: top center;  /* prirodno skupljanje */
-            /* border: 1px solid black;
+        width: 100%;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        /* A | A+B | B */
+        gap: 10px;
+        align-items: start;
+        transform: scale(0.80);
+        /* ključno skaliranje: pretodno: 0.62, pa 0.70 */
+        transform-origin: top center;
+        /* prirodno skupljanje */
+        /* border: 1px solid black;
             border-radius: 15px; */
 
-        }
+    }
 
-        /* 3. Kolone – bez sečenja */
-        #portfolio div{
+    /* 3. Kolone – bez sečenja */
+    #portfolio div {
 
-            width: 100%;
-            margin: 0;
-            max-height: none;
-            overflow: visible;
-            padding: 0.3em;
-            box-sizing: border-box;
-
-        }
-
-        /* 4. Ulazna polja malo uža */
-        input{
-            width: 8.8em;
-        }
-
-        #market{
-            width: 90%;
-        }
-
-        #analiza{
-
-            width: 90%;
-            display: flex;
-            flex-direction: row;
-            
-        }
-
-        #zacelje{
-            visibility: visible;
-        }
-
+        width: 100%;
+        margin: 0;
+        max-height: none;
+        overflow: visible;
+        padding: 0.3em;
+        box-sizing: border-box;
 
     }
+
+    /* 4. Ulazna polja malo uža */
+    input {
+        width: 8.8em;
+    }
+
+    #market {
+        width: 90%;
+    }
+
+    #analiza {
+
+        width: 90%;
+        display: flex;
+        flex-direction: row;
+
+    }
+
+    #zacelje {
+        visibility: visible;
+    }
+
+
+}
