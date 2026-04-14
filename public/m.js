@@ -447,8 +447,8 @@ function getAdjustedMarketPrice(symbol, rawPrice) {
   const price = Number(rawPrice);
   if (!Number.isFinite(price)) return null;
 
-  if (symbol === "btc") return price - 70;
-  if (symbol === "eth") return price - 3;
+  if (symbol === "btc") return price - 70 + 70;
+  if (symbol === "eth") return price - 3 + 3;
 
   return price;
 
