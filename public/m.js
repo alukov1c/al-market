@@ -359,14 +359,19 @@ async function updateLastTrades() {
         const dateEl = document.getElementById(cfg.dateId);
 
         if (profitEl) profitEl.textContent = "Myfxbook privremeno blokira API — podaci će se pojaviti automatski";
-        if (dateEl)   //dateEl.textContent   = "—"; 
-
+        if (dateEl) {
           if (item.date) {
             const d = new Date(item.date);
-            dateEl.textContent = formatSerbianDate(d);
+            const dd = String(d.getDate()).padStart(2, "0");
+            const mm = String(d.getMonth() + 1).padStart(2, "0");
+            const yyyy = d.getFullYear();
+            const hh = String(d.getHours()).padStart(2, "0");
+            const min = String(d.getMinutes()).padStart(2, "0");
+            dateEl.textContent = `${dd}.${mm}.${yyyy}. ${hh}:${min}h`;
           } else {
             dateEl.textContent = "—";
           }
+        }
 
       });
       return;

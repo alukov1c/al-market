@@ -913,8 +913,8 @@ app.get("/api/last-trades", async (_req, res) => {
         const history = await getHistoryCached(accountId);
         const last = pickLastClosedTrade(history);
 
-        const dateObj = parseMyfxbookDate(last.closeTime);
-        const formattedDate = formatSerbianDate(dateObj);
+        const dateObj = last ? parseMyfxbookDate(last.closeTime || last.openTime) : null;
+        const formattedDate = dateObj ? formatSerbianDate(dateObj) : null;
 
         return {
           index,
