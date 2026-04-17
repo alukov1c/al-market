@@ -322,7 +322,7 @@ async function getHistoryForAccountId(accountId) {
     if (!res.ok) throw new Error(`get-history HTTP ${res.status} after relogin`);
 
     data = await res.json();
-    console.log("get-history after relogin:", data);
+    //console.log("get-history after relogin:", data);
 
     if (data.error) {
       throw new Error("get-history posle relogina error: " + (data.message || "Unknown"));
