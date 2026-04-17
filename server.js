@@ -13,9 +13,9 @@ import { WebSocketServer, WebSocket } from "ws";
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname  = path.dirname(__filename);
+const __dirname = path.dirname(__filename);
 
-const app  = express();
+const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 8080;
 const BASE = "https://www.myfxbook.com/api";
@@ -24,7 +24,7 @@ let cachedAccounts = [];
 let cachedTs = 0;
 let refreshing = false;
 let backoffUntil = 0;
-const CACHE_TTL_MS = 60000; // 60s umesto 15s
+const CACHE_TTL_MS = 120000; // 2 minuta umesto 60s (izbegavanje API blokiranja)
 
 
 // indeks naloga se koristi u kod.js (INDEX = 1)
@@ -42,7 +42,7 @@ function loadSessionFromDisk() {
       const obj = JSON.parse(fs.readFileSync(SESSION_FILE, "utf8"));
       if (obj?.session) {
         SESSION = String(obj.session).trim();
-        console.log("Loaded session from disk. Prefix:", SESSION.slice(0,6) + "…");
+        console.log("Loaded session from disk. Prefix:", SESSION.slice(0, 6) + "…");
       }
     }
   } catch (e) {
@@ -82,8 +82,8 @@ let loginBlockedUntil = 0;      // backoff do kog se ne pokušava login
 let loginInFlight = null;       // Promise za single-flight
 
 const MIN_LOGIN_INTERVAL_MS = 60_000;      // 60s između pokušaja (povećati po potrebi)
-const FORBIDDEN_BACKOFF_MS  = 12 * 60 * 60_000; // 12 * 60 min backoff na HTTP 403
-const FAIL_BACKOFF_MS       = 5 * 60_000;  // 5 min backoff na druge greške
+const FORBIDDEN_BACKOFF_MS = 12 * 60 * 60_000; // 12 * 60 min backoff na HTTP 403
+const FAIL_BACKOFF_MS = 5 * 60_000;  // 5 min backoff na druge greške
 
 async function loginMyfxbook() {
   // Ako sesija postoji, ne raditi ništa
@@ -107,7 +107,7 @@ async function loginMyfxbook() {
   lastLoginAttemptAt = now;
 
   loginInFlight = (async () => {
-    const email    = process.env.MYFXBOOK_EMAIL;
+    const email = process.env.MYFXBOOK_EMAIL;
     const password = process.env.MYFXBOOK_PASSWORD;
 
     if (!email || !password) {
@@ -131,7 +131,7 @@ async function loginMyfxbook() {
     // 403: najčešće WAF / previše pokušaja / zabranjen datacenter IP
     if (res.status === 403) {
       loginBlockedUntil = Date.now() + FORBIDDEN_BACKOFF_MS;
-      throw new Error(`Login HTTP 403 → backoff ${Math.round(FORBIDDEN_BACKOFF_MS/60000)} min`);
+      throw new Error(`Login HTTP 403 → backoff ${Math.round(FORBIDDEN_BACKOFF_MS / 60000)} min`);
     }
 
     if (!res.ok) {
@@ -179,7 +179,7 @@ function parseMyfxbookDate(str) {
   if (!datePart || !timePart) return null;
 
   const [month, day, year] = datePart.split("/").map(Number);
-  const [hour, minute]     = timePart.split(":").map(Number);
+  const [hour, minute] = timePart.split(":").map(Number);
 
   //Korekcija: -1 sat
   return new Date(
@@ -343,121 +343,121 @@ async function getHistoryForAccountId(accountId) {
 //
 //------------------------------------------------------
 async function getBinanceCapital() {
-    try {
-        const apiKey = process.env.BINANCE_API_KEY;
-        const apiSecret = process.env.BINANCE_API_SECRET;
+  try {
+    const apiKey = process.env.BINANCE_API_KEY;
+    const apiSecret = process.env.BINANCE_API_SECRET;
 
-        if (!apiKey || !apiSecret) {
-            console.warn("Binance API ključevi nisu definisani u .env!");
-            return null;
-        }
-
-        const timestamp = Date.now();
-        const recvWindow = 45000;
-
-        const query = `timestamp=${timestamp}&recvWindow=${recvWindow}`;
-
-        const signature = crypto
-            .createHmac("sha256", apiSecret)
-            .update(query)
-            .digest("hex");
-
-        const url = `https://api.binance.com/api/v3/account?${query}&signature=${signature}`;
-
-        const res = await fetch(url, {
-            method: "GET",
-            headers: {
-                "X-MBX-APIKEY": apiKey
-            }
-        });
-
-        // DEBUG: detaljniji ispis zbog lakšeg praćenja grešaka
-        if (!res.ok) {
-            const txt = await res.text();
-            console.warn("Binance HTTP error:", res.status, txt);
-            return null;
-        }
-
-        const data = await res.json();
-        if (!data.balances) return null;
-
-        // -------------------------------------
-        // UKUPNA VREDNOST PORTFOLIJA U USDT
-        // -------------------------------------
-        let totalUsdt = 0;
-
-        for (const b of data.balances) {
-            const free   = Number(b.free   || 0);
-            const locked = Number(b.locked || 0);
-            const total  = free + locked;
-
-            if (total <= 0) continue;
-
-            if (b.asset === "USDT") {
-                totalUsdt += total;
-            } else {
-                // trenutna cena preko /ticker/price
-                const priceRes = await fetch(
-                    `https://api.binance.com/api/v3/ticker/price?symbol=${b.asset}USDT`
-                );
-
-                if (!priceRes.ok) continue;
-
-                const priceData = await priceRes.json();
-                const price = Number(priceData.price || 0);
-
-                if (price > 0) {
-                    totalUsdt += total * price;
-                }
-            }
-        }
-
-        return Number(totalUsdt.toFixed(2));
-
-    } catch (e) {
-        console.warn("Binance API error:", e.message);
-        return null;
+    if (!apiKey || !apiSecret) {
+      console.warn("Binance API ključevi nisu definisani u .env!");
+      return null;
     }
+
+    const timestamp = Date.now();
+    const recvWindow = 45000;
+
+    const query = `timestamp=${timestamp}&recvWindow=${recvWindow}`;
+
+    const signature = crypto
+      .createHmac("sha256", apiSecret)
+      .update(query)
+      .digest("hex");
+
+    const url = `https://api.binance.com/api/v3/account?${query}&signature=${signature}`;
+
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        "X-MBX-APIKEY": apiKey
+      }
+    });
+
+    // DEBUG: detaljniji ispis zbog lakšeg praćenja grešaka
+    if (!res.ok) {
+      const txt = await res.text();
+      console.warn("Binance HTTP error:", res.status, txt);
+      return null;
+    }
+
+    const data = await res.json();
+    if (!data.balances) return null;
+
+    // -------------------------------------
+    // UKUPNA VREDNOST PORTFOLIJA U USDT
+    // -------------------------------------
+    let totalUsdt = 0;
+
+    for (const b of data.balances) {
+      const free = Number(b.free || 0);
+      const locked = Number(b.locked || 0);
+      const total = free + locked;
+
+      if (total <= 0) continue;
+
+      if (b.asset === "USDT") {
+        totalUsdt += total;
+      } else {
+        // trenutna cena preko /ticker/price
+        const priceRes = await fetch(
+          `https://api.binance.com/api/v3/ticker/price?symbol=${b.asset}USDT`
+        );
+
+        if (!priceRes.ok) continue;
+
+        const priceData = await priceRes.json();
+        const price = Number(priceData.price || 0);
+
+        if (price > 0) {
+          totalUsdt += total * price;
+        }
+      }
+    }
+
+    return Number(totalUsdt.toFixed(2));
+
+  } catch (e) {
+    console.warn("Binance API error:", e.message);
+    return null;
+  }
 }
 
 // --------------------------------------------
 // KONVERZIJA USDT → CHF preko Binance API
 // --------------------------------------------
 async function convertUsdtToChf(usdtAmount) {
-    try {
-        if (!usdtAmount || usdtAmount <= 0) return 0;
+  try {
+    if (!usdtAmount || usdtAmount <= 0) return 0;
 
-        // Binance par USDTCHF
-        // Ako ne postoji, koristiti USDT → EUR → CHF
-        const direct = await fetch("https://api.binance.com/api/v3/ticker/price?symbol=USDCHF");
-        
-        if (direct.ok) {
-            const dj = await direct.json();
-            const chfPrice = Number(dj.price || 0);
-            if (chfPrice > 0) {
-                return Number((usdtAmount * chfPrice).toFixed(2));
-            }
-        }
+    // Binance par USDTCHF
+    // Ako ne postoji, koristiti USDT → EUR → CHF
+    const direct = await fetch("https://api.binance.com/api/v3/ticker/price?symbol=USDCHF");
 
-        // fallback ako USDCHF ne postoji
-        const eurPriceRes = await fetch("https://api.binance.com/api/v3/ticker/price?symbol=EURCHF");
-        const usdeurRes   = await fetch("https://api.binance.com/api/v3/ticker/price?symbol=USDEUR");
-
-        if (!eurPriceRes.ok || !usdeurRes.ok) return 0;
-
-        const eurChf  = Number((await eurPriceRes.json()).price || 0);
-        const usdEur  = Number((await usdeurRes.json()).price || 0);
-
-        if (eurChf > 0 && usdEur > 0) {
-            return Number((usdtAmount * usdEur * eurChf).toFixed(2));
-        }
-
-        return 0;
-
-    } catch (err) {
-        console.warn("convertUsdtToChf error:", err.message);
-        return 0;
+    if (direct.ok) {
+      const dj = await direct.json();
+      const chfPrice = Number(dj.price || 0);
+      if (chfPrice > 0) {
+        return Number((usdtAmount * chfPrice).toFixed(2));
+      }
     }
+
+    // fallback ako USDCHF ne postoji
+    const eurPriceRes = await fetch("https://api.binance.com/api/v3/ticker/price?symbol=EURCHF");
+    const usdeurRes = await fetch("https://api.binance.com/api/v3/ticker/price?symbol=USDEUR");
+
+    if (!eurPriceRes.ok || !usdeurRes.ok) return 0;
+
+    const eurChf = Number((await eurPriceRes.json()).price || 0);
+    const usdEur = Number((await usdeurRes.json()).price || 0);
+
+    if (eurChf > 0 && usdEur > 0) {
+      return Number((usdtAmount * usdEur * eurChf).toFixed(2));
+    }
+
+    return 0;
+
+  } catch (err) {
+    console.warn("convertUsdtToChf error:", err.message);
+    return 0;
+  }
 }
 
 
@@ -523,10 +523,10 @@ async function refreshEquityTick() {
     const acc2 = accounts[2] || null;
 
     const aEquity = acc1 ? toNumber(acc1.equity) : null;
-    const aCurr   = acc1 ? (acc1.currency || null) : null;
+    const aCurr = acc1 ? (acc1.currency || null) : null;
 
     const bEquity = acc2 ? toNumber(acc2.equity) : null;
-    const bCurr   = acc2 ? (acc2.currency || null) : null;
+    const bCurr = acc2 ? (acc2.currency || null) : null;
 
     // Konverzija u CHF (ako je već CHF, samo *1)
     const aChf = convertToChf(aEquity, aCurr);
@@ -582,7 +582,7 @@ async function ensureAccountsCache() {
   }
 }
 
-setInterval(ensureAccountsCache, 30000);
+setInterval(ensureAccountsCache, 120000);
 
 
 // -----------------------------------------------------
@@ -646,7 +646,7 @@ function connectBinanceMarketStream() {
 
   //const url = "wss://stream.binance.com:9443/stream?streams=btcusdt@ticker/ethusdt@ticker";
   const url = "wss://data-stream.binance.vision/stream?streams=btcusdt@ticker/ethusdt@ticker";
-  
+
   binanceWs = new WebSocket(url);
 
   binanceWs.on("open", () => {
@@ -904,7 +904,7 @@ app.get("/api/last-trades", async (_req, res) => {
       LAST_TRADE_INDICES.map(async (index) => {
         const a = accounts[index];
         const accountId = a?.id;              // Myfxbook entity id (koristi se za get-history) :contentReference[oaicite:2]{index=2}
-        const currency  = a?.currency ?? null;
+        const currency = a?.currency ?? null;
 
         if (!accountId) {
           return { index, profit: null, date: null, currency, action: null, symbol: null };
@@ -949,7 +949,7 @@ app.post("/api/set-session", (req, res) => {
   loginBlockedUntil = 0; // reset backoff kada korisnik ubaci novu sesiju
   backoffUntil = 0;
   saveSessionToDisk();
-  res.json({ ok: true, sessionPrefix: SESSION.slice(0,6) + "…" });
+  res.json({ ok: true, sessionPrefix: SESSION.slice(0, 6) + "…" });
 });
 
 app.get("/api/market", (_req, res) => {
