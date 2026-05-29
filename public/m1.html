@@ -473,36 +473,21 @@
                 <b>Tržište danas: </b>
             </div>
 
-
-            <!-- TradingView Widget BEGIN -->
+            <!-- TradingView Ticker Tape Widget BEGIN -->
             <div class="tradingview-widget-container">
                 <div class="tradingview-widget-container__widget"></div>
-                <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com/markets/"
-                        rel="noopener nofollow" target="_blank"><span class="blue-text">Markets today</span></a><span
-                        class="trademark"> by TradingView</span></div>
+
                 <script type="text/javascript"
-                    src="https://s3.tradingview.com/external-embedding/embed-widget-tickers.js" async>
+                    src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
                         {
                             "symbols": [
                                 {
                                     "proName": "FOREXCOM:SPXUSD",
-                                    "title": "S&P 500 Index"
-                                },
-                                {
-                                    "proName": "FOREXCOM:NSXUSD",
-                                    "title": "US 100 Cash CFD"
+                                    "title": "S&P 500"
                                 },
                                 {
                                     "proName": "BITSTAMP:BTCUSD",
                                     "title": "Bitcoin"
-                                },
-                                {
-                                    "proName": "BITSTAMP:ETHUSD",
-                                    "title": "Ethereum"
-                                },
-                                {
-                                    "proName": "TVC:DXY",
-                                    "title": "DXY"
                                 },
                                 {
                                     "proName": "TVC:GOLD",
@@ -514,22 +499,22 @@
                                 },
                                 {
                                     "proName": "FX:AUDUSD",
-                                    "title": "AUD"
+                                    "title": "AUD/USD"
                                 },
                                 {
                                     "proName": "FX_IDC:CHFUSD",
-                                    "title": "CHF"
+                                    "title": "CHF/USD"
                                 }
                             ],
-                                "colorTheme": "light",
-                                    "locale": "en",
-                                        "largeChartUrl": "",
-                                            "isTransparent": false,
-                                                "showSymbolLogo": true
+                                "showSymbolLogo": true,
+                                    "colorTheme": "light",
+                                        "isTransparent": false,
+                                            "displayMode": "adaptive",
+                                                "locale": "en"
                         }
                     </script>
             </div>
-            <!-- TradingView Widget END -->
+            <!-- TradingView Ticker Tape Widget END -->
 
             <div>
                 <b>Podaci o tržištu: </b>

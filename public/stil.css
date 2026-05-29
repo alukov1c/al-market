@@ -374,6 +374,7 @@ button {
     width: 100%;
     max-width: 980px;
     margin: 0 auto 30px auto;
+    overflow: hidden;
 }
 
 .tradingview-widget-container iframe {
@@ -499,6 +500,7 @@ button {
     .tradingview-widget-container {
         width: 100%;
         max-width: 100%;
+        overflow: hidden;
     }
 
     .tradingview-widget-container iframe {
@@ -581,6 +583,7 @@ button {
     .tradingview-widget-container {
         width: 100%;
         max-width: 100%;
+        overflow: hidden;
     }
 
     #zacelje {
