@@ -487,6 +487,16 @@ button {
 
     }
 
+    #grafikoni {
+        width: 80%;
+        margin: 0 auto 0 auto;
+    }
+
+    .tradingview-widget-container {
+        width: 90%;
+        margin: 0 auto 0 auto;
+    }
+
 }
 
 @media screen and (min-width: 701px) and (max-width: 1000px) {
@@ -553,6 +563,16 @@ button {
         display: flex;
         flex-direction: row;
 
+    }
+
+    #grafikoni {
+        width: 80%;
+        margin: 0 auto 0 auto;
+    }
+
+    .tradingview-widget-container {
+        width: 90%;
+        margin: 0 auto 0 auto;
     }
 
     #zacelje {
