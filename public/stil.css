@@ -366,13 +366,18 @@ button {
 }
 
 #grafikoni {
-    width: 90%;
-    margin: 0 auto 0 auto;
+    width: 100%;
+    margin: 0 auto;
 }
 
 .tradingview-widget-container {
     width: 100%;
-    margin: 0 auto 0 auto;
+    max-width: 980px;
+    margin: 0 auto 30px auto;
+}
+
+.tradingview-widget-container iframe {
+    width: 100% !important;
 }
 
 .volatility-value {
@@ -488,13 +493,17 @@ button {
     }
 
     #grafikoni {
-        width: 80%;
-        margin: 0 auto 0 auto;
+        width: 95%;
     }
 
     .tradingview-widget-container {
-        width: 90%;
-        margin: 0 auto 0 auto;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .tradingview-widget-container iframe {
+        width: 100% !important;
+        height: 420px !important;
     }
 
 }
@@ -566,13 +575,12 @@ button {
     }
 
     #grafikoni {
-        width: 80%;
-        margin: 0 auto 0 auto;
+        width: 90%;
     }
 
     .tradingview-widget-container {
-        width: 90%;
-        margin: 0 auto 0 auto;
+        width: 100%;
+        max-width: 100%;
     }
 
     #zacelje {
