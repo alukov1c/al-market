@@ -365,6 +365,15 @@ button {
     text-align: center;
 }
 
+#grafikoni {
+    width: 90%;
+    margin: 0 auto 0 auto;
+}
+
+.tradingview-widget-container {
+    width: 100%;
+    margin: 0 auto 0 auto;
+}
 
 .volatility-value {
     font-weight: bold;
