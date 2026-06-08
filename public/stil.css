@@ -581,8 +581,10 @@ button {
     }
 
     .tradingview-widget-container {
-        width: 100%;
-        max-width: 100%;
+        width: 90%;
+        /* umesto 100% */
+        max-width: 90%;
+        /* umesto 100% */
         overflow: hidden;
     }
 
