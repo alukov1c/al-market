@@ -376,7 +376,7 @@ button {
   position: relative;
   width: 85%;
   margin: 1.3em auto;
-  padding: 1.7px;
+  padding: 1.5px;
   border-radius: 1.2em;
   background: linear-gradient(
     90deg,
@@ -394,7 +394,7 @@ button {
 .sa-content {
   background: #ffffff;
   border-radius: calc(1.2em - 3px);
-  padding: 1.7em;
+  padding: 1.2em;
 }
 
 @keyframes alBorderMove {
