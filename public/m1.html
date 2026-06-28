@@ -386,6 +386,64 @@
 
         </div>
 
+        <!-- 
+        <section id="selfAnalysis" class="self-analysis">
+            <b> A-L market analitički mehanizam</b>
+
+            <div class="analysis-header">
+                <strong id="analysisDate">Datum: —</strong>
+                <select id="analysisHistorySelect">
+                    <option>Učitavanje analiza...</option>
+                </select>
+            </div>
+
+            <div class="analysis-card">
+                <p><strong>Stanje tržišta:</strong> <span id="marketState">—</span></p>
+                <p><strong>Rizik:</strong> <span id="riskLevel">—</span></p>
+                <p><strong>Signal:</strong> <span id="marketSignal">—</span></p>
+                <p id="analysisSummary">Analiza još nije generisana.</p>
+            </div>
+
+            <div>
+                <button id="btnGenALmeh" onclick="generateSelfAnalysisNow()">Generisanje analize sada</button>
+            </div>
+            
+        </section>
+        -->
+
+        <section id="selfAnalysis" class="self-analysis">
+            <div class="sa-content">
+                <div class="sa-title">
+                <span class="sa-icon">📊</span>
+                <b>A-L market analitički mehanizam</b>
+                </div>
+
+                <div class="analysis-header">
+                <div class="sa-date">
+                    <span class="sa-date-icon">📅</span>
+                    <strong id="analysisDate">Datum: —</strong>
+                </div>
+
+                <select id="analysisHistorySelect">
+                    <option>Učitavanje analiza...</option>
+                </select>
+                </div>
+
+                <div class="analysis-card">
+                <p><span class="sa-row-icon">🌐</span><strong>Stanje tržišta:</strong> <span id="marketState" class="state-neutral">—</span></p>
+                <p><span class="sa-row-icon">🛡️</span><strong>Rizik:</strong> <span id="riskLevel" class="risk-medium">—</span></p>
+                <p><span class="sa-row-icon">📡</span><strong>Signal:</strong> <span id="marketSignal" class="signal-wait">—</span></p>
+
+                <hr>
+
+                <p id="analysisSummary">Analiza još nije generisana.</p>
+                </div>
+
+                <button id="btnGenALmeh" onclick="generateSelfAnalysisNow()">
+                <span>📊</span> Generisanje analize sada
+                </button>
+            </div>
+        </section>
 
         <div id="analiza">
 

@@ -945,3 +945,112 @@ function setLiveStatus(isOnline) {
 
 }
 
+//////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////
+/////////self-analysis - A-L market analitički mehanizam/////////
+////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////
+
+async function loadLatestAnalysis() {
+  const res = await fetch("/api/self-analysis/latest");
+  const report = await res.json();
+  renderAnalysis(report);
+}
+
+async function loadAnalysisHistory() {
+  const res = await fetch("/api/self-analysis/history");
+  const reports = await res.json();
+
+  const select = document.getElementById("analysisHistorySelect");
+  select.innerHTML = "";
+
+  reports.forEach(report => {
+    const option = document.createElement("option");
+    option.value = report.date;
+    option.textContent = report.date;
+    select.appendChild(option);
+  });
+
+  select.addEventListener("change", async () => {
+    const res = await fetch(`/api/self-analysis/${select.value}`);
+    const report = await res.json();
+    renderAnalysis(report);
+  });
+}
+
+async function generateSelfAnalysisNow() {
+
+    await sendMarketSnapshotToServer();
+
+    await fetch("/api/self-analysis/generate");
+
+    await loadLatestAnalysis();
+    await loadAnalysisHistory();
+}
+
+function renderAnalysis(report) {
+  document.getElementById("analysisDate").textContent = `Datum: ${report.date}`;
+  document.getElementById("marketState").textContent = report.marketState;
+  document.getElementById("riskLevel").textContent = report.riskLevel;
+  document.getElementById("marketSignal").textContent = report.signal;
+  document.getElementById("analysisSummary").textContent = report.summary;
+}
+
+function parsePriceNumber(text) {
+  if (!text) return null;
+
+  const value = text
+    .replace("USD", "")
+    .replace("$", "")
+    .replace(/\./g, "")
+    .replace(",", ".")
+    .trim();
+
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function parsePercentNumber(text) {
+  if (!text) return null;
+
+  const value = text
+    .replace("%", "")
+    .replace("+", "")
+    .replace(",", ".")
+    .trim();
+
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function readCryptoFromDOM() {
+  return {
+    btc: {
+      price: parsePriceNumber(document.querySelector("#btcPrice .price-value")?.textContent),
+      change24h: parsePercentNumber(document.querySelector("#btcChange .change-value")?.textContent)
+    },
+    eth: {
+      price: parsePriceNumber(document.querySelector("#ethPrice .price-value")?.textContent),
+      change24h: parsePercentNumber(document.querySelector("#ethChange .change-value")?.textContent)
+    },
+    collectedAt: new Date().toISOString()
+  };
+}
+
+async function sendMarketSnapshotToServer() {
+  const marketData = readCryptoFromDOM();
+
+  await fetch("/api/market-snapshot", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(marketData)
+  });
+}
+
+loadLatestAnalysis();
+loadAnalysisHistory();
+
+setTimeout(sendMarketSnapshotToServer, 3000);
+setInterval(sendMarketSnapshotToServer, 5 * 60 * 1000);

@@ -1,0 +1,115 @@
+   .self-analysis {
+        max-width: 1070px;
+        margin: 30px auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 14px;
+        background: #ffffff;
+        /* box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); */
+    }
+
+    .self-analysis h2 {
+        text-align: center;
+        margin-bottom: 15px;
+    }
+
+    .analysis-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 15px;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+    }
+
+    .analysis-card {
+        line-height: 1.7;
+        font-size: 16px;
+    }
+
+    #marketSignal {
+        font-weight: bold;
+    }
+
+
+    .self-analysis {
+    position: relative;
+    width: 85%;
+    margin: 2rem auto;
+    padding: 2rem;
+    border-radius: 18px;
+    background: #ffffff;
+    overflow: hidden;
+    z-index: 0;
+
+    box-shadow:
+        0 6px 20px rgba(0,0,0,.08);
+}
+
+/* Animirani okvir */
+.self-analysis::before {
+
+    content: "";
+
+    position: absolute;
+    inset: 0;
+
+    padding: 3px;
+    border-radius: 18px;
+
+    background: linear-gradient(
+        90deg,
+        #d90429,
+        #4361ee,
+        #ffffff,
+        #4361ee,
+        #d90429,
+        #4361ee,
+        #ffffff
+    );
+
+    background-size: 400% 400%;
+
+    animation: borderFlow 8s linear infinite;
+
+    z-index: -1;
+
+    -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+}
+
+/* Bela unutrašnjost */
+.self-analysis::after {
+
+    content: "";
+
+    position: absolute;
+
+    inset: 3px;
+
+    background: #ffffff;
+
+    border-radius: 15px;
+
+    z-index: -1;
+}
+
+/* Kretanje gradijenta */
+@keyframes borderFlow {
+
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+
+}

@@ -9,6 +9,9 @@ import crypto from 'crypto';
 import fs from "fs";
 import http from "http";
 import { WebSocketServer, WebSocket } from "ws";
+import cron from "node-cron";
+import fsp from "fs/promises";
+//import path from "path";
 
 dotenv.config();
 
@@ -61,7 +64,17 @@ function saveSessionToDisk() {
 // pozvati na boot:
 loadSessionFromDisk();
 
+cron.schedule("00 08 * * *", async () => {
+  console.log("Generisanje dnevne A-L Market analize...");
 
+  const data = await fetchMarketData();
+  const indicators = calculateIndicators(data);
+  const report = generateDailyReport(indicators);
+
+  await saveReport(report);
+}, {
+  timezone: "Europe/Belgrade"
+});
 
 // equity tick (za graf + input)
 /*
@@ -1010,6 +1023,225 @@ app.get("/api/market-7d", async (_req, res) => {
   }
 });
 
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+///////////////self-analysis: A-L analitički mehanizam//////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+//import fs from "fs/promises";
+//import path from "path";
+
+const REPORTS_FILE = path.join(process.cwd(), "data", "self-analysis.json");
+
+//const CRYPTO_SNAPSHOT_FILE = path.join(process.cwd(), "data", "crypto-snapshot.json");
+
+const MARKET_SNAPSHOT_FILE = path.join(process.cwd(),"data","market-snapshot.json");
+
+app.post("/api/market-snapshot", async (req, res) => {
+    await fsp.writeFile(
+        MARKET_SNAPSHOT_FILE,
+        JSON.stringify(req.body, null, 2),
+        "utf8"
+    );
+
+    res.json({ success: true });
+});
+
+async function fetchMarketData() {
+    try {
+        const data = await fsp.readFile(MARKET_SNAPSHOT_FILE, "utf8");
+        const market = JSON.parse(data);
+
+        return {
+            btc: market.btc || { price: null, change24h: null },
+            eth: market.eth || { price: null, change24h: null },
+
+            gold: { price: 4088, change24h: 1.18 },
+            oil: { price: 75.71, change24h: 3.37 },
+            sp500: { price: 7352, change24h: -0.78 },
+            cryptoTotal: { value: 2.02, change24h: -2.79 }
+        };
+
+    } catch (err) {
+        console.error("Nema market snapshot podataka:", err.message);
+
+        return {
+            btc: { price: null, change24h: null },
+            eth: { price: null, change24h: null },
+
+            gold: { price: 4038, change24h: 1.18 },
+            oil: { price: 75.71, change24h: 3.37 },
+            sp500: { price: 7352, change24h: -0.78 },
+            cryptoTotal: { value: 2.02, change24h: -2.79 }
+        };
+    }
+}
+
+async function readReports() {
+    try {
+        const data = await fsp.readFile(REPORTS_FILE, "utf8");
+
+        if (!data.trim()) {
+            return [];
+        }
+
+        return JSON.parse(data);
+    } catch (err) {
+        console.error("Greška pri čitanju self-analysis.json:", err.message);
+        return [];
+    }
+}
+
+async function saveReport(report) {
+    const reports = await readReports();
+
+    const filteredReports = reports.filter(r => r.date !== report.date);
+
+    filteredReports.push(report);
+
+    filteredReports.sort((a, b) => b.date.localeCompare(a.date));
+
+    await fsp.writeFile(
+        REPORTS_FILE,
+        JSON.stringify(filteredReports, null, 2),
+        "utf8"
+    );
+}
+
+async function getAllReports() {
+    const reports = await readReports();
+
+    return reports
+        .map(report => ({
+            date: report.date,
+            marketState: report.marketState,
+            riskLevel: report.riskLevel,
+            signal: report.signal
+        }))
+        .sort((a, b) => b.date.localeCompare(a.date));
+}
+
+async function getLatestReport() {
+    const reports = await readReports();
+
+    if (reports.length === 0) {
+        return {
+            date: "—",
+            marketState: "—",
+            riskLevel: "—",
+            signal: "—",
+            summary: "Analiza još nije generisana."
+        };
+    }
+
+    return reports.sort((a, b) => b.date.localeCompare(a.date))[0];
+}
+
+async function getReportByDate(date) {
+    const reports = await readReports();
+
+    return reports.find(report => report.date === date) || {
+        date,
+        marketState: "—",
+        riskLevel: "—",
+        signal: "—",
+        summary: "Analiza za izabrani datum nije pronađena."
+    };
+}
+
+function calculateIndicators(data) {
+    return data;
+}
+
+function formatPrice(value, decimals = 0) {
+
+    if (value === null || value === undefined || isNaN(value)) {
+        return "—";
+    }
+
+    return Number(value).toLocaleString("sr-RS", {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+    });
+
+}
+
+function formatPercent(value) {
+    if (value === null || value === undefined || isNaN(value)) {
+        return "—";
+    }
+
+    return Number(value).toLocaleString("sr-RS", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
+function generateDailyReport(i) {
+  let marketState = "neutralno";
+  let riskLevel = "srednji";
+  let signal = "WAIT";
+
+  if (i.btc.change24h < -3 && i.gold.change24h > 0 && i.sp500.change24h < 0) {
+    marketState = "risk-off";
+    riskLevel = "povišen";
+    signal = "OPREZ / WAIT";
+  }
+
+  if (i.btc.price > 60000 && i.cryptoTotal.change24h > 0) {
+    marketState = "neutralno do umereno bikovski";
+    signal = "WAIT / DCA AKUMULACIJA";
+  }
+
+  if (i.btc.change24h > 2 && i.sp500.change24h > 0 && i.gold.change24h < 0) {
+    marketState = "risk-on";
+    riskLevel = "srednji";
+    signal = "OPORAVAK";
+  }
+
+  return {
+    date: new Date().toISOString().slice(0, 10),
+    marketState,
+    riskLevel,
+    signal,
+    btc: i.btc,
+    eth: i.eth,
+    gold: i.gold,
+    oil: i.oil,
+    cryptoTotal: i.cryptoTotal,
+    summary: `
+BTC se trenutno kreće oko ${formatPrice(i.btc.price)} USD, uz dnevnu promenu od ${formatPercent(i.btc.change24h)}%.
+ETH je na ${formatPrice(i.eth.price, 2)} USD, dok je ukupna kripto kapitalizacija oko ${i.cryptoTotal.value} T USD.
+Zlato je ${i.gold.change24h > 0 ? "u rastu" : "u padu"}, što ukazuje na ${i.gold.change24h > 0 ? "povećan oprez investitora" : "slabljenje zaštitne tražnje"}.
+Trenutno stanje tržišta je: ${marketState}. Rizik je ${riskLevel}. Signal: ${signal}.
+    `.trim()
+  };
+}
+
+app.get("/api/self-analysis/latest", async (req, res) => {
+    const report = await getLatestReport();
+    res.json(report);
+});
+
+app.get("/api/self-analysis/history", async (req, res) => {
+    const reports = await getAllReports();
+    res.json(reports);
+});
+
+app.get("/api/self-analysis/generate", async (req, res) => {
+    const data = await fetchMarketData();
+    const indicators = calculateIndicators(data);
+    const report = generateDailyReport(indicators);
+
+    await saveReport(report);
+
+    res.json(report);
+});
+
+app.get("/api/self-analysis/:date", async (req, res) => {
+    const report = await getReportByDate(req.params.date);
+    res.json(report);
+});
 
 // --------------------------------------------------
 // POKRETANJE SERVERA

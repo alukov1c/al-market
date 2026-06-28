@@ -365,6 +365,187 @@ button {
     text-align: center;
 }
 
+
+#btnGenALmeh{
+
+    width: 15em;
+
+}
+
+.self-analysis {
+  position: relative;
+  width: 85%;
+  margin: 2em auto;
+  padding: 3px;
+  border-radius: 1.2em;
+  background: linear-gradient(
+    90deg,
+    #e11d48,
+    #2563eb,
+    #ffffff,
+    #2563eb,
+    #e11d48
+  );
+  background-size: 400% 400%;
+  animation: alBorderMove 7s linear infinite;
+  box-shadow: 0 0 18px rgba(37, 99, 235, 0.18);
+}
+
+.sa-content {
+  background: #ffffff;
+  border-radius: calc(1.2em - 3px);
+  padding: 2em;
+}
+
+@keyframes alBorderMove {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 400% 50%; }
+}
+
+.sa-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6em;
+  font-size: 1.35em;
+  margin-bottom: 1.5em;
+}
+
+.sa-icon {
+  color: #2563eb;
+  font-size: 1.3em;
+}
+
+.analysis-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1em;
+  margin-bottom: 1.5em;
+  padding-bottom: 1em;
+  border-bottom: 1px solid rgba(165, 165, 165, 0.3);
+}
+
+.sa-date {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.sa-date-icon {
+  color: #e11d48;
+}
+
+#analysisHistorySelect {
+  padding: 0.5em 0.8em;
+  border: 1px solid rgba(37, 99, 235, 0.35);
+  border-radius: 0.7em;
+  background: white;
+}
+
+.analysis-card {
+  margin: 1.5em auto;
+  padding: 1.5em;
+  border: 1px solid rgba(165, 165, 165, 0.3);
+  border-radius: 1em;
+  background: #ffffff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  text-align: left;
+  line-height: 1.8;
+}
+
+.analysis-card p {
+  margin: 0.7em 0;
+}
+
+.sa-row-icon {
+  display: inline-block;
+  width: 2.2em;
+  text-align: center;
+  margin-right: 0.4em;
+}
+
+#marketState,
+#riskLevel,
+#marketSignal {
+  font-weight: 700;
+}
+
+.state-risk-off {
+  color: #e11d48;
+}
+
+.state-neutral {
+  color: #2563eb;
+}
+
+.state-risk-on {
+  color: #16a34a;
+}
+
+.risk-low {
+  color: #16a34a;
+}
+
+.risk-medium {
+  color: #f59e0b;
+}
+
+.risk-high {
+  color: #e11d48;
+}
+
+.signal-wait {
+  color: #16a34a;
+}
+
+.signal-risk {
+  color: #e11d48;
+}
+
+#analysisSummary {
+  text-align: center;
+  font-size: 1.05em;
+}
+
+#btnGenALmeh {
+  width: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  margin-top: 0.7em;
+  padding: 0.8em 1.6em;
+  border-radius: 1em;
+  border: 1px solid #2563eb;
+  background: #ffffff;
+  color: #2563eb;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 3px 12px rgba(37, 99, 235, 0.16);
+}
+
+#btnGenALmeh:hover {
+  background: rgba(37, 99, 235, 0.06);
+}
+
+@media screen and (max-width: 700px) {
+  .self-analysis {
+    width: 92%;
+  }
+
+  .sa-content {
+    padding: 1.2em;
+  }
+
+  .analysis-header {
+    flex-direction: column;
+  }
+
+  .analysis-card {
+    text-align: left;
+  }
+} 
+
 #grafikoni {
     width: 100%;
     margin: 0 auto;
