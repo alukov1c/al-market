@@ -1,11 +1,11 @@
 {
   "btc": {
-    "price": 59460.19,
-    "change24h": -1.16
+    "price": 59619.99,
+    "change24h": -1.09
   },
   "eth": {
-    "price": 1563.91,
-    "change24h": -0.89
+    "price": 1570.12,
+    "change24h": -0.76
   },
-  "collectedAt": "2026-06-28T19:57:01.419Z"
+  "collectedAt": "2026-06-28T20:13:37.502Z"
 }

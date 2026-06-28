@@ -376,7 +376,7 @@ button {
   position: relative;
   width: 85%;
   margin: 1.3em auto;
-  padding: 3px;
+  padding: 1.7px;
   border-radius: 1.2em;
   background: linear-gradient(
     90deg,
@@ -394,7 +394,7 @@ button {
 .sa-content {
   background: #ffffff;
   border-radius: calc(1.2em - 3px);
-  padding: 2em;
+  padding: 1.7em;
 }
 
 @keyframes alBorderMove {
@@ -407,13 +407,13 @@ button {
   align-items: center;
   justify-content: center;
   gap: 0.6em;
-  font-size: 1.35em;
-  margin-bottom: 1.5em;
+  font-size: 1.2em;
+  margin-bottom: 1.3em;
 }
 
 .sa-icon {
   color: #2563eb;
-  font-size: 1.3em;
+  font-size: 1.15em;
 }
 
 .analysis-header {
@@ -445,7 +445,7 @@ button {
 
 .analysis-card {
   margin: 1.5em auto;
-  padding: 1.5em;
+  padding: 1.2em;
   border: 1px solid rgba(165, 165, 165, 0.3);
   border-radius: 1em;
   background: #ffffff;
