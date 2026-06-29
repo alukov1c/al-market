@@ -765,7 +765,7 @@ button {
         width: 85%;
         margin: 1.3em auto;
         */
-        width: 75%;
+        max-height: 80%;
         padding: 1.1px;
 
     }
