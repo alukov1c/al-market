@@ -766,7 +766,22 @@ button {
         margin: 1.3em auto;
         */
         padding: 1.1px;
-        
+
+    }
+
+    .sa-content {
+
+        /*
+        background: #ffffff;
+        border-radius: calc(1.2em - 3px);
+        */
+        padding: 1em;
+
+    }
+
+    .analysis-card {
+        /* margin: 1.5em auto; */
+        padding: 1em;
     }
 
     #grafikoni {
