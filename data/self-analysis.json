@@ -5,12 +5,12 @@
     "riskLevel": "srednji",
     "signal": "WAIT",
     "btc": {
-      "price": 59356.21,
-      "change24h": -1.42
+      "price": 59688.15,
+      "change24h": -0.97
     },
     "eth": {
-      "price": 1559.62,
-      "change24h": -1.27
+      "price": 1573.03,
+      "change24h": -0.55
     },
     "gold": {
       "price": 4088,
@@ -24,6 +24,6 @@
       "value": 2.02,
       "change24h": -2.79
     },
-    "summary": "BTC se trenutno kreće oko 59.356 USD, uz dnevnu promenu od -1,42%.\nETH je na 1.559,62 USD, dok je ukupna kripto kapitalizacija oko 2.02 T USD.\nZlato je u rastu, što ukazuje na povećan oprez investitora.\nTrenutno stanje tržišta je: neutralno. Rizik je srednji. Signal: WAIT."
+    "summary": "BTC se trenutno kreće oko 59.688 USD, uz dnevnu promenu od -0,97%.\nETH je na 1.573,03 USD, dok je ukupna kripto kapitalizacija oko 2.02 T USD.\nZlato je u rastu, što ukazuje na povećan oprez investitora.\nTrenutno stanje tržišta je: neutralno. Rizik je srednji. Signal: WAIT."
   }
 ]

@@ -534,7 +534,7 @@ button {
   }
 
   .sa-content {
-    padding: 1.2em;
+    padding: 1em;
   }
 
   .analysis-header {
@@ -755,6 +755,18 @@ button {
         display: flex;
         flex-direction: row;
 
+    }
+
+
+    .self-analysis {
+        
+        /*
+        position: relative;
+        width: 85%;
+        margin: 1.3em auto;
+        */
+        padding: 1.1px;
+        
     }
 
     #grafikoni {
