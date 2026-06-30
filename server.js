@@ -1199,6 +1199,7 @@ function generateDailyReport(i) {
     signal = "OPORAVAK";
   }
 
+  /*
   return {
     date: new Date().toISOString().slice(0, 10),
     marketState,
@@ -1216,6 +1217,28 @@ Zlato je ${i.gold.change24h > 0 ? "u rastu" : "u padu"}, što ukazuje na ${i.gol
 Trenutno stanje tržišta je: ${marketState}. Rizik je ${riskLevel}. Signal: ${signal}.
     `.trim()
   };
+  */
+
+    return {
+    date: new Date().toISOString().slice(0, 10),
+    marketState,
+    riskLevel,
+    signal,
+    btc: i.btc,
+    eth: i.eth,
+    gold: i.gold,
+    oil: i.oil,
+    cryptoTotal: i.cryptoTotal,
+    summary: `
+BTC se trenutno kreće oko ${formatPrice(i.btc.price)} USD, uz dnevnu promenu od ${formatPercent(i.btc.change24h)}%.
+ETH je na ${formatPrice(i.eth.price, 2)} USD. 
+Trenutno stanje tržišta je: ${marketState}. Rizik je ${riskLevel}. Signal: ${signal}.
+    `.trim()
+  };
+
+
+
+
 }
 
 app.get("/api/self-analysis/latest", async (req, res) => {
