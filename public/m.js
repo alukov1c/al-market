@@ -1214,7 +1214,7 @@ function renderAnalysis(report) {
 
 let autoAnalysisCountdownTimer = null;
 let autoAnalysisScheduleRefreshTimer = null;
-let autoAnalysisScheduleLabelInterval = null;
+let autoAnalysisApproxTimeTimer = null;
 let nextAutoAnalysisAtMs = null;
 let serverClockOffsetMs = 0;
 
@@ -1298,19 +1298,16 @@ function startAutoAnalysisCountdown() {
     clearInterval(autoAnalysisScheduleRefreshTimer);
   }
 
-  if (autoAnalysisScheduleLabelInterval) {
-    clearInterval(autoAnalysisScheduleLabelInterval);
+  if (autoAnalysisApproxTimeTimer) {
+    clearInterval(autoAnalysisApproxTimeTimer);
   }
 
-  const scheduleLabel = document.getElementById("autoAnalysisScheduleLabel");
+  const approxTime = document.getElementById("autoAnalysisApproxTime");
 
-  if (scheduleLabel) {
-    let showCronLabel = true;
-    scheduleLabel.textContent = "sinhronizovano sa serverom";
-
-    autoAnalysisScheduleLabelInterval = setInterval(() => {
-      showCronLabel = !showCronLabel;
-      scheduleLabel.textContent = showCronLabel ? "sinhronizovano sa serverom" : "~8 AM";
+  if (approxTime) {
+    approxTime.classList.remove("is-hidden");
+    autoAnalysisApproxTimeTimer = setInterval(() => {
+      approxTime.classList.toggle("is-hidden");
     }, 5000);
   }
 

@@ -499,6 +499,16 @@ lazy-load.market-summary {
   font-variant-numeric: tabular-nums;
 }
 
+.sa-approx-time {
+  display: inline-block;
+  opacity: 1;
+  transition: opacity 0.7s ease;
+}
+
+.sa-approx-time.is-hidden {
+  opacity: 0;
+}
+
 #analysisHistorySelect {
   padding: 0.5em 0.8em;
   border: 1px solid rgba(37, 99, 235, 0.35);
