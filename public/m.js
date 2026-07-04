@@ -633,7 +633,8 @@ btnPlus.addEventListener('click', () => {
 
     if (window.innerWidth <= 700) {
 
-      market.style.fontSize = 'x-large';
+      market.style.fontSize = '18px';
+      setCoinIconSize('16px');
 
     } else {
 
@@ -703,7 +704,11 @@ btnPlus.addEventListener('click', () => {
 
 btnMinus.addEventListener('click', () => {
 
-  market.style.fontSize = 'smaller';
+  if (window.innerWidth <= 700) {
+    market.style.fontSize = '14px';
+  } else {
+    market.style.fontSize = 'smaller';
+  }
 
   setCoinIconSize('18px');
 

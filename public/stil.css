@@ -684,11 +684,31 @@ lazy-load.market-summary {
 
     #market {
         width: 90%;
+        max-width: calc(100vw - 32px);
+        padding: 0.45em;
+        font-size: 14px;
+        overflow: hidden;
     }
 
     #market,
     #market .instrument {
         box-sizing: border-box;
+    }
+
+    #market .instrument {
+        min-width: 0;
+        padding: 0.5em 0.3em;
+        border-radius: 0.7em;
+    }
+
+    #market .instrument-title {
+        gap: 0.25em;
+    }
+
+    #market .coin-icon {
+        width: 16px;
+        height: 16px;
+        flex: 0 0 16px;
     }
 
     #opcije {
