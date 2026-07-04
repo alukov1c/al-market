@@ -1,27 +1,27 @@
 {
-  "collectedAt": "2026-07-04T19:52:41.268Z",
+  "collectedAt": "2026-07-04T19:57:39.004Z",
   "btc": {
-    "price": 63308.01,
-    "change24h": 1.696,
-    "base7d": null,
-    "change7d": null,
-    "base30d": null,
-    "change30d": null
+    "price": 63302,
+    "change24h": 1.711,
+    "base7d": 60029,
+    "change7d": 5.45236469039964,
+    "base30d": 63885.99,
+    "change30d": -0.9141127812216701
   },
   "eth": {
-    "price": 1793.66,
-    "change24h": 2.727,
-    "base7d": null,
-    "change7d": null,
-    "base30d": null,
-    "change30d": null
+    "price": 1793.12,
+    "change24h": 2.683,
+    "base7d": 1573.99,
+    "change7d": 13.921943595575566,
+    "base30d": 1770.77,
+    "change30d": 1.2621627879397046
   },
   "sol": {
-    "price": 81.85,
-    "change24h": -0.92,
-    "base7d": null,
-    "change7d": null,
-    "base30d": null,
-    "change30d": null
+    "price": 81.89,
+    "change24h": -0.751,
+    "base7d": 70.5,
+    "change7d": 16.156028368794324,
+    "base30d": 68.88,
+    "change30d": 18.88792102206737
   }
 }
