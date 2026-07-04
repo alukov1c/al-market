@@ -915,6 +915,167 @@ async function load7dBasePrices() {
 
 }
 
+
+////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////
+//////////////TradingView optimizacija//////////////////
+////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////
+
+/* ==============================
+   Lazy Loading TradingView optimizacija učitavanja widget-a
+============================== */
+
+class LazyLoad extends HTMLElement {
+
+    connectedCallback() {
+
+        if (this.dataset.loaded === "true")
+            return;
+
+        this.setAttribute("aria-busy", "true");
+        this.dataset.state = "waiting";
+
+        if ("IntersectionObserver" in window) {
+
+            const observer = new IntersectionObserver((entries) => {
+
+                entries.forEach(entry => {
+
+                    if (!entry.isIntersecting)
+                        return;
+
+                    LazyLoad.enqueue(this);
+                    observer.unobserve(this);
+
+                });
+
+            }, {
+
+                rootMargin: "0px",
+                threshold: 0.01
+
+            });
+
+            observer.observe(this);
+            this._observer = observer;
+
+        } else {
+
+            window.requestAnimationFrame(() => LazyLoad.enqueue(this));
+
+        }
+
+    }
+
+    disconnectedCallback() {
+
+        this._observer?.disconnect();
+
+    }
+
+    static enqueue(element) {
+
+        if (element.dataset.loaded === "true" || element.dataset.queued === "true")
+            return;
+
+        element.dataset.queued = "true";
+        element.dataset.state = "queued";
+        LazyLoad.queue.push(element);
+        LazyLoad.queue.sort((a, b) => {
+            const order = a.compareDocumentPosition(b);
+            return order & Node.DOCUMENT_POSITION_PRECEDING ? 1 : -1;
+        });
+
+        LazyLoad.processQueue();
+
+    }
+
+    static async processQueue() {
+
+        if (LazyLoad.isLoading)
+            return;
+
+        const element = LazyLoad.queue.shift();
+
+        if (!element)
+            return;
+
+        LazyLoad.isLoading = true;
+        await element.loadContent();
+        LazyLoad.isLoading = false;
+        LazyLoad.processQueue();
+
+    }
+
+    async loadContent() {
+
+        const template = this.querySelector("template");
+
+        if (!template) {
+            this.finishLoading();
+            return;
+        }
+
+        this.dataset.state = "loading";
+
+        const fragment = template.content.cloneNode(true);
+        const scripts = Array.from(fragment.querySelectorAll("script"));
+        const scriptLoads = [];
+
+        scripts.forEach((oldScript) => {
+
+            const script = document.createElement("script");
+
+            Array.from(oldScript.attributes).forEach((attr) => {
+                script.setAttribute(attr.name, attr.value);
+            });
+
+            script.textContent = oldScript.textContent;
+
+            scriptLoads.push(new Promise((resolve) => {
+                script.addEventListener("load", resolve, { once: true });
+                script.addEventListener("error", resolve, { once: true });
+            }));
+
+            oldScript.replaceWith(script);
+
+        });
+
+        this.appendChild(fragment);
+        template.remove();
+
+        await Promise.race([
+            Promise.all(scriptLoads),
+            new Promise(resolve => setTimeout(resolve, 1200))
+        ]);
+
+        this.finishLoading();
+
+    }
+
+    finishLoading() {
+
+        this.dataset.loaded = "true";
+        this.dataset.state = "loaded";
+        this.setAttribute("aria-busy", "false");
+        delete this.dataset.queued;
+
+    }
+
+
+}
+
+LazyLoad.queue = [];
+LazyLoad.isLoading = false;
+
+if (!customElements.get("lazy-load")) {
+    customElements.define("lazy-load", LazyLoad);
+}
+
+
+
 //////////////////////////////////////////
 //////////////////////////////////////////
 /////////analiza-u-realnom-vremenu////////
