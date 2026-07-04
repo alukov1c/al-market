@@ -936,42 +936,75 @@ class LazyLoad extends HTMLElement {
 
         this.setAttribute("aria-busy", "true");
         this.dataset.state = "waiting";
+        LazyLoad.register(this);
 
-        if ("IntersectionObserver" in window) {
-
-            const observer = new IntersectionObserver((entries) => {
-
-                entries.forEach(entry => {
-
-                    if (!entry.isIntersecting)
-                        return;
-
-                    LazyLoad.enqueue(this);
-                    observer.unobserve(this);
-
-                });
-
-            }, {
-
-                rootMargin: "0px",
-                threshold: 0.01
-
-            });
-
-            observer.observe(this);
-            this._observer = observer;
-
-        } else {
-
-            window.requestAnimationFrame(() => LazyLoad.enqueue(this));
-
-        }
+        LazyLoad.scheduleBufferLoad();
 
     }
 
     disconnectedCallback() {
 
-        this._observer?.disconnect();
+        LazyLoad.instances = LazyLoad.instances.filter(element => element !== this);
+
+    }
+
+    static register(element) {
+
+        if (!LazyLoad.instances.includes(element)) {
+            LazyLoad.instances.push(element);
+        }
+
+        LazyLoad.instances.sort(LazyLoad.comparePosition);
+
+        if (LazyLoad.bufferStarted) {
+            LazyLoad.enqueue(element);
+        }
+
+    }
+
+    static comparePosition(a, b) {
+
+        if (a === b)
+            return 0;
+
+        const order = a.compareDocumentPosition(b);
+        return order & Node.DOCUMENT_POSITION_PRECEDING ? 1 : -1;
+
+    }
+
+    static scheduleBufferLoad() {
+
+        if (LazyLoad.bufferScheduled)
+            return;
+
+        LazyLoad.bufferScheduled = true;
+
+        const startAfterPaint = () => {
+
+            window.requestAnimationFrame(() => {
+                window.requestAnimationFrame(() => {
+                    window.setTimeout(() => LazyLoad.enqueueBufferedWidgets(), 150);
+                });
+            });
+
+        };
+
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", startAfterPaint, { once: true });
+        } else {
+            startAfterPaint();
+        }
+
+    }
+
+    static enqueueBufferedWidgets() {
+
+        LazyLoad.bufferStarted = true;
+
+        LazyLoad.instances
+            .slice()
+            .sort(LazyLoad.comparePosition)
+            .forEach(element => LazyLoad.enqueue(element));
 
     }
 
@@ -1068,7 +1101,10 @@ class LazyLoad extends HTMLElement {
 }
 
 LazyLoad.queue = [];
+LazyLoad.instances = [];
 LazyLoad.isLoading = false;
+LazyLoad.bufferScheduled = false;
+LazyLoad.bufferStarted = false;
 
 if (!customElements.get("lazy-load")) {
     customElements.define("lazy-load", LazyLoad);
