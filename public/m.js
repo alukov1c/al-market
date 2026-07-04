@@ -1306,7 +1306,7 @@ function startAutoAnalysisCountdown() {
 
   if (scheduleLabel) {
     let showCronLabel = true;
-    scheduleLabel.textContent = "prema cron rasporedu";
+    scheduleLabel.textContent = "sinhronizovano sa serverom";
 
     autoAnalysisScheduleLabelInterval = setInterval(() => {
       showCronLabel = !showCronLabel;
