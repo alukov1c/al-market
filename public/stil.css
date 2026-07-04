@@ -728,7 +728,8 @@ lazy-load.market-summary {
         }
         */
 
-    #analiza {
+    #analiza,
+    #analiza-r {
 
         width: 90%;
         margin: 0 auto 0 auto;

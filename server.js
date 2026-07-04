@@ -978,8 +978,9 @@ app.get("/api/market", (_req, res) => {
   res.json(marketTick);
 });
 
-async function fetch7dBasePrice(symbol) {
-  const url = `https://data-api.binance.vision/api/v3/klines?symbol=${symbol}&interval=1d&limit=8`;
+async function fetchMarketBasePrice(symbol, days) {
+  const limit = days + 1;
+  const url = `https://data-api.binance.vision/api/v3/klines?symbol=${symbol}&interval=1d&limit=${limit}`;
 
   const res = await fetch(url, {
     headers: {
@@ -993,7 +994,7 @@ async function fetch7dBasePrice(symbol) {
 
   const rows = await res.json();
 
-  if (!Array.isArray(rows) || rows.length < 8) {
+  if (!Array.isArray(rows) || rows.length < limit) {
     throw new Error(`Nedovoljno kline podataka za ${symbol}`);
   }
 
@@ -1002,10 +1003,18 @@ async function fetch7dBasePrice(symbol) {
   const baseClose = Number(rows[0][4]);
 
   if (!Number.isFinite(baseClose) || baseClose <= 0) {
-    throw new Error(`Neispravna 7d baza za ${symbol}`);
+    throw new Error(`Neispravna ${days}d baza za ${symbol}`);
   }
 
   return baseClose;
+}
+
+async function fetch7dBasePrice(symbol) {
+  return fetchMarketBasePrice(symbol, 7);
+}
+
+async function fetch30dBasePrice(symbol) {
+  return fetchMarketBasePrice(symbol, 30);
 }
 
 app.get("/api/market-7d", async (_req, res) => {
@@ -1014,6 +1023,33 @@ app.get("/api/market-7d", async (_req, res) => {
       fetch7dBasePrice("BTCUSDT"),
       fetch7dBasePrice("ETHUSDT"),
       fetch7dBasePrice("SOLUSDT")
+    ]);
+
+    res.json({
+      ok: true,
+      ts: Date.now(),
+      btcBase,
+      ethBase,
+      solBase
+    });
+  } catch (err) {
+    res.status(500).json({
+      ok: false,
+      ts: Date.now(),
+      error: String(err?.message || err),
+      btcBase: null,
+      ethBase: null,
+      solBase: null
+    });
+  }
+});
+
+app.get("/api/market-30d", async (_req, res) => {
+  try {
+    const [btcBase, ethBase, solBase] = await Promise.all([
+      fetch30dBasePrice("BTCUSDT"),
+      fetch30dBasePrice("ETHUSDT"),
+      fetch30dBasePrice("SOLUSDT")
     ]);
 
     res.json({
@@ -1186,9 +1222,13 @@ function calculateIndicators(data) {
     const changes7d = cryptoSymbols
         .map(symbol => Number(data[symbol]?.change7d))
         .filter(Number.isFinite);
+    const changes30d = cryptoSymbols
+        .map(symbol => Number(data[symbol]?.change30d))
+        .filter(Number.isFinite);
 
     const avgCrypto24h = average(changes24h);
     const avgCrypto7d = average(changes7d);
+    const avgCrypto30d = average(changes30d);
     const maxAbsCrypto7d = changes7d.length
         ? Math.max(...changes7d.map(value => Math.abs(value)))
         : null;
@@ -1196,6 +1236,7 @@ function calculateIndicators(data) {
     const riskScore = calculateRiskScore({
         avgCrypto24h,
         avgCrypto7d,
+        avgCrypto30d,
         maxAbsCrypto7d,
         btc24h: Number(data.btc?.change24h),
         btc7d: Number(data.btc?.change7d),
@@ -1208,11 +1249,12 @@ function calculateIndicators(data) {
         indicators: {
             avgCrypto24h,
             avgCrypto7d,
+            avgCrypto30d,
             maxAbsCrypto7d,
             riskScore,
             riskLevel: getRiskLevel(riskScore),
-            marketState: getMarketState(riskScore, avgCrypto24h, avgCrypto7d),
-            signal: getMarketSignal(riskScore, avgCrypto24h, avgCrypto7d)
+            marketState: getMarketState(riskScore, avgCrypto24h, avgCrypto7d, avgCrypto30d),
+            signal: getMarketSignal(riskScore, avgCrypto24h, avgCrypto7d, avgCrypto30d)
         }
     };
 }
@@ -1233,6 +1275,8 @@ function calculateRiskScore(values) {
     score = addRisk(score, values.avgCrypto24h >= 3, -8);
     score = addRisk(score, values.avgCrypto7d <= -6, 15);
     score = addRisk(score, values.avgCrypto7d >= 6, -10);
+    score = addRisk(score, values.avgCrypto30d <= -12, 12);
+    score = addRisk(score, values.avgCrypto30d >= 12, -8);
     score = addRisk(score, values.maxAbsCrypto7d >= 12, 10);
     score = addRisk(score, values.btc24h <= -3, 10);
     score = addRisk(score, values.btc7d <= -7, 10);
@@ -1249,17 +1293,18 @@ function getRiskLevel(score) {
     return "srednji";
 }
 
-function getMarketState(score, avgCrypto24h, avgCrypto7d) {
+function getMarketState(score, avgCrypto24h, avgCrypto7d, avgCrypto30d) {
     if (score >= 70) return "risk-off";
-    if (score <= 35 && avgCrypto24h > 0 && avgCrypto7d > 0) return "risk-on";
+    if (score <= 35 && avgCrypto24h > 0 && avgCrypto7d > 0 && avgCrypto30d > 0) return "risk-on";
     if (avgCrypto7d > 3) return "neutralno do umereno uzlaznog trenda";
+    if (avgCrypto30d < -8) return "neutralno do oprezno na mesečnom nivou";
     if (avgCrypto7d < -3) return "neutralno do oprezno";
     return "neutralno";
 }
 
-function getMarketSignal(score, avgCrypto24h, avgCrypto7d) {
+function getMarketSignal(score, avgCrypto24h, avgCrypto7d, avgCrypto30d) {
     if (score >= 75) return "OPREZ / WAIT";
-    if (score <= 35 && avgCrypto24h > 0 && avgCrypto7d > 0) return "OPORAVAK";
+    if (score <= 35 && avgCrypto24h > 0 && avgCrypto7d > 0 && avgCrypto30d > 0) return "OPORAVAK";
     if (avgCrypto7d > 3 && score < 60) return "WAIT / DCA AKUMULACIJA";
     return "WAIT";
 }
@@ -1381,7 +1426,7 @@ Trenutno stanje tržišta je: ${marketState}. Rizik je ${riskLevel}. Signal: ${s
 }
 
 function generateScoredDailyReport(i) {
-    const { marketState, riskLevel, signal, riskScore, avgCrypto7d } = i.indicators;
+    const { marketState, riskLevel, signal, riskScore, avgCrypto7d, avgCrypto30d } = i.indicators;
     const timeMeta = createReportTimeMeta();
 
     return {
@@ -1414,6 +1459,7 @@ function generateScoredDailyReport(i) {
 BTC se trenutno kreće oko ${formatPrice(i.btc.price)} USD, uz dnevnu promenu od ${formatPercent(i.btc.change24h)}%.
 ETH je na ${formatPrice(i.eth.price, 2)} USD, a SOL na ${formatPrice(i.sol.price, 2)} USD.
 Prosečna 7d promena BTC/ETH/SOL je ${formatPercent(avgCrypto7d)}%, a risk score je ${riskScore}/100.
+Prosečna 30d promena BTC/ETH/SOL je ${formatPercent(avgCrypto30d)}%.
 Trenutno stanje tržišta je: ${marketState}. Rizik je ${riskLevel}. Signal: ${signal}.
         `.trim()
     };

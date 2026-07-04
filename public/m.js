@@ -515,7 +515,7 @@ async function loadInitialMarket() {
 
     updateMarketStateFromTick(data);
 
-    refresh7dAnalysis();
+    refreshMarketAnalysis();
   } catch (err) {
     console.error("Greška u loadInitialMarket():", err);
   }
@@ -540,7 +540,7 @@ function initMarketSocket() {
 
       updateMarketStateFromTick(msg.data);
 
-      refresh7dAnalysis();
+      refreshMarketAnalysis();
 
     } catch (err) {
       console.error("WS message parse error:", err);
@@ -576,6 +576,7 @@ function init() {
 
   loadInitialMarket();
   load7dBasePrices();
+  load30dBasePrices();
   initMarketSocket();
 
 }
@@ -733,8 +734,8 @@ btnNoc.addEventListener('click', () => {
 /////////////////////////////////////////
 /////////////////////////////////////////
 
-function updateVolatilityLabel(level) {
-  const el = document.getElementById("volatilityText");
+function updateVolatilityLabel(level, elementId = "volatilityText") {
+  const el = document.getElementById(elementId);
   if (!el) return;
 
   el.classList.remove("vol-high", "vol-medium", "vol-low");
@@ -751,9 +752,9 @@ function updateVolatilityLabel(level) {
   }
 }
 
-function refreshVolatility() {
+function refreshVolatility(period = "7d", elementId = "volatilityText") {
   const moves = MARKET_SYMBOLS
-    .map(symbol => get7dChangePercent(symbol))
+    .map(symbol => getChangePercent(symbol, period))
     .filter(Number.isFinite);
 
   if (moves.length === 0) return;
@@ -761,11 +762,11 @@ function refreshVolatility() {
   const maxAbsMove = Math.max(...moves.map(value => Math.abs(value)));
 
   if (maxAbsMove >= 8) {
-    updateVolatilityLabel("visoka");
+    updateVolatilityLabel("visoka", elementId);
   } else if (maxAbsMove >= 3) {
-    updateVolatilityLabel("umerena");
+    updateVolatilityLabel("umerena", elementId);
   } else {
-    updateVolatilityLabel("niska");
+    updateVolatilityLabel("niska", elementId);
   }
 }
 
@@ -792,6 +793,9 @@ const analysisState = {
   btc7dBase: null,
   eth7dBase: null,
   sol7dBase: null,
+  btc30dBase: null,
+  eth30dBase: null,
+  sol30dBase: null,
   lastMarketTick: null
 };
 
@@ -827,10 +831,10 @@ function formatPercentSR(value) {
   }) + "%";
 }
 
-function updateAnalysisItem(symbol, pct) {
+function updateAnalysisItem(symbol, pct, period = "7d") {
 
-  const pctEl = document.getElementById(`${symbol}7dChange`);
-  const trendEl = document.getElementById(`${symbol}TrendText`);
+  const pctEl = document.getElementById(`${symbol}${period}Change`);
+  const trendEl = document.getElementById(period === "7d" ? `${symbol}TrendText` : `${symbol}${period}TrendText`);
 
   if (!pctEl || !trendEl || !Number.isFinite(pct)) return;
 
@@ -852,9 +856,9 @@ function updateAnalysisItem(symbol, pct) {
 
 }
 
-function get7dChangePercent(symbol) {
+function getChangePercent(symbol, period) {
   const current = analysisState[`${symbol}Current`];
-  const base = analysisState[`${symbol}7dBase`];
+  const base = analysisState[`${symbol}${period}Base`];
 
   if (!Number.isFinite(current) || !Number.isFinite(base) || base <= 0) {
     return null;
@@ -863,13 +867,25 @@ function get7dChangePercent(symbol) {
   return ((current - base) / base) * 100;
 }
 
-function refresh7dAnalysis() {
+function get7dChangePercent(symbol) {
+  return getChangePercent(symbol, "7d");
+}
+
+function get30dChangePercent(symbol) {
+  return getChangePercent(symbol, "30d");
+}
+
+function refreshMarketAnalysis() {
   MARKET_SYMBOLS.forEach(symbol => {
-    const pct = get7dChangePercent(symbol);
-    if (Number.isFinite(pct)) updateAnalysisItem(symbol, pct);
+    const pct7d = get7dChangePercent(symbol);
+    const pct30d = get30dChangePercent(symbol);
+
+    if (Number.isFinite(pct7d)) updateAnalysisItem(symbol, pct7d, "7d");
+    if (Number.isFinite(pct30d)) updateAnalysisItem(symbol, pct30d, "30d");
   });
 
-  refreshVolatility();
+  refreshVolatility("7d", "volatilityText");
+  refreshVolatility("30d", "volatility30dText");
 
 }
 
@@ -886,9 +902,29 @@ async function load7dBasePrices() {
     analysisState.eth7dBase = Number(data.ethBase);
     analysisState.sol7dBase = Number(data.solBase);
 
-    refresh7dAnalysis();
+    refreshMarketAnalysis();
   } catch (err) {
     console.error("Greška u load7dBasePrices():", err);
+  }
+
+}
+
+async function load30dBasePrices() {
+
+  try {
+    const res = await fetch("/api/market-30d");
+    if (!res.ok) throw new Error("HTTP " + res.status);
+
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || "market-30d error");
+
+    analysisState.btc30dBase = Number(data.btcBase);
+    analysisState.eth30dBase = Number(data.ethBase);
+    analysisState.sol30dBase = Number(data.solBase);
+
+    refreshMarketAnalysis();
+  } catch (err) {
+    console.error("Greška u load30dBasePrices():", err);
   }
 
 }
@@ -1186,12 +1222,15 @@ function readMarketSnapshot() {
     const price = Number(analysisState[`${symbol}Current`]);
     const change24h = Number(tick.changePercent);
     const change7d = get7dChangePercent(symbol);
+    const change30d = get30dChangePercent(symbol);
 
     snapshot[symbol] = {
       price: Number.isFinite(price) ? price : null,
       change24h: Number.isFinite(change24h) ? change24h : null,
       base7d: Number.isFinite(analysisState[`${symbol}7dBase`]) ? analysisState[`${symbol}7dBase`] : null,
-      change7d: Number.isFinite(change7d) ? change7d : null
+      change7d: Number.isFinite(change7d) ? change7d : null,
+      base30d: Number.isFinite(analysisState[`${symbol}30dBase`]) ? analysisState[`${symbol}30dBase`] : null,
+      change30d: Number.isFinite(change30d) ? change30d : null
     };
   });
 
