@@ -1,3 +1,5 @@
 /node_modules
 .env
 .myfxbook_session.json
+loginMyfxbook.txt
+rezervniCSSmeh.txt
