@@ -1205,7 +1205,7 @@ async function generateSelfAnalysisNow() {
 function renderAnalysis(report) {
   const reportDate = report.generatedAt || report.date;
 
-  document.getElementById("analysisDate").textContent = `Datum: ${reportDate}`;
+  document.getElementById("analysisDate").textContent = `Datum poslednje analize: ${reportDate}`;
   document.getElementById("marketState").textContent = report.marketState;
   document.getElementById("riskLevel").textContent = report.riskLevel;
   document.getElementById("marketSignal").textContent = report.signal;
