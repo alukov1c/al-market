@@ -1,0 +1,1537 @@
+// server.js — login → SESSION → get-my-accounts → real-time equity (CHF)
+
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
+import crypto from 'crypto';
+import fs from "fs";
+import http from "http";
+import { WebSocketServer, WebSocket } from "ws";
+import cron from "node-cron";
+import fsp from "fs/promises";
+//import path from "path";
+
+dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const app = express();
+const server = http.createServer(app);
+const PORT = process.env.PORT || 8080;
+const BASE = "https://www.myfxbook.com/api";
+
+let cachedAccounts = [];
+let cachedTs = 0;
+let refreshing = false;
+let backoffUntil = 0;
+const CACHE_TTL_MS = 120000; // 2 minuta umesto 60s (izbegavanje API blokiranja)
+
+
+// indeks naloga se koristi u kod.js (INDEX = 1)
+const ACCOUNT_INDEX = parseInt(process.env.ACCOUNT_INDEX || "0", 10);
+
+// GLOBAL SESSION (samo u memoriji)
+let SESSION = null;
+
+
+const SESSION_FILE = ".myfxbook_session.json";
+
+function loadSessionFromDisk() {
+  try {
+    if (fs.existsSync(SESSION_FILE)) {
+      const obj = JSON.parse(fs.readFileSync(SESSION_FILE, "utf8"));
+      if (obj?.session) {
+        SESSION = String(obj.session).trim();
+        console.log("Loaded session from disk. Prefix:", SESSION.slice(0, 6) + "…");
+      }
+    }
+  } catch (e) {
+    console.warn("Could not load session file:", e.message);
+  }
+}
+
+function saveSessionToDisk() {
+  try {
+    fs.writeFileSync(SESSION_FILE, JSON.stringify({ session: SESSION, savedAt: Date.now() }, null, 2), "utf8");
+  } catch (e) {
+    console.warn("Could not save session file:", e.message);
+  }
+}
+
+// pozvati na boot:
+loadSessionFromDisk();
+
+const SELF_ANALYSIS_CRON_EXPRESSION = "00 08 * * *";
+const SELF_ANALYSIS_CRON_TIMEZONE = "Europe/Belgrade";
+
+const selfAnalysisCronTask = cron.schedule(SELF_ANALYSIS_CRON_EXPRESSION, async () => {
+  console.log("Generisanje dnevne A-L Market analize...");
+
+  const data = await fetchMarketData();
+  const indicators = calculateIndicators(data);
+  const report = generateScoredDailyReport(indicators);
+
+  await saveReport(report);
+}, {
+  timezone: SELF_ANALYSIS_CRON_TIMEZONE
+});
+
+// equity tick (za graf + input)
+/*
+let lastEquityTick = {
+  t: Date.now(),
+  equity: null,
+  currency: "CHF"
+};
+*/
+
+// --------------------------------------------------
+// LOGIN — ekvivalent curl "…/login.json?email=...&password=..."
+// --------------------------------------------------
+// Nova verzija
+
+let lastLoginAttemptAt = 0;     // poslednji POKUŠAJ logina
+let loginBlockedUntil = 0;      // backoff do kog se ne pokušava login
+let loginInFlight = null;       // Promise za single-flight
+
+const MIN_LOGIN_INTERVAL_MS = 60_000;      // 60s između pokušaja (povećati po potrebi)
+const FORBIDDEN_BACKOFF_MS = 12 * 60 * 60_000; // 12 * 60 min backoff na HTTP 403
+const FAIL_BACKOFF_MS = 5 * 60_000;  // 5 min backoff na druge greške
+
+async function loginMyfxbook() {
+  // Ako sesija postoji, ne raditi ništa
+  if (SESSION) return SESSION;
+
+  const now = Date.now();
+
+  // Ako je backoff, ne pokušavati ponovo
+  if (now < loginBlockedUntil) {
+    throw new Error(`Login blocked by backoff until ${new Date(loginBlockedUntil).toISOString()}`);
+  }
+
+  // Single-flight: ako je login već u toku, sačekati
+  if (loginInFlight) return loginInFlight;
+
+  // Minimum interval između pokušaja
+  if (now - lastLoginAttemptAt < MIN_LOGIN_INTERVAL_MS) {
+    throw new Error("Previše login pokušaja u kratkom vremenu (rate limit u aplikaciji).");
+  }
+
+  lastLoginAttemptAt = now;
+
+  loginInFlight = (async () => {
+    const email = process.env.MYFXBOOK_EMAIL;
+    const password = process.env.MYFXBOOK_PASSWORD;
+
+    if (!email || !password) {
+      throw new Error("MYFXBOOK_EMAIL ili MYFXBOOK_PASSWORD nisu podešeni.");
+    }
+
+    const url = `${BASE}/login.json?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`;
+
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/124 Safari/537.36",
+        "Accept": "application/json,text/javascript,*/*;q=0.1",
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache"
+      }
+    });
+
+    console.log("Login HTTP status:", res.status);
+
+    // 403: najčešće WAF / previše pokušaja / zabranjen datacenter IP
+    if (res.status === 403) {
+      loginBlockedUntil = Date.now() + FORBIDDEN_BACKOFF_MS;
+      throw new Error(`Login HTTP 403 → backoff ${Math.round(FORBIDDEN_BACKOFF_MS / 60000)} min`);
+    }
+
+    if (!res.ok) {
+      // ostale greške: uvođenje kraćeg backoff-a
+      loginBlockedUntil = Date.now() + FAIL_BACKOFF_MS;
+      throw new Error("Login HTTP error " + res.status);
+    }
+
+    const data = await res.json();
+    console.log("Login JSON:", data);
+
+    if (data.error) {
+      // označeno je kao greška sa backoff-om
+      loginBlockedUntil = Date.now() + FAIL_BACKOFF_MS;
+      throw new Error("Login error: " + (data.message || "Unknown"));
+    }
+
+    if (!data.session) {
+      loginBlockedUntil = Date.now() + FAIL_BACKOFF_MS;
+      throw new Error("Login OK ali nema sesije u odgovoru.");
+    }
+
+    // VAŽNO: bez dekodovanja sesije
+    SESSION = String(data.session).trim();
+    saveSessionToDisk();
+    console.log("SESSION prefix:", SESSION.slice(0, 6) + "…");
+    return SESSION;
+  })()
+    .finally(() => {
+      // obavezno resetovanje single-flight
+      loginInFlight = null;
+    });
+
+  return loginInFlight;
+}
+
+
+
+
+// Pomoćna funkcija: parsiranje Myfxbook formata "MM/DD/YYYY HH:mm"
+function parseMyfxbookDate(str) {
+  if (!str) return null;
+
+  const [datePart, timePart] = str.split(" ");
+  if (!datePart || !timePart) return null;
+
+  const [month, day, year] = datePart.split("/").map(Number);
+  const [hour, minute] = timePart.split(":").map(Number);
+
+  //Korekcija: -1 sat
+  return new Date(
+    year,
+    month - 1,
+    day,
+    (hour ?? 0) - 1,
+    minute ?? 0,
+    0
+  );
+}
+
+
+function formatSerbianDate(dateObj) {
+  if (!dateObj || !(dateObj instanceof Date)) return null;
+
+  const dd = String(dateObj.getDate()).padStart(2, "0");
+  const mm = String(dateObj.getMonth() + 1).padStart(2, "0");
+  const yyyy = dateObj.getFullYear();
+
+  const hh = String(dateObj.getHours()).padStart(2, "0");
+  const min = String(dateObj.getMinutes()).padStart(2, "0");
+
+  return `${dd}.${mm}.${yyyy}. ${hh}:${min}h`;
+}
+
+
+// --------------------------------------------------
+// GET-MY-ACCOUNTS — Korak 3 (bez encodeURIComponent za session)
+// --------------------------------------------------
+async function getMyAccounts() {
+  // Ako nema sesije, prvo login (ali ako loginMyfxbook već ima backoff)
+  if (!SESSION) {
+    console.log("SESSION je null → loginMyfxbook()");
+    await loginMyfxbook();
+  }
+
+  let attempt = 0;
+
+  while (attempt < 2) {
+    attempt++;
+
+    const url = `${BASE}/get-my-accounts.json?session=${SESSION}`;
+    console.log(">>> GET-MY-ACCOUNTS URL:", url);
+
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Accept": "application/json,text/javascript,*/*;q=0.1",
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache",
+        "User-Agent": "Node-Myfxbook-Client"
+      }
+    });
+
+    if (!res.ok) {
+      // Bez pokušaja relogin-a ako je 403 na accounts
+      throw new Error(`get-my-accounts HTTP error ${res.status}`);
+    }
+
+    const data = await res.json();
+
+    if (data?.error) {
+      const msg = String(data.message || "").toLowerCase();
+
+      // Samo 1 retry za invalid session
+      if (msg.includes("invalid session") && attempt === 1) {
+        console.warn("⚠ Invalid session → relogin jednom pa retry…");
+        SESSION = null;
+        await loginMyfxbook(); // sada je uključena zaštita backoff-om
+        continue;
+      }
+
+      throw new Error("get-my-accounts error: " + (data.message || "Unknown"));
+    }
+
+    return data;
+  }
+
+  throw new Error("getMyAccounts failed after retry");
+}
+
+
+
+// helper: siguran wrap oko getMyAccounts da uvek vrati objekat {accounts:[]}
+/*
+async function getMyfxbookAccountsSafe() {
+  const data = await getMyAccounts();
+  if (!data || typeof data !== "object") {
+    throw new Error("getMyfxbookAccountsSafe: getMyAccounts vratio neočekivan tip.");
+  }
+  if (!Array.isArray(data.accounts)) {
+    console.warn("getMyfxbookAccountsSafe: data.accounts nije niz, kreiranje praznog niza.");
+    return { accounts: [] };
+  }
+  return data;
+}
+*/
+
+//dohvatanje istorije za konkretan nalog po ID
+async function getHistoryForAccountId(accountId) {
+  if (!SESSION) {
+    await loginMyfxbook();
+  }
+
+  let url = `${BASE}/get-history.json?session=${SESSION}&id=${accountId}`;
+  console.log(">>> GET-HISTORY URL:", url);
+
+  let res = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Accept": "application/json,text/javascript,*/*;q=0.1",
+      "User-Agent": "Node-Myfxbook-Client"
+    }
+  });
+
+  if (!res.ok) throw new Error(`get-history HTTP ${res.status}`);
+
+  //privremeno uklanjanje prikaza JSON
+  let data = await res.json();
+  //console.log("get-history response:", data);
+
+  // fallback za "Invalid session"
+  if (data.error && (data.message || "").toLowerCase().includes("invalid session")) {
+    console.warn("⚠ Invalid session u getHistoryForAccountId → relogin & retry…");
+    SESSION = null;
+    await loginMyfxbook();
+
+    url = `${BASE}/get-history.json?session=${SESSION}&id=${accountId}`;
+    console.log(">>> GET-HISTORY (after relogin) URL:", url);
+
+    res = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Accept": "application/json,text/javascript,*/*;q=0.1",
+        "User-Agent": "Node-Myfxbook-Client"
+      }
+    });
+
+    if (!res.ok) throw new Error(`get-history HTTP ${res.status} after relogin`);
+
+    data = await res.json();
+    //console.log("get-history after relogin:", data);
+
+    if (data.error) {
+      throw new Error("get-history posle relogina error: " + (data.message || "Unknown"));
+    }
+  }
+
+  if (data.error) {
+    throw new Error("get-history error: " + (data.message || "Unknown"));
+  }
+
+  // vraćanje niza trejdova
+  return data.history || [];
+}
+
+// -----------------------------------------------------
+//
+//BINANCE
+//
+//------------------------------------------------------
+async function getBinanceCapital() {
+  try {
+    const apiKey = process.env.BINANCE_API_KEY;
+    const apiSecret = process.env.BINANCE_API_SECRET;
+
+    if (!apiKey || !apiSecret) {
+      console.warn("Binance API ključevi nisu definisani u .env!");
+      return null;
+    }
+
+    const timestamp = Date.now();
+    const recvWindow = 45000;
+
+    const query = `timestamp=${timestamp}&recvWindow=${recvWindow}`;
+
+    const signature = crypto
+      .createHmac("sha256", apiSecret)
+      .update(query)
+      .digest("hex");
+
+    const url = `https://api.binance.com/api/v3/account?${query}&signature=${signature}`;
+
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        "X-MBX-APIKEY": apiKey
+      }
+    });
+
+    // DEBUG: detaljniji ispis zbog lakšeg praćenja grešaka
+    if (!res.ok) {
+      const txt = await res.text();
+      console.warn("Binance HTTP error:", res.status, txt);
+      return null;
+    }
+
+    const data = await res.json();
+    if (!data.balances) return null;
+
+    // -------------------------------------
+    // UKUPNA VREDNOST PORTFOLIJA U USDT
+    // -------------------------------------
+    let totalUsdt = 0;
+
+    for (const b of data.balances) {
+      const free = Number(b.free || 0);
+      const locked = Number(b.locked || 0);
+      const total = free + locked;
+
+      if (total <= 0) continue;
+
+      if (b.asset === "USDT") {
+        totalUsdt += total;
+      } else {
+        // trenutna cena preko /ticker/price
+        const priceRes = await fetch(
+          `https://api.binance.com/api/v3/ticker/price?symbol=${b.asset}USDT`
+        );
+
+        if (!priceRes.ok) continue;
+
+        const priceData = await priceRes.json();
+        const price = Number(priceData.price || 0);
+
+        if (price > 0) {
+          totalUsdt += total * price;
+        }
+      }
+    }
+
+    return Number(totalUsdt.toFixed(2));
+
+  } catch (e) {
+    console.warn("Binance API error:", e.message);
+    return null;
+  }
+}
+
+// --------------------------------------------
+// KONVERZIJA USDT → CHF preko Binance API
+// --------------------------------------------
+async function convertUsdtToChf(usdtAmount) {
+  try {
+    if (!usdtAmount || usdtAmount <= 0) return 0;
+
+    // Binance par USDTCHF
+    // Ako ne postoji, koristiti USDT → EUR → CHF
+    const direct = await fetch("https://api.binance.com/api/v3/ticker/price?symbol=USDCHF");
+
+    if (direct.ok) {
+      const dj = await direct.json();
+      const chfPrice = Number(dj.price || 0);
+      if (chfPrice > 0) {
+        return Number((usdtAmount * chfPrice).toFixed(2));
+      }
+    }
+
+    // fallback ako USDCHF ne postoji
+    const eurPriceRes = await fetch("https://api.binance.com/api/v3/ticker/price?symbol=EURCHF");
+    const usdeurRes = await fetch("https://api.binance.com/api/v3/ticker/price?symbol=USDEUR");
+
+    if (!eurPriceRes.ok || !usdeurRes.ok) return 0;
+
+    const eurChf = Number((await eurPriceRes.json()).price || 0);
+    const usdEur = Number((await usdeurRes.json()).price || 0);
+
+    if (eurChf > 0 && usdEur > 0) {
+      return Number((usdtAmount * usdEur * eurChf).toFixed(2));
+    }
+
+    return 0;
+
+  } catch (err) {
+    console.warn("convertUsdtToChf error:", err.message);
+    return 0;
+  }
+}
+
+
+// --------------------------------------------------
+// PERIODIČNO OSVEŽAVANJE TRENUTNOG KAPITALA (CHF)
+// --------------------------------------------------
+// --------------------------------------------------
+// SABIRANJE KAPITALA SA NALOGA [0] i [2] => promena indeksa
+// --------------------------------------------------
+//
+// + Binance
+//
+//---------------------------------------------------
+
+let lastEquityTick = {
+  t: Date.now(),
+  equityChf: null,
+  a: { index: 0, equity: null, currency: null },
+  b: { index: 2, equity: null, currency: null },
+  note: "init"
+};
+
+// Jednostavna FX mapa (primer). Kasnije može da se zameni realnim API-jem.
+const fxToChf = {
+  CHF: 1.00,
+  USD: 0.790,  // 
+  EUR: 0.928,  // prier
+  GBP: 1.07,  // 
+  RSD: 0.0079 // 
+};
+
+function toNumber(x) {
+  const n = Number(x);
+  return Number.isFinite(n) ? n : null;
+}
+
+function convertToChf(amount, currency) {
+  if (amount == null) return null;
+  const cur = String(currency || "").toUpperCase().trim();
+  const rate = fxToChf[cur];
+  if (!rate) return null;
+  return amount * rate;
+}
+
+async function refreshEquityTick() {
+  try {
+    await ensureAccountsCache(); // osvežiti cache po TTL-u
+    const accounts = Array.isArray(cachedAccounts) ? cachedAccounts : [];
+
+    // Ako je "cache" prazan, bez spamovanja log-ovima
+    if (!accounts.length) {
+      lastEquityTick = {
+        ...lastEquityTick,
+        t: Date.now(),
+        equityChf: null,
+        note: "no accounts in cache"
+      };
+      return;
+    }
+
+    // Bezbedno uzimanje naloga po indeksima (mogu da ne postoje)
+    const acc1 = accounts[0] || null;
+    const acc2 = accounts[2] || null;
+
+    const aEquity = acc1 ? toNumber(acc1.equity) : null;
+    const aCurr = acc1 ? (acc1.currency || null) : null;
+
+    const bEquity = acc2 ? toNumber(acc2.equity) : null;
+    const bCurr = acc2 ? (acc2.currency || null) : null;
+
+    // Konverzija u CHF (ako je već CHF, samo *1)
+    const aChf = convertToChf(aEquity, aCurr);
+    const bChf = convertToChf(bEquity, bCurr);
+
+    // Sabrati samo ono što postoji
+    const parts = [aChf, bChf].filter(v => typeof v === "number");
+    const totalChf = parts.length ? Number(parts.reduce((s, v) => s + v, 0).toFixed(2)) : null;
+
+    lastEquityTick = {
+      t: Date.now(),
+      equityChf: totalChf,
+      a: { index: 0, equity: aEquity, currency: aCurr, chf: aChf != null ? Number(aChf.toFixed(2)) : null },
+      b: { index: 2, equity: bEquity, currency: bCurr, chf: bChf != null ? Number(bChf.toFixed(2)) : null },
+      note: totalChf == null ? "missing fx rate or missing equities" : "ok"
+    };
+  } catch (e) {
+    console.warn("refreshEquityTick error:", e.message);
+    lastEquityTick = {
+      ...lastEquityTick,
+      t: Date.now(),
+      equityChf: null,
+      note: "error: " + e.message
+    };
+  }
+}
+
+async function ensureAccountsCache() {
+  const now = Date.now();
+  if (now < loginBlockedUntil) return;
+  if (now < backoffUntil) return;
+  if (refreshing) return;
+  if (cachedAccounts.length && (now - cachedTs) < CACHE_TTL_MS) return;
+
+  refreshing = true;
+  try {
+    const data = await getMyAccounts();    // jedini poziv ka Myfxbook-u
+    cachedAccounts = data.accounts || [];
+    cachedTs = Date.now();
+  } catch (e) {
+    const msg = String(e?.message || e);
+    if (msg.includes("403")) {
+      backoffUntil = Date.now() + 12 * 60 * 60 * 1000; // 12 * 60 min 
+      console.warn("Myfxbook 403 → backoff 12 * 60 min");
+    } else {
+      backoffUntil = Date.now() + 5 * 60 * 1000; // 5 min za ostale greške
+      console.warn("Myfxbook error → backoff 5 min:", msg);
+    }
+    // KLJUČNO: ne throw — samo izlaz
+    return;
+  } finally {
+    refreshing = false;
+  }
+}
+
+setInterval(ensureAccountsCache, 120000);
+
+
+// -----------------------------------------------------
+//
+// MARKET WS (BTC + ETH preko Binance, pa broadcast klijentima)
+//
+// -----------------------------------------------------
+
+const wss = new WebSocketServer({ server });
+
+let marketTick = {
+  t: Date.now(),
+  btc: {
+    price: null,
+    changePercent: null
+  },
+  eth: {
+    price: null,
+    changePercent: null
+  },
+  sol: {
+    price: null,
+    changePercent: null
+  },
+  note: "init"
+};
+
+function broadcastMarketTick() {
+  const payload = JSON.stringify({
+    type: "market",
+    data: marketTick
+  });
+
+  for (const client of wss.clients) {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(payload);
+    }
+  }
+}
+
+wss.on("connection", (ws) => {
+  console.log("WS klijent povezan.");
+
+  ws.send(JSON.stringify({
+    type: "market",
+    data: marketTick
+  }));
+
+  ws.on("close", () => {
+    console.log("WS klijent diskonektovan.");
+  });
+
+  ws.on("error", (err) => {
+    console.warn("WS client error:", err.message);
+  });
+});
+
+let binanceWs = null;
+let reconnectTimer = null;
+
+function connectBinanceMarketStream() {
+  if (binanceWs && (binanceWs.readyState === WebSocket.OPEN || binanceWs.readyState === WebSocket.CONNECTING)) {
+    return;
+  }
+
+  //const url = "wss://stream.binance.com:9443/stream?streams=btcusdt@ticker/ethusdt@ticker/solusdt@ticker";
+  const url = "wss://data-stream.binance.vision/stream?streams=btcusdt@ticker/ethusdt@ticker/solusdt@ticker";
+
+  binanceWs = new WebSocket(url);
+
+  binanceWs.on("open", () => {
+    console.log("Binance market WS povezan.");
+  });
+
+  binanceWs.on("message", (raw) => {
+    try {
+      const msg = JSON.parse(raw.toString());
+      const data = msg?.data;
+
+      if (!data || !data.s) return;
+
+      const symbol = data.s;
+      const price = Number(data.c);
+      const changePercent = Number(data.P);
+
+      marketTick.t = Date.now();
+      marketTick.note = "ok";
+
+      if (symbol === "BTCUSDT") {
+        marketTick.btc.price = Number.isFinite(price) ? price : null;
+        marketTick.btc.changePercent = Number.isFinite(changePercent) ? changePercent : null;
+      }
+
+      if (symbol === "ETHUSDT") {
+        marketTick.eth.price = Number.isFinite(price) ? price : null;
+        marketTick.eth.changePercent = Number.isFinite(changePercent) ? changePercent : null;
+      }
+
+      if (symbol === "SOLUSDT") {
+        marketTick.sol.price = Number.isFinite(price) ? price : null;
+        marketTick.sol.changePercent = Number.isFinite(changePercent) ? changePercent : null;
+      }
+
+      broadcastMarketTick();
+    } catch (e) {
+      console.warn("Binance WS parse error:", e.message);
+    }
+  });
+
+  binanceWs.on("close", () => {
+    console.warn("Binance market WS zatvoren. Reconnect za 3s...");
+    marketTick.note = "binance socket closed";
+
+    if (reconnectTimer) clearTimeout(reconnectTimer);
+    reconnectTimer = setTimeout(connectBinanceMarketStream, 3000);
+  });
+
+  binanceWs.on("error", (err) => {
+    console.warn("Binance market WS error:", err.message);
+  });
+}
+
+
+// --------------------------------------------------
+// STATIC — front-end (market.html, kod.js, m.html, m.js, stil.css)
+// --------------------------------------------------
+app.use(cors());
+app.use(express.json());
+app.use(express.static(path.join(__dirname, "public")));
+
+/*
+app.get("/", (_req, res) => {
+  res.sendFile(path.join(__dirname, "public", "m1.html"));
+});
+*/
+
+
+app.get("/m1", (_req, res) => {
+  res.sendFile(path.join(__dirname, "public", "m1.html"));
+});
+
+
+// --------------------------------------------------
+// /api/accounts — korišćenje getMyAccounts()
+// --------------------------------------------------
+
+
+app.get("/api/accounts", async (_req, res) => {
+  await ensureAccountsCache();
+  res.json(Array.isArray(cachedAccounts) ? cachedAccounts : []);
+});
+
+app.get("/api/status", (_req, res) => {
+  const now = Date.now();
+  const blockedUntil = Math.max(loginBlockedUntil || 0, backoffUntil || 0);
+
+  let state = "ACTIVE";
+  let message = null;
+
+  if (!SESSION || !Array.isArray(cachedAccounts) || cachedAccounts.length === 0) {
+    if (now < blockedUntil) {
+      state = "STOPPED";
+      message = "API je trenutno stopiran — podaci će se pojaviti automatski.";
+    } else {
+      state = "WAITING";
+      message = "Čekanje na Myfxbook API…";
+    }
+  }
+
+  res.json({
+    state,
+    message,
+    now,
+    blockedUntil,
+    hasSession: !!SESSION,
+    cachedCount: Array.isArray(cachedAccounts) ? cachedAccounts.length : 0,
+    cachedTs
+  });
+});
+
+// --------------------------------------------------
+// /api/equity — koristi lastEquityTick (za polling)
+// --------------------------------------------------
+app.get("/api/equity", (_req, res) => {
+  res.json(lastEquityTick);
+});
+
+// --------------------------------------------------
+// /api/stream-equity — SSE stream za Chart.js
+// --------------------------------------------------
+app.get("/api/stream-equity", (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.flushHeaders();
+
+  // poslati trenutni tick odmah
+  res.write(`data: ${JSON.stringify(lastEquityTick)}\n\n`);
+
+  const intervalMs = 5000;
+  const timer = setInterval(() => {
+    res.write(`data: ${JSON.stringify(lastEquityTick)}\n\n`);
+  }, intervalMs);
+
+  req.on("close", () => {
+    clearInterval(timer);
+  });
+});
+
+//željeni indeksi portfolija (1, 3)
+//const LAST_TRADE_INDICES = [/*1,*/ 2, 4];
+
+const LAST_TRADE_INDICES = [0, 2];
+
+function pickProfit(a) {
+  // prioritet: profit => daily → monthly 
+  const p = Number(a?.profit);
+  if (Number.isFinite(p)) return p;
+
+  const d = Number(a?.daily);
+  if (Number.isFinite(d)) return d;
+
+  const m = Number(a?.monthly);
+  if (Number.isFinite(m)) return m;
+
+  return null;
+}
+
+function pickDate(a) {
+  // “poslednja promena” naloga (najkorisnije za UI)
+  return a?.lastUpdateDate || a?.creationDate || null;
+}
+
+// --- History cache (da ne spamuje Myfxbook) ---
+const HISTORY_TTL_MS = 60_000; // 60s dovoljno; po želji 2-5 min
+const historyCache = new Map(); // accountId(string) -> { ts, items }
+
+function isTradeAction(actionRaw) {
+  const a = String(actionRaw || "").toLowerCase().trim();
+
+  // izbaci depozite / povlačenja / balans akcije
+  if (a.includes("deposit")) return false;
+  if (a.includes("withdraw")) return false;
+  if (a.includes("balance")) return false;
+  if (a.includes("credit")) return false;
+  if (a.includes("rebate")) return false;
+
+  // trade akcije (mogu da se uključe i varijacije tipa "buy limit", "sell stop", itd.)
+  return a.includes("buy") || a.includes("sell");
+}
+
+// Myfxbook get-history.json (vraća poslednjih ~50 transakcija) :contentReference[oaicite:1]{index=1}
+// --- History cache (da ne spamuje Myfxbook) ---
+//const HISTORY_TTL_MS = 60_000; // 60s (po želji 2-5 min)
+//const historyCache = new Map(); // accountId -> { ts, items }
+
+async function getHistoryCached(accountId) {
+  const key = String(accountId);
+  const now = Date.now();
+
+  const hit = historyCache.get(key);
+  if (hit && (now - hit.ts) < HISTORY_TTL_MS) return hit.items;
+
+  //korišćenje postojećeg wrapper-a, bez apiGet()
+  const items = await getHistoryForAccountId(key); // očekuje niz "history" zapisa
+  const arr = Array.isArray(items) ? items : [];
+
+  historyCache.set(key, { ts: now, items: arr });
+  return arr;
+}
+
+/*
+function pickLastClosedTrade(historyArr) {
+  // filtriranje  trade-ove (buy/sell...) i vraćanje poslednjeg po closeTime
+  const trades = historyArr.filter(t => isTradeAction(t.action));
+
+  if (!trades.length) return null;
+
+  // Myfxbook format je string, ali pošto su svi istog formata,
+  // najjednostavnije: uzeti prvi nakon sortiranja po closeTime/opentime
+  // (closeTime je najbolji za "zatvoren trade")
+  trades.sort((a, b) => String(a.closeTime || "").localeCompare(String(b.closeTime || "")));
+  return trades[trades.length - 1] || null;
+}
+*/
+
+function pickLastClosedTrade(historyArr) {
+  const trades = (historyArr || []).filter(tr => {
+    const action = String(tr.action || "").toLowerCase();
+    const symbol = String(tr.symbol || "").trim();
+
+    // samo pravi trejdovi
+    if (!symbol) return false;
+    if (!action.includes("buy") && !action.includes("sell")) return false;
+
+    // ukloniti deposit/withdraw/balance (dodatna sigurnost)
+    if (action.includes("deposit") || action.includes("withdraw") || action.includes("balance")) return false;
+
+    return true;
+  });
+
+  if (!trades.length) return null;
+
+  let best = null;
+  let bestTs = -1;
+
+  for (const tr of trades) {
+    const d = parseMyfxbookDate(tr.closeTime) || parseMyfxbookDate(tr.openTime);
+    const ts = d ? d.getTime() : -1;
+    if (ts > bestTs) {
+      bestTs = ts;
+      best = tr;
+    }
+  }
+
+  return best;
+}
+
+
+//const LAST_TRADE_INDICES = [1, 3];
+
+app.get("/api/last-trades", async (_req, res) => {
+  try {
+    await ensureAccountsCache();
+    const accounts = Array.isArray(cachedAccounts) ? cachedAccounts : [];
+
+    const items = await Promise.all(
+      LAST_TRADE_INDICES.map(async (index) => {
+        const a = accounts[index];
+        const accountId = a?.id;              // Myfxbook entity id (koristi se za get-history) :contentReference[oaicite:2]{index=2}
+        const currency = a?.currency ?? null;
+
+        if (!accountId) {
+          return { index, profit: null, date: null, currency, action: null, symbol: null };
+        }
+
+        const history = await getHistoryCached(accountId);
+        const last = pickLastClosedTrade(history);
+
+        const dateObj = last ? parseMyfxbookDate(last.closeTime || last.openTime) : null;
+        const formattedDate = dateObj ? formatSerbianDate(dateObj) : null;
+
+        return {
+          index,
+          profit: last?.profit ?? null,
+          //date:   last?.closeTime ?? null,    // zatvaranje pozicije
+          date: formattedDate,
+          currency,
+          action: last?.action ?? null,       // Buy / Sell / Buy Limit ...
+          symbol: last?.symbol ?? null
+        };
+      })
+    );
+
+    return res.json({ ok: true, ts: Date.now(), items });
+  } catch (e) {
+    return res.json({
+      ok: false,
+      ts: Date.now(),
+      error: String(e?.message || e),
+      items: []
+    });
+  }
+});
+
+
+app.post("/api/set-session", (req, res) => {
+  const s = String(req.body?.session || "").trim();
+  if (!s || s.length < 10) {
+    return res.status(400).json({ ok: false, error: "Session missing/too short" });
+  }
+  SESSION = s;
+  loginBlockedUntil = 0; // reset backoff kada korisnik ubaci novu sesiju
+  backoffUntil = 0;
+  saveSessionToDisk();
+  res.json({ ok: true, sessionPrefix: SESSION.slice(0, 6) + "…" });
+});
+
+app.get("/api/market", (_req, res) => {
+  res.json(marketTick);
+});
+
+async function fetchMarketBasePrice(symbol, days) {
+  const limit = days + 1;
+  const url = `https://data-api.binance.vision/api/v3/klines?symbol=${symbol}&interval=1d&limit=${limit}`;
+
+  const res = await fetch(url, {
+    headers: {
+      "Accept": "application/json"
+    }
+  });
+
+  if (!res.ok) {
+    throw new Error(`Binance klines HTTP ${res.status} za ${symbol}`);
+  }
+
+  const rows = await res.json();
+
+  if (!Array.isArray(rows) || rows.length < limit) {
+    throw new Error(`Nedovoljno kline podataka za ${symbol}`);
+  }
+
+  // rows[0] je najstarija od poslednjih 8 dnevnih sveća
+  // uzima se cena zatvaranja (close) od pre ~7 dana kao osnova (baza)
+  const baseClose = Number(rows[0][4]);
+
+  if (!Number.isFinite(baseClose) || baseClose <= 0) {
+    throw new Error(`Neispravna ${days}d baza za ${symbol}`);
+  }
+
+  return baseClose;
+}
+
+async function fetch7dBasePrice(symbol) {
+  return fetchMarketBasePrice(symbol, 7);
+}
+
+async function fetch30dBasePrice(symbol) {
+  return fetchMarketBasePrice(symbol, 30);
+}
+
+app.get("/api/market-7d", async (_req, res) => {
+  try {
+    const [btcBase, ethBase, solBase] = await Promise.all([
+      fetch7dBasePrice("BTCUSDT"),
+      fetch7dBasePrice("ETHUSDT"),
+      fetch7dBasePrice("SOLUSDT")
+    ]);
+
+    res.json({
+      ok: true,
+      ts: Date.now(),
+      btcBase,
+      ethBase,
+      solBase
+    });
+  } catch (err) {
+    res.status(500).json({
+      ok: false,
+      ts: Date.now(),
+      error: String(err?.message || err),
+      btcBase: null,
+      ethBase: null,
+      solBase: null
+    });
+  }
+});
+
+app.get("/api/market-30d", async (_req, res) => {
+  try {
+    const [btcBase, ethBase, solBase] = await Promise.all([
+      fetch30dBasePrice("BTCUSDT"),
+      fetch30dBasePrice("ETHUSDT"),
+      fetch30dBasePrice("SOLUSDT")
+    ]);
+
+    res.json({
+      ok: true,
+      ts: Date.now(),
+      btcBase,
+      ethBase,
+      solBase
+    });
+  } catch (err) {
+    res.status(500).json({
+      ok: false,
+      ts: Date.now(),
+      error: String(err?.message || err),
+      btcBase: null,
+      ethBase: null,
+      solBase: null
+    });
+  }
+});
+
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+///////////////self-analysis: A-L analitički mehanizam//////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+//import fs from "fs/promises";
+//import path from "path";
+
+const REPORTS_FILE = path.join(process.cwd(), "data", "self-analysis.json");
+
+//const CRYPTO_SNAPSHOT_FILE = path.join(process.cwd(), "data", "crypto-snapshot.json");
+
+const MARKET_SNAPSHOT_FILE = path.join(process.cwd(),"data","market-snapshot.json");
+
+app.post("/api/market-snapshot", async (req, res) => {
+    await fsp.writeFile(
+        MARKET_SNAPSHOT_FILE,
+        JSON.stringify(req.body, null, 2),
+        "utf8"
+    );
+
+    res.json({ success: true });
+});
+
+async function fetchMarketData() {
+    try {
+        const data = await fsp.readFile(MARKET_SNAPSHOT_FILE, "utf8");
+        const market = JSON.parse(data);
+
+        return {
+            btc: market.btc || { price: null, change24h: null },
+            eth: market.eth || { price: null, change24h: null },
+            sol: market.sol || { price: null, change24h: null },
+            collectedAt: market.collectedAt || null,
+
+            gold: { price: 4088, change24h: 1.18 },
+            oil: { price: 75.71, change24h: 3.37 },
+            sp500: { price: 7352, change24h: -0.78 },
+            cryptoTotal: { value: 2.02, change24h: -2.79 }
+        };
+
+    } catch (err) {
+        console.error("Nema market snapshot podataka:", err.message);
+
+        return {
+            btc: { price: null, change24h: null },
+            eth: { price: null, change24h: null },
+            sol: { price: null, change24h: null },
+            collectedAt: null,
+
+            gold: { price: 4038, change24h: 1.18 },
+            oil: { price: 75.71, change24h: 3.37 },
+            sp500: { price: 7352, change24h: -0.78 },
+            cryptoTotal: { value: 2.02, change24h: -2.79 }
+        };
+    }
+}
+
+async function readReports() {
+    try {
+        const data = await fsp.readFile(REPORTS_FILE, "utf8");
+
+        if (!data.trim()) {
+            return [];
+        }
+
+        return JSON.parse(data);
+    } catch (err) {
+        console.error("Greška pri čitanju self-analysis.json:", err.message);
+        return [];
+    }
+}
+
+async function saveReport(report) {
+    const reports = await readReports();
+
+    const reportId = report.id || report.generatedAt || report.date;
+    const filteredReports = reports.filter(r => (r.id || r.generatedAt || r.date) !== reportId);
+
+    filteredReports.push(report);
+
+    filteredReports.sort(compareReportsDesc);
+
+    await fsp.writeFile(
+        REPORTS_FILE,
+        JSON.stringify(filteredReports, null, 2),
+        "utf8"
+    );
+}
+
+async function getAllReports() {
+    const reports = await readReports();
+
+    return reports
+        .map(report => ({
+            id: report.id || report.generatedAt || report.date,
+            generatedAt: report.generatedAt || null,
+            date: report.date,
+            marketState: report.marketState,
+            riskLevel: report.riskLevel,
+            signal: report.signal
+        }))
+        .sort(compareReportsDesc);
+}
+
+async function getLatestReport() {
+    const reports = await readReports();
+
+    if (reports.length === 0) {
+        return {
+            date: "—",
+            marketState: "—",
+            riskLevel: "—",
+            signal: "—",
+            summary: "Analiza još nije generisana."
+        };
+    }
+
+    return reports.sort(compareReportsDesc)[0];
+}
+
+async function getReportById(id) {
+    const reports = await readReports();
+
+    return reports.find(report =>
+        report.id === id ||
+        report.generatedAt === id ||
+        report.date === id
+    ) || {
+        date: id,
+        marketState: "—",
+        riskLevel: "—",
+        signal: "—",
+        summary: "Analiza za izabrani datum nije pronađena."
+    };
+}
+
+function compareReportsDesc(a, b) {
+    const aKey = a.generatedAtIso || a.generatedAt || a.id || a.date || "";
+    const bKey = b.generatedAtIso || b.generatedAt || b.id || b.date || "";
+    return String(bKey).localeCompare(String(aKey));
+}
+
+function calculateIndicators(data) {
+    const cryptoSymbols = ["btc", "eth", "sol"];
+    const changes24h = cryptoSymbols
+        .map(symbol => Number(data[symbol]?.change24h))
+        .filter(Number.isFinite);
+    const changes7d = cryptoSymbols
+        .map(symbol => Number(data[symbol]?.change7d))
+        .filter(Number.isFinite);
+    const changes30d = cryptoSymbols
+        .map(symbol => Number(data[symbol]?.change30d))
+        .filter(Number.isFinite);
+
+    const avgCrypto24h = average(changes24h);
+    const avgCrypto7d = average(changes7d);
+    const avgCrypto30d = average(changes30d);
+    const maxAbsCrypto7d = changes7d.length
+        ? Math.max(...changes7d.map(value => Math.abs(value)))
+        : null;
+
+    const riskIndex = calculateRiskIndex({
+        avgCrypto24h,
+        avgCrypto7d,
+        avgCrypto30d,
+        maxAbsCrypto7d,
+        btc24h: Number(data.btc?.change24h),
+        btc7d: Number(data.btc?.change7d),
+        sp500: Number(data.sp500?.change24h),
+        gold: Number(data.gold?.change24h)
+    });
+
+    return {
+        ...data,
+        indicators: {
+            avgCrypto24h,
+            avgCrypto7d,
+            avgCrypto30d,
+            maxAbsCrypto7d,
+            riskIndex,
+            riskLevel: getRiskLevel(riskIndex),
+            marketState: getMarketState(riskIndex, avgCrypto24h, avgCrypto7d, avgCrypto30d),
+            signal: getMarketSignal(riskIndex, avgCrypto24h, avgCrypto7d, avgCrypto30d)
+        }
+    };
+}
+
+function average(values) {
+    if (!values.length) return null;
+    return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function addRisk(score, condition, points) {
+    return condition ? score + points : score;
+}
+
+function calculateRiskIndex(values) {
+    let score = 50;
+
+    score = addRisk(score, values.avgCrypto24h <= -3, 15);
+    score = addRisk(score, values.avgCrypto24h >= 3, -8);
+    score = addRisk(score, values.avgCrypto7d <= -6, 15);
+    score = addRisk(score, values.avgCrypto7d >= 6, -10);
+    score = addRisk(score, values.avgCrypto30d <= -12, 12);
+    score = addRisk(score, values.avgCrypto30d >= 12, -8);
+    score = addRisk(score, values.maxAbsCrypto7d >= 12, 10);
+    score = addRisk(score, values.btc24h <= -3, 10);
+    score = addRisk(score, values.btc7d <= -7, 10);
+    score = addRisk(score, values.sp500 < 0, 8);
+    score = addRisk(score, values.gold > 0 && values.sp500 < 0, 8);
+    score = addRisk(score, values.gold < 0 && values.sp500 > 0, -6);
+
+    return Math.max(0, Math.min(100, Math.round(score)));
+}
+
+function getRiskLevel(score) {
+    if (score >= 70) return "povišen";
+    if (score <= 35) return "nizak";
+    return "srednji";
+}
+
+function getMarketState(score, avgCrypto24h, avgCrypto7d, avgCrypto30d) {
+    if (score >= 70) return "risk-off";
+    if (score <= 35 && avgCrypto24h > 0 && avgCrypto7d > 0 && avgCrypto30d > 0) return "risk-on";
+    if (avgCrypto7d > 3) return "neutralno do umereno uzlaznog trenda";
+    if (avgCrypto30d < -8) return "neutralno do oprezno na mesečnom nivou";
+    if (avgCrypto7d < -3) return "neutralno do oprezno";
+    return "neutralno";
+}
+
+function getMarketSignal(score, avgCrypto24h, avgCrypto7d, avgCrypto30d) {
+    if (score >= 75) return "OPREZ / WAIT";
+    if (score <= 35 && avgCrypto24h > 0 && avgCrypto7d > 0 && avgCrypto30d > 0) return "OPORAVAK";
+    if (avgCrypto7d > 3 && score < 60) return "WAIT / DCA AKUMULACIJA";
+    return "WAIT";
+}
+
+function getBelgradeDateTimeParts(date = new Date()) {
+    const parts = new Intl.DateTimeFormat("sv-SE", {
+        timeZone: "Europe/Belgrade",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false
+    }).formatToParts(date);
+
+    return Object.fromEntries(parts.map(part => [part.type, part.value]));
+}
+
+function createReportTimeMeta(date = new Date()) {
+    const parts = getBelgradeDateTimeParts(date);
+    const day = `${parts.year}-${parts.month}-${parts.day}`;
+    const time = `${parts.hour}:${parts.minute}:${parts.second}`;
+
+    return {
+        id: `${day}T${parts.hour}-${parts.minute}-${parts.second}-${String(date.getMilliseconds()).padStart(3, "0")}`,
+        date: day,
+        generatedAt: `${day} ${time}`,
+        generatedAtIso: date.toISOString()
+    };
+}
+
+function formatPrice(value, decimals = 0) {
+
+    if (value === null || value === undefined || isNaN(value)) {
+        return "—";
+    }
+
+    return Number(value).toLocaleString("sr-RS", {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+    });
+
+}
+
+function formatPercent(value) {
+    if (value === null || value === undefined || isNaN(value)) {
+        return "—";
+    }
+
+    return Number(value).toLocaleString("sr-RS", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
+function generateDailyReport(i) {
+  let marketState = "neutralno";
+  let riskLevel = "srednji";
+  let signal = "WAIT";
+
+  if (i.btc.change24h < -3 && i.gold.change24h > 0 && i.sp500.change24h < 0) {
+    marketState = "risk-off";
+    riskLevel = "povišen";
+    signal = "OPREZ / WAIT";
+  }
+
+  if (i.btc.price > 60000 && i.cryptoTotal.change24h > 0) {
+    marketState = "neutralno do umereno uzlaznog trenda";
+    signal = "WAIT / DCA AKUMULACIJA";
+  }
+
+  if (i.btc.change24h > 2 && i.sp500.change24h > 0 && i.gold.change24h < 0) {
+    marketState = "risk-on";
+    riskLevel = "srednji";
+    signal = "OPORAVAK";
+  }
+
+  /*
+  return {
+    date: new Date().toISOString().slice(0, 10),
+    marketState,
+    riskLevel,
+    signal,
+    btc: i.btc,
+    eth: i.eth,
+    gold: i.gold,
+    oil: i.oil,
+    cryptoTotal: i.cryptoTotal,
+    summary: `
+BTC se trenutno kreće oko ${formatPrice(i.btc.price)} USD, uz dnevnu promenu od ${formatPercent(i.btc.change24h)}%.
+ETH je na ${formatPrice(i.eth.price, 2)} USD, dok je ukupna kripto kapitalizacija oko ${i.cryptoTotal.value} T USD.
+Zlato je ${i.gold.change24h > 0 ? "u rastu" : "u padu"}, što ukazuje na ${i.gold.change24h > 0 ? "povećan oprez investitora" : "slabljenje zaštitne tražnje"}.
+Trenutno stanje tržišta je: ${marketState}. Rizik je ${riskLevel}. Signal: ${signal}.
+    `.trim()
+  };
+  */
+
+    return {
+    date: new Date().toISOString().slice(0, 10),
+    marketState,
+    riskLevel,
+    signal,
+    btc: i.btc,
+    eth: i.eth,
+    gold: i.gold,
+    oil: i.oil,
+    cryptoTotal: i.cryptoTotal,
+    summary: `
+BTC se trenutno kreće oko ${formatPrice(i.btc.price)} USD, uz dnevnu promenu od ${formatPercent(i.btc.change24h)}%.
+ETH je na ${formatPrice(i.eth.price, 2)} USD. 
+Trenutno stanje tržišta je: ${marketState}. Rizik je ${riskLevel}. Signal: ${signal}.
+    `.trim()
+  };
+
+
+
+
+}
+
+function generateScoredDailyReport(i) {
+    const { marketState, riskLevel, signal, avgCrypto7d, avgCrypto30d } = i.indicators;
+    const riskIndex = i.indicators.riskIndex ?? i.indicators.riskScore;
+    const timeMeta = createReportTimeMeta();
+
+    return {
+        id: timeMeta.id,
+        date: timeMeta.date,
+        generatedAt: timeMeta.generatedAt,
+        generatedAtIso: timeMeta.generatedAtIso,
+        marketState,
+        riskLevel,
+        signal,
+        btc: i.btc,
+        eth: i.eth,
+        sol: i.sol,
+        gold: i.gold,
+        oil: i.oil,
+        sp500: i.sp500,
+        cryptoTotal: i.cryptoTotal,
+        indicators: i.indicators,
+        snapshot: {
+            collectedAt: i.collectedAt,
+            btc: i.btc,
+            eth: i.eth,
+            sol: i.sol,
+            gold: i.gold,
+            oil: i.oil,
+            sp500: i.sp500,
+            cryptoTotal: i.cryptoTotal
+        },
+        summary: `
+BTC se trenutno kreće oko ${formatPrice(i.btc.price)} USD, uz dnevnu promenu od ${formatPercent(i.btc.change24h)}%.
+ETH je na ${formatPrice(i.eth.price, 2)} USD, a SOL na ${formatPrice(i.sol.price, 2)} USD.
+Prosečna 7d promena BTC/ETH/SOL je ${formatPercent(avgCrypto7d)}%, a indeks rizika je ${riskIndex}/100.
+Prosečna 30d promena BTC/ETH/SOL je ${formatPercent(avgCrypto30d)}%.
+Trenutno stanje tržišta je: ${marketState}. Rizik je ${riskLevel}. Signal: ${signal}.
+        `.trim()
+    };
+}
+
+app.get("/api/self-analysis/latest", async (req, res) => {
+    const report = await getLatestReport();
+    res.json(report);
+});
+
+app.get("/api/self-analysis/history", async (req, res) => {
+    const reports = await getAllReports();
+    res.json(reports);
+});
+
+app.get("/api/self-analysis/generate", async (req, res) => {
+    const data = await fetchMarketData();
+    const indicators = calculateIndicators(data);
+    const report = generateScoredDailyReport(indicators);
+
+    await saveReport(report);
+
+    res.json(report);
+});
+
+app.get("/api/self-analysis/schedule", (req, res) => {
+    const nextRun = typeof selfAnalysisCronTask.getNextRun === "function"
+        ? selfAnalysisCronTask.getNextRun()
+        : null;
+
+    res.json({
+        cron: SELF_ANALYSIS_CRON_EXPRESSION,
+        timezone: SELF_ANALYSIS_CRON_TIMEZONE,
+        serverNow: new Date().toISOString(),
+        nextRun: nextRun ? nextRun.toISOString() : null
+    });
+});
+
+app.get("/api/self-analysis/:id", async (req, res) => {
+    const report = await getReportById(req.params.id);
+    res.json(report);
+});
+
+// --------------------------------------------------
+// POKRETANJE SERVERA
+// --------------------------------------------------
+
+server.listen(PORT, async () => {
+
+  console.log(`Server je pokrenut na http://localhost:${PORT}`);
+  console.log("Boot: pokretanje tajmera (best-effort).");
+
+  // pokušati odmah sa osvežavanjem "cache" (ali bez rušenja)
+  await ensureAccountsCache();
+
+  // pokretanje timer-a uvek, čak i kad je login blokiran
+  setInterval(async () => {
+    await ensureAccountsCache();  // pokušaće login samo kad backoff istekne
+    await refreshEquityTick();    // koristi se cachedAccounts (ako ih ima)
+  }, 15000);
+
+  connectBinanceMarketStream();
+
+  console.log("Tick petlja je pokrenuta (15s).");
+  console.log("Market WS je pokrenut. ");
+
+});
+
+
+
+
