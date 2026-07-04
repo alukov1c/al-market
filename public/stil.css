@@ -470,14 +470,33 @@ lazy-load.market-summary {
   border-bottom: 1px solid rgba(165, 165, 165, 0.3);
 }
 
+.sa-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45em;
+}
+
 .sa-date {
   display: flex;
   align-items: center;
   gap: 0.5em;
 }
 
-.sa-date-icon {
+.sa-date-icon,
+.sa-countdown-icon {
   color: #e11d48;
+}
+
+.sa-countdown {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  color: #374151;
+}
+
+#autoAnalysisCountdown {
+  color: #2563eb;
+  font-variant-numeric: tabular-nums;
 }
 
 #analysisHistorySelect {
@@ -583,6 +602,15 @@ lazy-load.market-summary {
 
   .analysis-header {
     flex-direction: column;
+  }
+
+  .sa-meta {
+    width: 100%;
+  }
+
+  .sa-date,
+  .sa-countdown {
+    justify-content: center;
   }
 
   .analysis-card {

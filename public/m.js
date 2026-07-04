@@ -1212,6 +1212,112 @@ function renderAnalysis(report) {
   document.getElementById("analysisSummary").textContent = report.summary;
 }
 
+let autoAnalysisCountdownTimer = null;
+let autoAnalysisScheduleRefreshTimer = null;
+let autoAnalysisScheduleLabelInterval = null;
+let nextAutoAnalysisAtMs = null;
+let serverClockOffsetMs = 0;
+
+function formatCountdownTime(totalSeconds) {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  return [hours, minutes, seconds]
+    .map(value => String(value).padStart(2, "0"))
+    .join(":");
+}
+
+function getFallbackNextAutoAnalysisTime(now = new Date()) {
+  const nextAnalysis = new Date(now);
+  nextAnalysis.setHours(8, 0, 0, 0);
+
+  if (nextAnalysis <= now) {
+    nextAnalysis.setDate(nextAnalysis.getDate() + 1);
+  }
+
+  return nextAnalysis;
+}
+
+async function refreshAutoAnalysisSchedule() {
+  try {
+    const res = await fetch("/api/self-analysis/schedule", { cache: "no-store" });
+
+    if (!res.ok) {
+      throw new Error(`Schedule API error: ${res.status}`);
+    }
+
+    const schedule = await res.json();
+    const serverNowMs = Date.parse(schedule.serverNow);
+    const nextRunMs = Date.parse(schedule.nextRun);
+
+    if (Number.isFinite(serverNowMs)) {
+      serverClockOffsetMs = serverNowMs - Date.now();
+    }
+
+    if (Number.isFinite(nextRunMs)) {
+      nextAutoAnalysisAtMs = nextRunMs;
+    }
+  } catch (err) {
+    console.warn("Nije moguće učitati cron raspored automatske analize:", err);
+
+    if (!nextAutoAnalysisAtMs) {
+      nextAutoAnalysisAtMs = getFallbackNextAutoAnalysisTime().getTime();
+      serverClockOffsetMs = 0;
+    }
+  }
+
+  updateAutoAnalysisCountdown();
+}
+
+function updateAutoAnalysisCountdown() {
+  const countdown = document.getElementById("autoAnalysisCountdown");
+
+  if (!countdown) {
+    return;
+  }
+
+  const nowMs = Date.now() + serverClockOffsetMs;
+  const targetMs = nextAutoAnalysisAtMs && nextAutoAnalysisAtMs > nowMs
+    ? nextAutoAnalysisAtMs
+    : getFallbackNextAutoAnalysisTime(new Date(nowMs)).getTime();
+  const remainingSeconds = Math.max(0, Math.floor((targetMs - nowMs) / 1000));
+
+  countdown.textContent = formatCountdownTime(remainingSeconds);
+}
+
+function startAutoAnalysisCountdown() {
+  refreshAutoAnalysisSchedule();
+  updateAutoAnalysisCountdown();
+
+  if (autoAnalysisCountdownTimer) {
+    clearInterval(autoAnalysisCountdownTimer);
+  }
+
+  if (autoAnalysisScheduleRefreshTimer) {
+    clearInterval(autoAnalysisScheduleRefreshTimer);
+  }
+
+  if (autoAnalysisScheduleLabelInterval) {
+    clearInterval(autoAnalysisScheduleLabelInterval);
+  }
+
+  const scheduleLabel = document.getElementById("autoAnalysisScheduleLabel");
+
+  if (scheduleLabel) {
+    let showCronLabel = true;
+    scheduleLabel.textContent = "prema cron rasporedu";
+
+    autoAnalysisScheduleLabelInterval = setInterval(() => {
+      showCronLabel = !showCronLabel;
+      scheduleLabel.textContent = showCronLabel ? "prema cron rasporedu" : "~8 AM";
+    }, 5000);
+  }
+
+  autoAnalysisCountdownTimer = setInterval(updateAutoAnalysisCountdown, 1000);
+  autoAnalysisScheduleRefreshTimer = setInterval(refreshAutoAnalysisSchedule, 60 * 1000);
+}
+
 function readMarketSnapshot() {
   const snapshot = {
     collectedAt: new Date().toISOString()
@@ -1251,6 +1357,7 @@ async function sendMarketSnapshotToServer() {
 
 loadLatestAnalysis();
 loadAnalysisHistory();
+startAutoAnalysisCountdown();
 
 setTimeout(sendMarketSnapshotToServer, 3000);
 setInterval(sendMarketSnapshotToServer, 5 * 60 * 1000);

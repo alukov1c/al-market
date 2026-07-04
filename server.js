@@ -64,7 +64,10 @@ function saveSessionToDisk() {
 // pozvati na boot:
 loadSessionFromDisk();
 
-cron.schedule("00 08 * * *", async () => {
+const SELF_ANALYSIS_CRON_EXPRESSION = "00 08 * * *";
+const SELF_ANALYSIS_CRON_TIMEZONE = "Europe/Belgrade";
+
+const selfAnalysisCronTask = cron.schedule(SELF_ANALYSIS_CRON_EXPRESSION, async () => {
   console.log("Generisanje dnevne A-L Market analize...");
 
   const data = await fetchMarketData();
@@ -73,7 +76,7 @@ cron.schedule("00 08 * * *", async () => {
 
   await saveReport(report);
 }, {
-  timezone: "Europe/Belgrade"
+  timezone: SELF_ANALYSIS_CRON_TIMEZONE
 });
 
 // equity tick (za graf + input)
@@ -1484,6 +1487,19 @@ app.get("/api/self-analysis/generate", async (req, res) => {
     await saveReport(report);
 
     res.json(report);
+});
+
+app.get("/api/self-analysis/schedule", (req, res) => {
+    const nextRun = typeof selfAnalysisCronTask.getNextRun === "function"
+        ? selfAnalysisCronTask.getNextRun()
+        : null;
+
+    res.json({
+        cron: SELF_ANALYSIS_CRON_EXPRESSION,
+        timezone: SELF_ANALYSIS_CRON_TIMEZONE,
+        serverNow: new Date().toISOString(),
+        nextRun: nextRun ? nextRun.toISOString() : null
+    });
 });
 
 app.get("/api/self-analysis/:id", async (req, res) => {
