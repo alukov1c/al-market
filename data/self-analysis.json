@@ -1,5 +1,108 @@
 [
   {
+    "id": "2026-07-04T20-11-33-936",
+    "date": "2026-07-04",
+    "generatedAt": "2026-07-04 20:11:33",
+    "generatedAtIso": "2026-07-04T18:11:33.936Z",
+    "marketState": "neutralno do umereno uzlaznog trenda",
+    "riskLevel": "srednji",
+    "signal": "WAIT",
+    "btc": {
+      "price": 63259.99,
+      "change24h": 1.765,
+      "base7d": 60029,
+      "change7d": 5.38238184877309,
+      "base30d": 63885.99,
+      "change30d": -0.9798705475175387
+    },
+    "eth": {
+      "price": 1801.56,
+      "change24h": 3.716,
+      "base7d": 1573.99,
+      "change7d": 14.458160471159278,
+      "base30d": 1770.77,
+      "change30d": 1.7387915991348375
+    },
+    "sol": {
+      "price": 82.54,
+      "change24h": 1.028,
+      "base7d": 70.5,
+      "change7d": 17.078014184397173,
+      "base30d": 68.88,
+      "change30d": 19.831591173054605
+    },
+    "gold": {
+      "price": 4088,
+      "change24h": 1.18
+    },
+    "oil": {
+      "price": 75.71,
+      "change24h": 3.37
+    },
+    "sp500": {
+      "price": 7352,
+      "change24h": -0.78
+    },
+    "cryptoTotal": {
+      "value": 2.02,
+      "change24h": -2.79
+    },
+    "indicators": {
+      "avgCrypto24h": 2.1696666666666666,
+      "avgCrypto7d": 12.306185501443181,
+      "avgCrypto30d": 6.863504074890635,
+      "maxAbsCrypto7d": 17.078014184397173,
+      "riskIndex": 66,
+      "riskLevel": "srednji",
+      "marketState": "neutralno do umereno uzlaznog trenda",
+      "signal": "WAIT"
+    },
+    "snapshot": {
+      "collectedAt": "2026-07-04T18:11:33.856Z",
+      "btc": {
+        "price": 63259.99,
+        "change24h": 1.765,
+        "base7d": 60029,
+        "change7d": 5.38238184877309,
+        "base30d": 63885.99,
+        "change30d": -0.9798705475175387
+      },
+      "eth": {
+        "price": 1801.56,
+        "change24h": 3.716,
+        "base7d": 1573.99,
+        "change7d": 14.458160471159278,
+        "base30d": 1770.77,
+        "change30d": 1.7387915991348375
+      },
+      "sol": {
+        "price": 82.54,
+        "change24h": 1.028,
+        "base7d": 70.5,
+        "change7d": 17.078014184397173,
+        "base30d": 68.88,
+        "change30d": 19.831591173054605
+      },
+      "gold": {
+        "price": 4088,
+        "change24h": 1.18
+      },
+      "oil": {
+        "price": 75.71,
+        "change24h": 3.37
+      },
+      "sp500": {
+        "price": 7352,
+        "change24h": -0.78
+      },
+      "cryptoTotal": {
+        "value": 2.02,
+        "change24h": -2.79
+      }
+    },
+    "summary": "BTC se trenutno kreće oko 63.260 USD, uz dnevnu promenu od 1,77%.\nETH je na 1.801,56 USD, a SOL na 82,54 USD.\nProsečna 7d promena BTC/ETH/SOL je 12,31%, a indeks rizika je 66/100.\nProsečna 30d promena BTC/ETH/SOL je 6,86%.\nTrenutno stanje tržišta je: neutralno do umereno uzlaznog trenda. Rizik je srednji. Signal: WAIT."
+  },
+  {
     "date": "2026-07-04",
     "marketState": "neutralno do umereno uzlaznog trenda",
     "riskLevel": "srednji",
@@ -42,7 +145,7 @@
       "avgCrypto24h": 1.9883333333333333,
       "avgCrypto7d": 11.783908248235463,
       "maxAbsCrypto7d": 16.822695035460992,
-      "riskScore": 66,
+      "riskIndex": 66,
       "riskLevel": "srednji",
       "marketState": "neutralno do umereno uzlaznog trenda",
       "signal": "WAIT"
@@ -84,7 +187,7 @@
         "change24h": -2.79
       }
     },
-    "summary": "BTC se trenutno kreće oko 62.914 USD, uz dnevnu promenu od 1,36%.\nETH je na 1.789,99 USD, a SOL na 82,36 USD.\nProsečna 7d promena BTC/ETH/SOL je 11,78%, a risk score je 66/100.\nTrenutno stanje tržišta je: neutralno do umereno uzlaznog trenda. Rizik je srednji. Signal: WAIT."
+    "summary": "BTC se trenutno kreće oko 62.914 USD, uz dnevnu promenu od 1,36%.\nETH je na 1.789,99 USD, a SOL na 82,36 USD.\nProsečna 7d promena BTC/ETH/SOL je 11,78%, a indeks rizika je 66/100.\nTrenutno stanje tržišta je: neutralno do umereno uzlaznog trenda. Rizik je srednji. Signal: WAIT."
   },
   {
     "date": "2026-06-28",

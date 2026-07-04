@@ -1233,7 +1233,7 @@ function calculateIndicators(data) {
         ? Math.max(...changes7d.map(value => Math.abs(value)))
         : null;
 
-    const riskScore = calculateRiskScore({
+    const riskIndex = calculateRiskIndex({
         avgCrypto24h,
         avgCrypto7d,
         avgCrypto30d,
@@ -1251,10 +1251,10 @@ function calculateIndicators(data) {
             avgCrypto7d,
             avgCrypto30d,
             maxAbsCrypto7d,
-            riskScore,
-            riskLevel: getRiskLevel(riskScore),
-            marketState: getMarketState(riskScore, avgCrypto24h, avgCrypto7d, avgCrypto30d),
-            signal: getMarketSignal(riskScore, avgCrypto24h, avgCrypto7d, avgCrypto30d)
+            riskIndex,
+            riskLevel: getRiskLevel(riskIndex),
+            marketState: getMarketState(riskIndex, avgCrypto24h, avgCrypto7d, avgCrypto30d),
+            signal: getMarketSignal(riskIndex, avgCrypto24h, avgCrypto7d, avgCrypto30d)
         }
     };
 }
@@ -1268,7 +1268,7 @@ function addRisk(score, condition, points) {
     return condition ? score + points : score;
 }
 
-function calculateRiskScore(values) {
+function calculateRiskIndex(values) {
     let score = 50;
 
     score = addRisk(score, values.avgCrypto24h <= -3, 15);
@@ -1426,7 +1426,8 @@ Trenutno stanje tržišta je: ${marketState}. Rizik je ${riskLevel}. Signal: ${s
 }
 
 function generateScoredDailyReport(i) {
-    const { marketState, riskLevel, signal, riskScore, avgCrypto7d, avgCrypto30d } = i.indicators;
+    const { marketState, riskLevel, signal, avgCrypto7d, avgCrypto30d } = i.indicators;
+    const riskIndex = i.indicators.riskIndex ?? i.indicators.riskScore;
     const timeMeta = createReportTimeMeta();
 
     return {
@@ -1458,7 +1459,7 @@ function generateScoredDailyReport(i) {
         summary: `
 BTC se trenutno kreće oko ${formatPrice(i.btc.price)} USD, uz dnevnu promenu od ${formatPercent(i.btc.change24h)}%.
 ETH je na ${formatPrice(i.eth.price, 2)} USD, a SOL na ${formatPrice(i.sol.price, 2)} USD.
-Prosečna 7d promena BTC/ETH/SOL je ${formatPercent(avgCrypto7d)}%, a risk score je ${riskScore}/100.
+Prosečna 7d promena BTC/ETH/SOL je ${formatPercent(avgCrypto7d)}%, a indeks rizika je ${riskIndex}/100.
 Prosečna 30d promena BTC/ETH/SOL je ${formatPercent(avgCrypto30d)}%.
 Trenutno stanje tržišta je: ${marketState}. Rizik je ${riskLevel}. Signal: ${signal}.
         `.trim()

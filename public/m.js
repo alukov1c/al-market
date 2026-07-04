@@ -734,7 +734,7 @@ btnNoc.addEventListener('click', () => {
 /////////////////////////////////////////
 /////////////////////////////////////////
 
-function updateVolatilityLabel(level, elementId = "volatilityText") {
+function updateVolatilityLabel(level, elementId = "volatility7dText") {
   const el = document.getElementById(elementId);
   if (!el) return;
 
@@ -752,7 +752,7 @@ function updateVolatilityLabel(level, elementId = "volatilityText") {
   }
 }
 
-function refreshVolatility(period = "7d", elementId = "volatilityText") {
+function refreshVolatility(period = "7d", elementId = "volatility7dText") {
   const moves = MARKET_SYMBOLS
     .map(symbol => getChangePercent(symbol, period))
     .filter(Number.isFinite);
@@ -884,7 +884,7 @@ function refreshMarketAnalysis() {
     if (Number.isFinite(pct30d)) updateAnalysisItem(symbol, pct30d, "30d");
   });
 
-  refreshVolatility("7d", "volatilityText");
+  refreshVolatility("7d", "volatility7dText");
   refreshVolatility("30d", "volatility30dText");
 
 }
