@@ -1310,7 +1310,7 @@ function startAutoAnalysisCountdown() {
 
     autoAnalysisScheduleLabelInterval = setInterval(() => {
       showCronLabel = !showCronLabel;
-      scheduleLabel.textContent = showCronLabel ? "prema cron rasporedu" : "~8 AM";
+      scheduleLabel.textContent = showCronLabel ? "sinhronizovano sa serverom" : "~8 AM";
     }, 5000);
   }
 
