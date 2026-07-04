@@ -459,6 +459,7 @@ function getAdjustedMarketPrice(symbol, rawPrice) {
 
   if (symbol === "btc") return price - 70 + 70;
   if (symbol === "eth") return price - 3 + 3;
+  if (symbol === "sol") return price;
 
   return price;
 
@@ -512,15 +513,7 @@ async function loadInitialMarket() {
 
     const data = await res.json();
 
-    if (data?.btc && Number.isFinite(Number(data.btc.price))) {
-      updateMarketInstrument("btc", Number(data.btc.price), Number(data.btc.changePercent));
-      analysisState.btcCurrent = Number(data.btc.price);
-    }
-
-    if (data?.eth && Number.isFinite(Number(data.eth.price))) {
-      updateMarketInstrument("eth", Number(data.eth.price), Number(data.eth.changePercent));
-      analysisState.ethCurrent = Number(data.eth.price);
-    }
+    updateMarketStateFromTick(data);
 
     refresh7dAnalysis();
   } catch (err) {
@@ -545,21 +538,7 @@ function initMarketSocket() {
 
       if (msg.type !== "market" || !msg.data) return;
 
-      const market = msg.data;
-
-      if (market.btc) {
-
-        updateMarketInstrument("btc", market.btc.price, market.btc.changePercent);
-        analysisState.btcCurrent = Number(market.btc.price);
-
-      }
-
-      if (market.eth) {
-
-        updateMarketInstrument("eth", market.eth.price, market.eth.changePercent);
-        analysisState.ethCurrent = Number(market.eth.price);
-
-      }
+      updateMarketStateFromTick(msg.data);
 
       refresh7dAnalysis();
 
@@ -614,8 +593,7 @@ let btnMinus = document.querySelector('#btnMinus');
 let btnNoc = document.querySelector('#btnNoc');
 
 let market = document.querySelector('#market');
-let btcIco = document.querySelector('#btcIco');
-let ethIco = document.querySelector('#ethIco');
+let coinIcons = document.querySelectorAll('.coin-icon');
 
 let naslovBTC = document.querySelector('#naslovBTC');
 let naslovETH = document.querySelector('#naslovETH');
@@ -663,11 +641,7 @@ btnPlus.addEventListener('click', () => {
 
         market.style.fontSize = 'xx-large';
 
-        btcIco.style.width = '25px';
-        btcIco.style.height = '25px';
-
-        ethIco.style.width = '25px';
-        ethIco.style.height = '25px';
+        setCoinIconSize('25px');
 
         marketZoom = 1;
 
@@ -678,11 +652,7 @@ btnPlus.addEventListener('click', () => {
 
           market.style.fontSize = 'xx-large';
 
-          btcIco.style.width = '25px';
-          btcIco.style.height = '25px';
-
-          ethIco.style.width = '25px';
-          ethIco.style.height = '25px';
+          setCoinIconSize('25px');
 
           marketZoom = 1;
 
@@ -690,11 +660,7 @@ btnPlus.addEventListener('click', () => {
 
           market.style.fontSize = '40px';
 
-          btcIco.style.width = '36px';
-          btcIco.style.height = '36px';
-
-          ethIco.style.width = '36px';
-          ethIco.style.height = '36px';
+          setCoinIconSize('36px');
 
           marketZoom = 2;
 
@@ -721,11 +687,7 @@ btnPlus.addEventListener('click', () => {
 
         market.style.fontSize = 'xxx-large';
 
-        btcIco.style.width = '36px';
-        btcIco.style.height = '36px';
-
-        ethIco.style.width = '36px';
-        ethIco.style.height = '36px';
+        setCoinIconSize('36px');
 
         marketZoom = 2;
 
@@ -743,11 +705,7 @@ btnMinus.addEventListener('click', () => {
 
   market.style.fontSize = 'smaller';
 
-  btcIco.style.width = '18px';
-  btcIco.style.height = '18px';
-
-  ethIco.style.width = '18px';
-  ethIco.style.height = '18px';
+  setCoinIconSize('18px');
 
   marketZoom = 0;
 
@@ -789,23 +747,13 @@ function updateVolatilityLabel(level) {
 }
 
 function refreshVolatility() {
-  const btcReady =
-    Number.isFinite(analysisState.btcCurrent) &&
-    Number.isFinite(analysisState.btc7dBase) &&
-    analysisState.btc7dBase > 0;
+  const moves = MARKET_SYMBOLS
+    .map(symbol => get7dChangePercent(symbol))
+    .filter(Number.isFinite);
 
-  const ethReady =
-    Number.isFinite(analysisState.ethCurrent) &&
-    Number.isFinite(analysisState.eth7dBase) &&
-    analysisState.eth7dBase > 0;
+  if (moves.length === 0) return;
 
-  if (!btcReady || !ethReady) return;
-
-  const btcPct = ((analysisState.btcCurrent - analysisState.btc7dBase) / analysisState.btc7dBase) * 100;
-  const ethPct = ((analysisState.ethCurrent - analysisState.eth7dBase) / analysisState.eth7dBase) * 100;
-
-  const maxAbsMove = Math.max(Math.abs(btcPct), Math.abs(ethPct));
-  const avgAbsMove = (Math.abs(btcPct) + Math.abs(ethPct)) / 2;
+  const maxAbsMove = Math.max(...moves.map(value => Math.abs(value)));
 
   if (maxAbsMove >= 8) {
     updateVolatilityLabel("visoka");
@@ -835,9 +783,37 @@ function refreshVolatility() {
 const analysisState = {
   btcCurrent: null,
   ethCurrent: null,
+  solCurrent: null,
   btc7dBase: null,
-  eth7dBase: null
+  eth7dBase: null,
+  sol7dBase: null,
+  lastMarketTick: null
 };
+
+const MARKET_SYMBOLS = ["btc", "eth", "sol"];
+
+function setCoinIconSize(size) {
+  coinIcons.forEach(icon => {
+    icon.style.width = size;
+    icon.style.height = size;
+  });
+}
+
+function updateMarketStateFromTick(market) {
+  if (!market) return;
+
+  analysisState.lastMarketTick = market;
+
+  MARKET_SYMBOLS.forEach(symbol => {
+    const item = market[symbol];
+    const price = Number(item?.price);
+
+    if (!item || !Number.isFinite(price)) return;
+
+    updateMarketInstrument(symbol, price, Number(item.changePercent));
+    analysisState[`${symbol}Current`] = price;
+  });
+}
 
 function formatPercentSR(value) {
   return Number(value).toLocaleString("sr-RS", {
@@ -871,26 +847,22 @@ function updateAnalysisItem(symbol, pct) {
 
 }
 
-function refresh7dAnalysis() {
-  if (
-    Number.isFinite(analysisState.btcCurrent) &&
-    Number.isFinite(analysisState.btc7dBase) &&
-    analysisState.btc7dBase > 0
-  ) {
-    const btcPct =
-      ((analysisState.btcCurrent - analysisState.btc7dBase) / analysisState.btc7dBase) * 100;
-    updateAnalysisItem("btc", btcPct);
+function get7dChangePercent(symbol) {
+  const current = analysisState[`${symbol}Current`];
+  const base = analysisState[`${symbol}7dBase`];
+
+  if (!Number.isFinite(current) || !Number.isFinite(base) || base <= 0) {
+    return null;
   }
 
-  if (
-    Number.isFinite(analysisState.ethCurrent) &&
-    Number.isFinite(analysisState.eth7dBase) &&
-    analysisState.eth7dBase > 0
-  ) {
-    const ethPct =
-      ((analysisState.ethCurrent - analysisState.eth7dBase) / analysisState.eth7dBase) * 100;
-    updateAnalysisItem("eth", ethPct);
-  }
+  return ((current - base) / base) * 100;
+}
+
+function refresh7dAnalysis() {
+  MARKET_SYMBOLS.forEach(symbol => {
+    const pct = get7dChangePercent(symbol);
+    if (Number.isFinite(pct)) updateAnalysisItem(symbol, pct);
+  });
 
   refreshVolatility();
 
@@ -907,6 +879,7 @@ async function load7dBasePrices() {
 
     analysisState.btc7dBase = Number(data.btcBase);
     analysisState.eth7dBase = Number(data.ethBase);
+    analysisState.sol7dBase = Number(data.solBase);
 
     refresh7dAnalysis();
   } catch (err) {
@@ -1163,79 +1136,65 @@ async function loadAnalysisHistory() {
 
   reports.forEach(report => {
     const option = document.createElement("option");
-    option.value = report.date;
-    option.textContent = report.date;
+    option.value = report.id || report.generatedAt || report.date;
+    option.textContent = report.generatedAt
+      ? `${report.generatedAt} | ${report.signal}`
+      : `${report.date} | ${report.signal}`;
     select.appendChild(option);
   });
 
-  select.addEventListener("change", async () => {
-    const res = await fetch(`/api/self-analysis/${select.value}`);
+  select.onchange = async () => {
+    const res = await fetch(`/api/self-analysis/${encodeURIComponent(select.value)}`);
     const report = await res.json();
     renderAnalysis(report);
-  });
+  };
 }
 
 async function generateSelfAnalysisNow() {
 
     await sendMarketSnapshotToServer();
 
-    await fetch("/api/self-analysis/generate");
+    const res = await fetch("/api/self-analysis/generate");
+    const report = await res.json();
 
-    await loadLatestAnalysis();
+    renderAnalysis(report);
     await loadAnalysisHistory();
 }
 
 function renderAnalysis(report) {
-  document.getElementById("analysisDate").textContent = `Datum: ${report.date}`;
+  const reportDate = report.generatedAt || report.date;
+
+  document.getElementById("analysisDate").textContent = `Datum: ${reportDate}`;
   document.getElementById("marketState").textContent = report.marketState;
   document.getElementById("riskLevel").textContent = report.riskLevel;
   document.getElementById("marketSignal").textContent = report.signal;
   document.getElementById("analysisSummary").textContent = report.summary;
 }
 
-function parsePriceNumber(text) {
-  if (!text) return null;
-
-  const value = text
-    .replace("USD", "")
-    .replace("$", "")
-    .replace(/\./g, "")
-    .replace(",", ".")
-    .trim();
-
-  const number = Number(value);
-  return Number.isFinite(number) ? number : null;
-}
-
-function parsePercentNumber(text) {
-  if (!text) return null;
-
-  const value = text
-    .replace("%", "")
-    .replace("+", "")
-    .replace(",", ".")
-    .trim();
-
-  const number = Number(value);
-  return Number.isFinite(number) ? number : null;
-}
-
-function readCryptoFromDOM() {
-  return {
-    btc: {
-      price: parsePriceNumber(document.querySelector("#btcPrice .price-value")?.textContent),
-      change24h: parsePercentNumber(document.querySelector("#btcChange .change-value")?.textContent)
-    },
-    eth: {
-      price: parsePriceNumber(document.querySelector("#ethPrice .price-value")?.textContent),
-      change24h: parsePercentNumber(document.querySelector("#ethChange .change-value")?.textContent)
-    },
+function readMarketSnapshot() {
+  const snapshot = {
     collectedAt: new Date().toISOString()
   };
+
+  MARKET_SYMBOLS.forEach(symbol => {
+    const tick = analysisState.lastMarketTick?.[symbol] || {};
+    const price = Number(analysisState[`${symbol}Current`]);
+    const change24h = Number(tick.changePercent);
+    const change7d = get7dChangePercent(symbol);
+
+    snapshot[symbol] = {
+      price: Number.isFinite(price) ? price : null,
+      change24h: Number.isFinite(change24h) ? change24h : null,
+      base7d: Number.isFinite(analysisState[`${symbol}7dBase`]) ? analysisState[`${symbol}7dBase`] : null,
+      change7d: Number.isFinite(change7d) ? change7d : null
+    };
+  });
+
+  return snapshot;
 }
 
 async function sendMarketSnapshotToServer() {
-  const marketData = readCryptoFromDOM();
+  const marketData = readMarketSnapshot();
 
   await fetch("/api/market-snapshot", {
     method: "POST",

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+  <title id="title">Solana SOL</title>
+  <defs>
+    <linearGradient id="solGradient" x1="18" y1="20" x2="110" y2="108" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00ffa3"/>
+      <stop offset="0.52" stop-color="#03e1ff"/>
+      <stop offset="1" stop-color="#dc1fff"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="64" fill="#111827"/>
+  <g fill="url(#solGradient)">
+    <path d="M38 34.5a6 6 0 0 1 4.4-1.9h52.3a3 3 0 0 1 2.1 5.1L86.9 47a6 6 0 0 1-4.1 1.6H30.5a3 3 0 0 1-2.1-5.1l9.6-9Z"/>
+    <path d="M89.7 57.7a6 6 0 0 0-4.1-1.6H33.3a3 3 0 0 0-2.1 5.1l9.9 9.3a6 6 0 0 0 4.1 1.6h52.3a3 3 0 0 0 2.1-5.1l-9.9-9.3Z"/>
+    <path d="M38 81a6 6 0 0 1 4.4-1.9h52.3a3 3 0 0 1 2.1 5.1l-9.9 9.3a6 6 0 0 1-4.1 1.6H30.5a3 3 0 0 1-2.1-5.1l9.6-9Z"/>
+  </g>
+</svg>

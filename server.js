@@ -69,7 +69,7 @@ cron.schedule("00 08 * * *", async () => {
 
   const data = await fetchMarketData();
   const indicators = calculateIndicators(data);
-  const report = generateDailyReport(indicators);
+  const report = generateScoredDailyReport(indicators);
 
   await saveReport(report);
 }, {
@@ -616,6 +616,10 @@ let marketTick = {
     price: null,
     changePercent: null
   },
+  sol: {
+    price: null,
+    changePercent: null
+  },
   note: "init"
 };
 
@@ -657,8 +661,8 @@ function connectBinanceMarketStream() {
     return;
   }
 
-  //const url = "wss://stream.binance.com:9443/stream?streams=btcusdt@ticker/ethusdt@ticker";
-  const url = "wss://data-stream.binance.vision/stream?streams=btcusdt@ticker/ethusdt@ticker";
+  //const url = "wss://stream.binance.com:9443/stream?streams=btcusdt@ticker/ethusdt@ticker/solusdt@ticker";
+  const url = "wss://data-stream.binance.vision/stream?streams=btcusdt@ticker/ethusdt@ticker/solusdt@ticker";
 
   binanceWs = new WebSocket(url);
 
@@ -688,6 +692,11 @@ function connectBinanceMarketStream() {
       if (symbol === "ETHUSDT") {
         marketTick.eth.price = Number.isFinite(price) ? price : null;
         marketTick.eth.changePercent = Number.isFinite(changePercent) ? changePercent : null;
+      }
+
+      if (symbol === "SOLUSDT") {
+        marketTick.sol.price = Number.isFinite(price) ? price : null;
+        marketTick.sol.changePercent = Number.isFinite(changePercent) ? changePercent : null;
       }
 
       broadcastMarketTick();
@@ -1001,16 +1010,18 @@ async function fetch7dBasePrice(symbol) {
 
 app.get("/api/market-7d", async (_req, res) => {
   try {
-    const [btcBase, ethBase] = await Promise.all([
+    const [btcBase, ethBase, solBase] = await Promise.all([
       fetch7dBasePrice("BTCUSDT"),
-      fetch7dBasePrice("ETHUSDT")
+      fetch7dBasePrice("ETHUSDT"),
+      fetch7dBasePrice("SOLUSDT")
     ]);
 
     res.json({
       ok: true,
       ts: Date.now(),
       btcBase,
-      ethBase
+      ethBase,
+      solBase
     });
   } catch (err) {
     res.status(500).json({
@@ -1018,7 +1029,8 @@ app.get("/api/market-7d", async (_req, res) => {
       ts: Date.now(),
       error: String(err?.message || err),
       btcBase: null,
-      ethBase: null
+      ethBase: null,
+      solBase: null
     });
   }
 });
@@ -1055,6 +1067,8 @@ async function fetchMarketData() {
         return {
             btc: market.btc || { price: null, change24h: null },
             eth: market.eth || { price: null, change24h: null },
+            sol: market.sol || { price: null, change24h: null },
+            collectedAt: market.collectedAt || null,
 
             gold: { price: 4088, change24h: 1.18 },
             oil: { price: 75.71, change24h: 3.37 },
@@ -1068,6 +1082,8 @@ async function fetchMarketData() {
         return {
             btc: { price: null, change24h: null },
             eth: { price: null, change24h: null },
+            sol: { price: null, change24h: null },
+            collectedAt: null,
 
             gold: { price: 4038, change24h: 1.18 },
             oil: { price: 75.71, change24h: 3.37 },
@@ -1095,11 +1111,12 @@ async function readReports() {
 async function saveReport(report) {
     const reports = await readReports();
 
-    const filteredReports = reports.filter(r => r.date !== report.date);
+    const reportId = report.id || report.generatedAt || report.date;
+    const filteredReports = reports.filter(r => (r.id || r.generatedAt || r.date) !== reportId);
 
     filteredReports.push(report);
 
-    filteredReports.sort((a, b) => b.date.localeCompare(a.date));
+    filteredReports.sort(compareReportsDesc);
 
     await fsp.writeFile(
         REPORTS_FILE,
@@ -1113,12 +1130,14 @@ async function getAllReports() {
 
     return reports
         .map(report => ({
+            id: report.id || report.generatedAt || report.date,
+            generatedAt: report.generatedAt || null,
             date: report.date,
             marketState: report.marketState,
             riskLevel: report.riskLevel,
             signal: report.signal
         }))
-        .sort((a, b) => b.date.localeCompare(a.date));
+        .sort(compareReportsDesc);
 }
 
 async function getLatestReport() {
@@ -1134,14 +1153,18 @@ async function getLatestReport() {
         };
     }
 
-    return reports.sort((a, b) => b.date.localeCompare(a.date))[0];
+    return reports.sort(compareReportsDesc)[0];
 }
 
-async function getReportByDate(date) {
+async function getReportById(id) {
     const reports = await readReports();
 
-    return reports.find(report => report.date === date) || {
-        date,
+    return reports.find(report =>
+        report.id === id ||
+        report.generatedAt === id ||
+        report.date === id
+    ) || {
+        date: id,
         marketState: "—",
         riskLevel: "—",
         signal: "—",
@@ -1149,8 +1172,124 @@ async function getReportByDate(date) {
     };
 }
 
+function compareReportsDesc(a, b) {
+    const aKey = a.generatedAtIso || a.generatedAt || a.id || a.date || "";
+    const bKey = b.generatedAtIso || b.generatedAt || b.id || b.date || "";
+    return String(bKey).localeCompare(String(aKey));
+}
+
 function calculateIndicators(data) {
-    return data;
+    const cryptoSymbols = ["btc", "eth", "sol"];
+    const changes24h = cryptoSymbols
+        .map(symbol => Number(data[symbol]?.change24h))
+        .filter(Number.isFinite);
+    const changes7d = cryptoSymbols
+        .map(symbol => Number(data[symbol]?.change7d))
+        .filter(Number.isFinite);
+
+    const avgCrypto24h = average(changes24h);
+    const avgCrypto7d = average(changes7d);
+    const maxAbsCrypto7d = changes7d.length
+        ? Math.max(...changes7d.map(value => Math.abs(value)))
+        : null;
+
+    const riskScore = calculateRiskScore({
+        avgCrypto24h,
+        avgCrypto7d,
+        maxAbsCrypto7d,
+        btc24h: Number(data.btc?.change24h),
+        btc7d: Number(data.btc?.change7d),
+        sp500: Number(data.sp500?.change24h),
+        gold: Number(data.gold?.change24h)
+    });
+
+    return {
+        ...data,
+        indicators: {
+            avgCrypto24h,
+            avgCrypto7d,
+            maxAbsCrypto7d,
+            riskScore,
+            riskLevel: getRiskLevel(riskScore),
+            marketState: getMarketState(riskScore, avgCrypto24h, avgCrypto7d),
+            signal: getMarketSignal(riskScore, avgCrypto24h, avgCrypto7d)
+        }
+    };
+}
+
+function average(values) {
+    if (!values.length) return null;
+    return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function addRisk(score, condition, points) {
+    return condition ? score + points : score;
+}
+
+function calculateRiskScore(values) {
+    let score = 50;
+
+    score = addRisk(score, values.avgCrypto24h <= -3, 15);
+    score = addRisk(score, values.avgCrypto24h >= 3, -8);
+    score = addRisk(score, values.avgCrypto7d <= -6, 15);
+    score = addRisk(score, values.avgCrypto7d >= 6, -10);
+    score = addRisk(score, values.maxAbsCrypto7d >= 12, 10);
+    score = addRisk(score, values.btc24h <= -3, 10);
+    score = addRisk(score, values.btc7d <= -7, 10);
+    score = addRisk(score, values.sp500 < 0, 8);
+    score = addRisk(score, values.gold > 0 && values.sp500 < 0, 8);
+    score = addRisk(score, values.gold < 0 && values.sp500 > 0, -6);
+
+    return Math.max(0, Math.min(100, Math.round(score)));
+}
+
+function getRiskLevel(score) {
+    if (score >= 70) return "povišen";
+    if (score <= 35) return "nizak";
+    return "srednji";
+}
+
+function getMarketState(score, avgCrypto24h, avgCrypto7d) {
+    if (score >= 70) return "risk-off";
+    if (score <= 35 && avgCrypto24h > 0 && avgCrypto7d > 0) return "risk-on";
+    if (avgCrypto7d > 3) return "neutralno do umereno uzlaznog trenda";
+    if (avgCrypto7d < -3) return "neutralno do oprezno";
+    return "neutralno";
+}
+
+function getMarketSignal(score, avgCrypto24h, avgCrypto7d) {
+    if (score >= 75) return "OPREZ / WAIT";
+    if (score <= 35 && avgCrypto24h > 0 && avgCrypto7d > 0) return "OPORAVAK";
+    if (avgCrypto7d > 3 && score < 60) return "WAIT / DCA AKUMULACIJA";
+    return "WAIT";
+}
+
+function getBelgradeDateTimeParts(date = new Date()) {
+    const parts = new Intl.DateTimeFormat("sv-SE", {
+        timeZone: "Europe/Belgrade",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false
+    }).formatToParts(date);
+
+    return Object.fromEntries(parts.map(part => [part.type, part.value]));
+}
+
+function createReportTimeMeta(date = new Date()) {
+    const parts = getBelgradeDateTimeParts(date);
+    const day = `${parts.year}-${parts.month}-${parts.day}`;
+    const time = `${parts.hour}:${parts.minute}:${parts.second}`;
+
+    return {
+        id: `${day}T${parts.hour}-${parts.minute}-${parts.second}-${String(date.getMilliseconds()).padStart(3, "0")}`,
+        date: day,
+        generatedAt: `${day} ${time}`,
+        generatedAtIso: date.toISOString()
+    };
 }
 
 function formatPrice(value, decimals = 0) {
@@ -1189,7 +1328,7 @@ function generateDailyReport(i) {
   }
 
   if (i.btc.price > 60000 && i.cryptoTotal.change24h > 0) {
-    marketState = "neutralno do umereno bikovski";
+    marketState = "neutralno do umereno uzlaznog trenda";
     signal = "WAIT / DCA AKUMULACIJA";
   }
 
@@ -1241,6 +1380,45 @@ Trenutno stanje tržišta je: ${marketState}. Rizik je ${riskLevel}. Signal: ${s
 
 }
 
+function generateScoredDailyReport(i) {
+    const { marketState, riskLevel, signal, riskScore, avgCrypto7d } = i.indicators;
+    const timeMeta = createReportTimeMeta();
+
+    return {
+        id: timeMeta.id,
+        date: timeMeta.date,
+        generatedAt: timeMeta.generatedAt,
+        generatedAtIso: timeMeta.generatedAtIso,
+        marketState,
+        riskLevel,
+        signal,
+        btc: i.btc,
+        eth: i.eth,
+        sol: i.sol,
+        gold: i.gold,
+        oil: i.oil,
+        sp500: i.sp500,
+        cryptoTotal: i.cryptoTotal,
+        indicators: i.indicators,
+        snapshot: {
+            collectedAt: i.collectedAt,
+            btc: i.btc,
+            eth: i.eth,
+            sol: i.sol,
+            gold: i.gold,
+            oil: i.oil,
+            sp500: i.sp500,
+            cryptoTotal: i.cryptoTotal
+        },
+        summary: `
+BTC se trenutno kreće oko ${formatPrice(i.btc.price)} USD, uz dnevnu promenu od ${formatPercent(i.btc.change24h)}%.
+ETH je na ${formatPrice(i.eth.price, 2)} USD, a SOL na ${formatPrice(i.sol.price, 2)} USD.
+Prosečna 7d promena BTC/ETH/SOL je ${formatPercent(avgCrypto7d)}%, a risk score je ${riskScore}/100.
+Trenutno stanje tržišta je: ${marketState}. Rizik je ${riskLevel}. Signal: ${signal}.
+        `.trim()
+    };
+}
+
 app.get("/api/self-analysis/latest", async (req, res) => {
     const report = await getLatestReport();
     res.json(report);
@@ -1254,15 +1432,15 @@ app.get("/api/self-analysis/history", async (req, res) => {
 app.get("/api/self-analysis/generate", async (req, res) => {
     const data = await fetchMarketData();
     const indicators = calculateIndicators(data);
-    const report = generateDailyReport(indicators);
+    const report = generateScoredDailyReport(indicators);
 
     await saveReport(report);
 
     res.json(report);
 });
 
-app.get("/api/self-analysis/:date", async (req, res) => {
-    const report = await getReportByDate(req.params.date);
+app.get("/api/self-analysis/:id", async (req, res) => {
+    const report = await getReportById(req.params.id);
     res.json(report);
 });
 
