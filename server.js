@@ -1140,28 +1140,56 @@ async function readReports() {
             return [];
         }
 
-        return JSON.parse(data);
+        const parsed = JSON.parse(data);
+
+        if (Array.isArray(parsed)) {
+            return parsed.filter(report => report && typeof report === "object");
+        }
+
+        if (parsed && typeof parsed === "object") {
+            return [parsed];
+        }
+
+        throw new Error("self-analysis.json mora biti JSON niz ili objekat.");
     } catch (err) {
+        if (err.code === "ENOENT") {
+            return [];
+        }
+
         console.error("Greška pri čitanju self-analysis.json:", err.message);
-        return [];
+        throw err;
     }
 }
 
 async function saveReport(report) {
     const reports = await readReports();
+    const reportId = getPersistentReportId(report);
+    const existingIndex = reportId
+        ? reports.findIndex(r => getPersistentReportId(r) === reportId)
+        : -1;
 
-    const reportId = report.id || report.generatedAt || report.date;
-    const filteredReports = reports.filter(r => (r.id || r.generatedAt || r.date) !== reportId);
+    if (existingIndex >= 0) {
+        reports[existingIndex] = report;
+    } else {
+        reports.push(report);
+    }
 
-    filteredReports.push(report);
+    reports.sort(compareReportsDesc);
 
-    filteredReports.sort(compareReportsDesc);
+    await writeReportsFile(reports);
+}
 
-    await fsp.writeFile(
-        REPORTS_FILE,
-        JSON.stringify(filteredReports, null, 2),
-        "utf8"
-    );
+function getPersistentReportId(report) {
+    return report?.id || report?.generatedAtIso || report?.generatedAt || null;
+}
+
+async function writeReportsFile(reports) {
+    const reportsDir = path.dirname(REPORTS_FILE);
+    const tmpFile = path.join(reportsDir, `.${path.basename(REPORTS_FILE)}.tmp`);
+
+    await fsp.mkdir(reportsDir, { recursive: true });
+    await fsp.writeFile(tmpFile, JSON.stringify(reports, null, 2), "utf8");
+    await fsp.rename(tmpFile, REPORTS_FILE);
 }
 
 async function getAllReports() {

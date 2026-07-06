@@ -514,6 +514,9 @@ lazy-load.market-summary {
   border: 1px solid rgba(37, 99, 235, 0.35);
   border-radius: 0.7em;
   background: white;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .analysis-card {
@@ -612,6 +615,11 @@ lazy-load.market-summary {
 
   .analysis-header {
     flex-direction: column;
+  }
+
+  #analysisHistorySelect {
+    width: 100%;
+    font-size: 1rem;
   }
 
   .sa-meta {
