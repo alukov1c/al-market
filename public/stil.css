@@ -641,6 +641,98 @@ lazy-load.market-summary {
     margin: 0 auto;
 }
 
+.chart-switcher {
+    width: min(100%, 980px);
+    margin: 1.5em auto 30px;
+}
+
+.chart-symbol-menu {
+    display: grid;
+    grid-template-columns: repeat(9, minmax(0, 1fr));
+    gap: 0.45em;
+    width: 100%;
+    margin: 0 auto 1em;
+}
+
+.chart-symbol-menu .chart-symbol {
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    padding: 0.55em 0.3em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35em;
+    border: 1px solid rgba(165, 165, 165, 0.35);
+    border-radius: 0.8em;
+    color: #4b5563;
+    cursor: pointer;
+    font: 600 0.85rem system-ui, sans-serif;
+    transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.chart-symbol-menu .chart-symbol:hover {
+    border-color: rgb(54, 172, 188);
+    background: rgba(54, 172, 188, 0.06);
+}
+
+.chart-symbol-menu .chart-symbol:focus-visible {
+    outline: 3px solid rgba(37, 99, 235, 0.25);
+    outline-offset: 2px;
+}
+
+.chart-symbol-menu .chart-symbol.is-active {
+    border-color: #2563eb;
+    background: rgba(37, 99, 235, 0.08);
+    color: #1d4ed8;
+    box-shadow: 0 3px 12px rgba(37, 99, 235, 0.12);
+}
+
+.chart-symbol-icon,
+.chart-symbol-image {
+    width: 20px;
+    height: 20px;
+    flex: 0 0 20px;
+}
+
+.chart-symbol-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.chart-symbol-image {
+    object-fit: contain;
+}
+
+.chart-symbol-icon--gold {
+    color: #d4a017;
+    font-size: 1.4rem;
+}
+
+.chart-symbol-icon--nvidia {
+    border-radius: 50%;
+    background: #76b900;
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.active-chart-title {
+    margin: 0.9em auto;
+}
+
+.active-tradingview-chart {
+    min-height: 530px;
+}
+
+.active-tradingview-chart .tradingview-widget-container {
+    margin-bottom: 0;
+}
+
 .tradingview-widget-container {
     width: 100%;
     max-width: 980px;
@@ -787,6 +879,43 @@ lazy-load.market-summary {
 
     #grafikoni {
         width: 95%;
+    }
+
+    .chart-switcher {
+        width: 100%;
+        margin-top: 1em;
+    }
+
+    .chart-symbol-menu {
+        grid-template-columns: repeat(10, minmax(0, 1fr));
+        gap: 0.4em;
+        max-width: 560px;
+    }
+
+    .chart-symbol-menu .chart-symbol {
+        grid-column: span 2;
+        min-height: 45px;
+        padding: 0.5em 0.15em;
+        font-size: 0.72rem;
+    }
+
+    .chart-symbol-menu .chart-symbol:nth-child(n + 6) {
+        transform: translateX(50%);
+    }
+
+    .chart-symbol-menu .chart-symbol:nth-child(6) {
+        grid-column-start: 2;
+    }
+
+    .chart-symbol-icon,
+    .chart-symbol-image {
+        width: 17px;
+        height: 17px;
+        flex-basis: 17px;
+    }
+
+    .active-tradingview-chart {
+        min-height: 450px;
     }
 
     .tradingview-widget-container {
@@ -937,6 +1066,19 @@ lazy-load.market-summary {
 
     #grafikoni {
         width: 90%;
+    }
+
+    .chart-switcher {
+        width: 100%;
+    }
+
+    .chart-symbol-menu {
+        grid-template-columns: repeat(9, minmax(0, 1fr));
+    }
+
+    .chart-symbol-menu .chart-symbol {
+        padding-inline: 0.2em;
+        font-size: 0.75rem;
     }
 
     .tradingview-widget-container {

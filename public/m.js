@@ -1124,6 +1124,183 @@ if (!customElements.get("lazy-load")) {
     customElements.define("lazy-load", LazyLoad);
 }
 
+const tradingViewCharts = {
+    xau: {
+        title: "Grafik - Zlato - XAU",
+        symbol: "OANDA:XAUUSD",
+        href: "https://www.tradingview.com/symbols/XAUUSD/?exchange=OANDA",
+        label: "XAU grafik"
+    },
+    xbr: {
+        title: "Grafik - Nafta - XBR",
+        symbol: "ICMARKETS:XBRUSD",
+        href: "https://www.tradingview.com/symbols/XBRUSD/?exchange=ICMARKETS",
+        label: "XBR grafik"
+    },
+    total: {
+        title: "Grafik - Crypto Total Market Cap - TOTAL ",
+        symbol: "CRYPTOCAP:TOTAL",
+        href: "https://www.tradingview.com/symbols/TOTAL/?exchange=CRYPTOCAP",
+        label: "Kripto TOTAL"
+    },
+    btc: {
+        title: "Grafik - BTC",
+        symbol: "BITSTAMP:BTCUSD",
+        href: "https://www.tradingview.com/symbols/BTCUSD/?exchange=BITSTAMP",
+        label: "BTC grafik"
+    },
+    eth: {
+        title: "Grafik - ETH",
+        symbol: "COINBASE:ETHUSD",
+        href: "https://www.tradingview.com/symbols/ETHUSD/?exchange=COINBASE",
+        label: "ETH grafik"
+    },
+    sol: {
+        title: "Grafik - Solana",
+        symbol: "BINANCE:SOLUSDT",
+        href: "https://www.tradingview.com/symbols/SOLUSDT/?exchange=BINANCE",
+        label: "SOL grafik"
+    },
+    chf: {
+        title: "Forex - Grafik - CHF",
+        symbol: "FX_IDC:CHFUSD",
+        href: "https://www.tradingview.com/symbols/CHFUSD/?exchange=FX_IDC",
+        label: "CHF grafik"
+    },
+    aud: {
+        title: "Forex - Grafik - AUD",
+        symbol: "OANDA:AUDUSD",
+        href: "https://www.tradingview.com/symbols/AUDUSD/?exchange=OANDA",
+        label: "AUD grafik"
+    },
+    nvda: {
+        title: "Berza - Grafik - NVIDIA",
+        symbol: "NASDAQ:NVDA",
+        href: "https://www.tradingview.com/symbols/NVDA/?exchange=NASDAQ",
+        label: "NVIDIA grafik"
+    }
+};
+
+function renderTradingViewChart(chartKey) {
+    const chart = tradingViewCharts[chartKey];
+    const chartHost = document.querySelector("#activeTradingViewChart");
+    const chartTitle = document.querySelector("#activeChartTitle");
+
+    if (!chart || !chartHost || !chartTitle) return;
+
+    chartTitle.textContent = chart.title;
+    chartHost.replaceChildren();
+    chartHost.setAttribute("aria-busy", "true");
+
+    const widgetContainer = document.createElement("div");
+    widgetContainer.className = "tradingview-widget-container";
+
+    const widget = document.createElement("div");
+    widget.className = "tradingview-widget-container__widget";
+
+    const copyright = document.createElement("div");
+    copyright.className = "tradingview-widget-copyright";
+
+    const link = document.createElement("a");
+    link.href = chart.href;
+    link.rel = "noopener nofollow";
+    link.target = "_blank";
+
+    const label = document.createElement("span");
+    label.className = "blue-text";
+    label.textContent = chart.label;
+    link.appendChild(label);
+    copyright.appendChild(link);
+
+    const script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
+    script.async = true;
+    script.textContent = JSON.stringify({
+        allow_symbol_change: true,
+        calendar: false,
+        details: false,
+        hide_side_toolbar: true,
+        hide_top_toolbar: false,
+        hide_legend: false,
+        hide_volume: false,
+        hotlist: false,
+        interval: "D",
+        locale: "en",
+        save_image: true,
+        style: "1",
+        symbol: chart.symbol,
+        theme: "light",
+        timezone: "Etc/UTC",
+        backgroundColor: "#ffffff",
+        gridColor: "rgba(46, 46, 46, 0.06)",
+        watchlist: [],
+        withdateranges: false,
+        compareSymbols: [],
+        studies: [],
+        width: "100%",
+        height: 500
+    });
+
+    script.addEventListener("load", () => {
+        chartHost.setAttribute("aria-busy", "false");
+    }, { once: true });
+    script.addEventListener("error", () => {
+        chartHost.setAttribute("aria-busy", "false");
+    }, { once: true });
+
+    widgetContainer.append(widget, copyright, script);
+    chartHost.appendChild(widgetContainer);
+}
+
+function initTradingViewChartSwitcher() {
+    const menu = document.querySelector(".chart-symbol-menu");
+
+    if (!menu) return;
+
+    const tabs = Array.from(menu.querySelectorAll(".chart-symbol"));
+
+    const activateTab = (tab) => {
+        tabs.forEach((item) => {
+            const isActive = item === tab;
+            item.classList.toggle("is-active", isActive);
+            item.setAttribute("aria-selected", String(isActive));
+            item.tabIndex = isActive ? 0 : -1;
+        });
+
+        renderTradingViewChart(tab.dataset.chart);
+    };
+
+    menu.addEventListener("click", (event) => {
+        const tab = event.target.closest(".chart-symbol");
+        if (tab) activateTab(tab);
+    });
+
+    menu.addEventListener("keydown", (event) => {
+        const currentIndex = tabs.indexOf(document.activeElement);
+        if (currentIndex < 0 || !["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+
+        event.preventDefault();
+        let nextIndex = currentIndex;
+
+        if (event.key === "ArrowLeft") nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+        if (event.key === "ArrowRight") nextIndex = (currentIndex + 1) % tabs.length;
+        if (event.key === "Home") nextIndex = 0;
+        if (event.key === "End") nextIndex = tabs.length - 1;
+
+        tabs[nextIndex].focus();
+        activateTab(tabs[nextIndex]);
+    });
+
+    activateTab(tabs.find((tab) => tab.classList.contains("is-active")) || tabs[0]);
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initTradingViewChartSwitcher, { once: true });
+} else {
+    initTradingViewChartSwitcher();
+}
+
 
 
 //////////////////////////////////////////

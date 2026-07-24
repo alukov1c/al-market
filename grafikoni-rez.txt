@@ -1,0 +1,445 @@
+            <div>
+                <b>Grafik - Zlato - XAU</b>
+            </div>
+
+                        <lazy-load>
+
+                <template>
+
+                        <!-- XAU -->
+                            <!-- TradingView Widget BEGIN -->
+                            <div class="tradingview-widget-container">
+                                <div class="tradingview-widget-container__widget"></div>
+                                <div class="tradingview-widget-copyright"><a
+                                        href="https://www.tradingview.com/symbols/XAUUSD/?exchange=OANDA" rel="noopener nofollow"
+                                        target="_blank"><span class="blue-text">XAU grafik <!-- chart --></span></a><span
+                                        class="trademark"> <!-- by
+                                        TradingView --></span></div>
+                                <script type="text/javascript"
+                                    src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+                                        {
+                                            "allow_symbol_change": true,
+                                                "calendar": false,
+                                                    "details": false,
+                                                        "hide_side_toolbar": true,
+                                                            "hide_top_toolbar": false,
+                                                                "hide_legend": false,
+                                                                    "hide_volume": false,
+                                                                        "hotlist": false,
+                                                                            "interval": "D",
+                                                                                "locale": "en",
+                                                                                    "save_image": true,
+                                                                                        "style": "1",
+                                                                                            "symbol": "OANDA:XAUUSD",
+                                                                                                "theme": "light",
+                                                                                                    "timezone": "Etc/UTC",
+                                                                                                        "backgroundColor": "#ffffff",
+                                                                                                            "gridColor": "rgba(46, 46, 46, 0.06)",
+                                                                                                                "watchlist": [],
+                                                                                                                    "withdateranges": false,
+                                                                                                                        "compareSymbols": [],
+                                                                                                                            "studies": [],
+                                                                                                                                "width": "100%",
+                                                                                                                                    "height": 500
+                                        }
+                                    </script>
+                            </div>
+                            <!-- TradingView Widget END -->
+                    
+                </template>
+
+            </lazy-load>
+
+
+
+
+            <div>
+                <b>Grafik - Nafta - XBR</b>
+            </div>
+
+            <!-- XBR -->
+
+            <!-- TradingView Widget BEGIN -->
+            <lazy-load>
+                <template>
+                    <div class="tradingview-widget-container">
+                        <div class="tradingview-widget-container__widget"></div>
+                        <div class="tradingview-widget-copyright"><a
+                                href="https://www.tradingview.com/symbols/XBRUSD/?exchange=ICMARKETS" rel="noopener nofollow"
+                                target="_blank"><span class="blue-text">XBR grafik <!-- chart --></span></a><span
+                                class="trademark"> <!-- by
+                                TradingView --></span></div>
+                        <script type="text/javascript"
+                            src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+                                {
+                                    "allow_symbol_change": true,
+                                        "calendar": false,
+                                            "details": false,
+                                                "hide_side_toolbar": true,
+                                                    "hide_top_toolbar": false,
+                                                        "hide_legend": false,
+                                                            "hide_volume": false,
+                                                                "hotlist": false,
+                                                                    "interval": "D",
+                                                                        "locale": "en",
+                                                                            "save_image": true,
+                                                                                "style": "1",
+                                                                                    "symbol": "ICMARKETS:XBRUSD",
+                                                                                        "theme": "light",
+                                                                                            "timezone": "Etc/UTC",
+                                                                                                "backgroundColor": "#ffffff",
+                                                                                                    "gridColor": "rgba(46, 46, 46, 0.06)",
+                                                                                                        "watchlist": [],
+                                                                                                            "withdateranges": false,
+                                                                                                                "compareSymbols": [],
+                                                                                                                    "studies": [],
+                                                                                                                        "width": "100%",
+                                                                                                                            "height": 500
+                                }
+                            </script>
+                    </div>
+                </template>
+            </lazy-load>
+            <!-- TradingView Widget END -->
+
+            <div>
+                <b>Grafik - Crypto Total Market Cap - TOTAL </b>
+            </div>
+
+            <!-- Crypto Total Market Cap -->
+
+            <!-- TradingView Widget BEGIN -->
+            <lazy-load>
+                <template>
+                    <div class="tradingview-widget-container">
+                        <div class="tradingview-widget-container__widget"></div>
+                        <div class="tradingview-widget-copyright"><a
+                                href="https://www.tradingview.com/symbols/TOTAL/?exchange=CRYPTOCAP" rel="noopener nofollow"
+                                target="_blank"><span class="blue-text">Kripto TOTAL <!-- chart --></span></a><span
+                                class="trademark"> <!-- by TradingView --> </span></div>
+                        <script type="text/javascript"
+                            src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+                                {
+                                    "allow_symbol_change": true,
+                                        "calendar": false,
+                                            "details": false,
+                                                "hide_side_toolbar": true,
+                                                    "hide_top_toolbar": false,
+                                                        "hide_legend": false,
+                                                            "hide_volume": false,
+                                                                "hotlist": false,
+                                                                    "interval": "D",
+                                                                        "locale": "en",
+                                                                            "save_image": true,
+                                                                                "style": "1",
+                                                                                    "symbol": "CRYPTOCAP:TOTAL",
+                                                                                        "theme": "light",
+                                                                                            "timezone": "Etc/UTC",
+                                                                                                "backgroundColor": "#ffffff",
+                                                                                                    "gridColor": "rgba(46, 46, 46, 0.06)",
+                                                                                                        "watchlist": [],
+                                                                                                            "withdateranges": false,
+                                                                                                                "compareSymbols": [],
+                                                                                                                    "studies": [],
+                                                                                                                        "width": "100%",
+                                                                                                                            "height": 500
+                                }
+                            </script>
+                    </div>
+                </template>
+            </lazy-load>
+            <!-- TradingView Widget END -->
+
+            <div>
+                <b>Grafik - BTC</b>
+            </div>
+
+            <!-- BTC -->
+
+            <!-- TradingView Widget BEGIN -->
+            <lazy-load>
+                <template>
+                    <div class="tradingview-widget-container">
+                        <div class="tradingview-widget-container__widget"></div>
+                        <div class="tradingview-widget-copyright"><a
+                                href="https://www.tradingview.com/symbols/BTCUSD/?exchange=BITSTAMP" rel="noopener nofollow"
+                                target="_blank"><span class="blue-text">BTC grafik <!-- Bitcoin price --></span></a><span
+                                class="trademark"> <!-- by
+                                TradingView --></span></div>
+                        <script type="text/javascript"
+                            src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+                                {
+                                    "allow_symbol_change": true,
+                                        "calendar": false,
+                                            "details": false,
+                                                "hide_side_toolbar": true,
+                                                    "hide_top_toolbar": false,
+                                                        "hide_legend": false,
+                                                            "hide_volume": false,
+                                                                "hotlist": false,
+                                                                    "interval": "D",
+                                                                        "locale": "en",
+                                                                            "save_image": true,
+                                                                                "style": "1",
+                                                                                    "symbol": "BITSTAMP:BTCUSD",
+                                                                                        "theme": "light",
+                                                                                            "timezone": "Etc/UTC",
+                                                                                                "backgroundColor": "#ffffff",
+                                                                                                    "gridColor": "rgba(46, 46, 46, 0.06)",
+                                                                                                        "watchlist": [],
+                                                                                                            "withdateranges": false,
+                                                                                                                "compareSymbols": [],
+                                                                                                                    "studies": [],
+                                                                                                                        "width": "100%",
+                                                                                                                            "height": 500
+                                }
+                            </script>
+                    </div>
+                </template>
+            </lazy-load>
+            <!-- TradingView Widget END -->
+
+            <div>
+                <b>Grafik - ETH</b>
+            </div>
+
+            <!-- ETH -->
+
+            <!-- TradingView Widget BEGIN -->
+            <lazy-load>
+                <template>
+                    <div class="tradingview-widget-container">
+                        <div class="tradingview-widget-container__widget"></div>
+                        <div class="tradingview-widget-copyright"><a
+                                href="https://www.tradingview.com/symbols/ETHUSD/?exchange=COINBASE" rel="noopener nofollow"
+                                target="_blank"><span class="blue-text">ETH grafik <!-- Ethereum price --></span></a><span
+                                class="trademark"> <!-- by
+                                TradingView --></span></div>
+                        <script type="text/javascript"
+                            src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+                                {
+                                    "allow_symbol_change": true,
+                                        "calendar": false,
+                                            "details": false,
+                                                "hide_side_toolbar": true,
+                                                    "hide_top_toolbar": false,
+                                                        "hide_legend": false,
+                                                            "hide_volume": false,
+                                                                "hotlist": false,
+                                                                    "interval": "D",
+                                                                        "locale": "en",
+                                                                            "save_image": true,
+                                                                                "style": "1",
+                                                                                    "symbol": "COINBASE:ETHUSD",
+                                                                                        "theme": "light",
+                                                                                            "timezone": "Etc/UTC",
+                                                                                                "backgroundColor": "#ffffff",
+                                                                                                    "gridColor": "rgba(46, 46, 46, 0.06)",
+                                                                                                        "watchlist": [],
+                                                                                                            "withdateranges": false,
+                                                                                                                "compareSymbols": [],
+                                                                                                                    "studies": [],
+                                                                                                                        "width": "100%",
+                                                                                                                            "height": 500
+                                }
+                            </script>
+                    </div>
+                </template>
+            </lazy-load>
+            <!-- TradingView Widget END -->
+
+
+            <div>
+                <b>Grafik - Solana</b>
+            </div>
+
+            <!-- Solana -->
+
+            <!-- TradingView Widget BEGIN -->
+            <lazy-load>
+                <template>
+                    <div class="tradingview-widget-container">
+                        <div class="tradingview-widget-container__widget"></div>
+                        <div class="tradingview-widget-copyright"><a
+                                href="https://www.tradingview.com/symbols/SOLUSDT/?exchange=BINANCE" rel="noopener nofollow"
+                                target="_blank"><span class="blue-text">SOL<!-- USDT --> grafik <!-- price --></span></a><span
+                                class="trademark"> <!-- by TradingView --></span></div>
+                        <script type="text/javascript"
+                            src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+                                {
+                                    "allow_symbol_change": true,
+                                        "calendar": false,
+                                            "details": false,
+                                                "hide_side_toolbar": true,
+                                                    "hide_top_toolbar": false,
+                                                        "hide_legend": false,
+                                                            "hide_volume": false,
+                                                                "hotlist": false,
+                                                                    "interval": "D",
+                                                                        "locale": "en",
+                                                                            "save_image": true,
+                                                                                "style": "1",
+                                                                                    "symbol": "BINANCE:SOLUSDT",
+                                                                                        "theme": "light",
+                                                                                            "timezone": "Etc/UTC",
+                                                                                                "backgroundColor": "#ffffff",
+                                                                                                    "gridColor": "rgba(46, 46, 46, 0.06)",
+                                                                                                        "watchlist": [],
+                                                                                                            "withdateranges": false,
+                                                                                                                "compareSymbols": [],
+                                                                                                                    "studies": [],
+                                                                                                                        "width": "100%",
+                                                                                                                            "height": 500
+                                }
+                            </script>
+                    </div>
+                </template>
+            </lazy-load>
+            <!-- TradingView Widget END -->
+
+            <div>
+                <b>Forex - Grafik - CHF</b>
+            </div>
+
+            <!-- CHF -->
+
+            <!-- TradingView Widget BEGIN -->
+            <lazy-load>
+                <template>
+                    <div class="tradingview-widget-container">
+                        <div class="tradingview-widget-container__widget"></div>
+                        <div class="tradingview-widget-copyright"><a
+                                href="https://www.tradingview.com/symbols/CHFUSD/?exchange=FX_IDC" rel="noopener nofollow"
+                                target="_blank"><span class="blue-text">CHF<!-- USD --> grafik <!-- chart --> </span></a><span
+                                class="trademark"> <!-- by TradingView --> </span></div>
+                        <script type="text/javascript"
+                            src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+                                {
+                                    "allow_symbol_change": true,
+                                        "calendar": false,
+                                            "details": false,
+                                                "hide_side_toolbar": true,
+                                                    "hide_top_toolbar": false,
+                                                        "hide_legend": false,
+                                                            "hide_volume": false,
+                                                                "hotlist": false,
+                                                                    "interval": "D",
+                                                                        "locale": "en",
+                                                                            "save_image": true,
+                                                                                "style": "1",
+                                                                                    "symbol": "FX_IDC:CHFUSD",
+                                                                                        "theme": "light",
+                                                                                            "timezone": "Etc/UTC",
+                                                                                                "backgroundColor": "#ffffff",
+                                                                                                    "gridColor": "rgba(46, 46, 46, 0.06)",
+                                                                                                        "watchlist": [],
+                                                                                                            "withdateranges": false,
+                                                                                                                "compareSymbols": [],
+                                                                                                                    "studies": [],
+                                                                                                                        "width": "100%",
+                                                                                                                            "height": 500
+                                }
+                            </script>
+                    </div>
+                </template>
+            </lazy-load>
+            <!-- TradingView Widget END -->
+
+            <div>
+                <b>Forex - Grafik - AUD</b>
+            </div>
+
+            <!-- AUD -->
+
+            <!-- TradingView Widget BEGIN -->
+            <lazy-load>
+                <template>
+                    <div class="tradingview-widget-container">
+                        <div class="tradingview-widget-container__widget"></div>
+                        <div class="tradingview-widget-copyright"><a
+                                href="https://www.tradingview.com/symbols/AUDUSD/?exchange=OANDA" rel="noopener nofollow"
+                                target="_blank"><span class="blue-text">AUD<!-- USD --> grafik <!-- chart --></span></a><span
+                                class="trademark"> <!-- by TradingView --></span></div>
+                        <script type="text/javascript"
+                            src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+                                {
+                                    "allow_symbol_change": true,
+                                        "calendar": false,
+                                            "details": false,
+                                                "hide_side_toolbar": true,
+                                                    "hide_top_toolbar": false,
+                                                        "hide_legend": false,
+                                                            "hide_volume": false,
+                                                                "hotlist": false,
+                                                                    "interval": "D",
+                                                                        "locale": "en",
+                                                                            "save_image": true,
+                                                                                "style": "1",
+                                                                                    "symbol": "OANDA:AUDUSD",
+                                                                                        "theme": "light",
+                                                                                            "timezone": "Etc/UTC",
+                                                                                                "backgroundColor": "#ffffff",
+                                                                                                    "gridColor": "rgba(46, 46, 46, 0.06)",
+                                                                                                        "watchlist": [],
+                                                                                                            "withdateranges": false,
+                                                                                                                "compareSymbols": [],
+                                                                                                                    "studies": [],
+                                                                                                                        "width": "100%",
+                                                                                                                            "height": 500
+                                }
+                            </script>
+                    </div>
+                </template>
+            </lazy-load>
+            <!-- TradingView Widget END -->
+
+            <div>
+                <b>Berza - Grafik - NVIDIA</b>
+            </div>
+
+            <!-- NVIDIA -->
+
+            <!-- TradingView Widget BEGIN -->
+            <lazy-load>
+                <template>
+                    <div class="tradingview-widget-container">
+                        <div class="tradingview-widget-container__widget"></div>
+                        <div class="tradingview-widget-copyright"><a
+                                href="https://www.tradingview.com/symbols/NVDA/?exchange=NASDAQ"
+                                rel="noopener nofollow" target="_blank"><span class="blue-text">NVIDIA
+                                    grafik <!-- chart --></span></a><span
+                                class="trademark"> <!-- by TradingView --></span></div>
+                        <script type="text/javascript"
+                            src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+                                {
+                                    "allow_symbol_change": true,
+                                        "calendar": false,
+                                            "details": false,
+                                                "hide_side_toolbar": true,
+                                                    "hide_top_toolbar": false,
+                                                        "hide_legend": false,
+                                                            "hide_volume": false,
+                                                                "hotlist": false,
+                                                                    "interval": "D",
+                                                                        "locale": "en",
+                                                                            "save_image": true,
+                                                                                "style": "1",
+                                                                                    "symbol": "NASDAQ:NVDA",
+                                                                                        "theme": "light",
+                                                                                            "timezone": "Etc/UTC",
+                                                                                                "backgroundColor": "#ffffff",
+                                                                                                    "gridColor": "rgba(46, 46, 46, 0.06)",
+                                                                                                        "watchlist": [],
+                                                                                                            "withdateranges": false,
+                                                                                                                "compareSymbols": [],
+                                                                                                                    "studies": [],
+                                                                                                                        "width": "100%",
+                                                                                                                            "height": 500
+                                }
+                            </script>
+                    </div>
+                </template>
+            </lazy-load>
+            <!-- TradingView Widget END -->
+
+

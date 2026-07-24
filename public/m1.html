@@ -781,9 +781,63 @@
 
             </lazy-load>
 
+            <section class="chart-switcher" aria-label="Izbor tržišnog grafikona">
+                <div class="chart-symbol-menu" role="tablist" aria-label="Simboli grafikona">
+                    <button class="chart-symbol is-active" type="button" role="tab" aria-selected="true"
+                        aria-controls="activeTradingViewChart" data-chart="xau">
+                        <span class="chart-symbol-icon chart-symbol-icon--gold" aria-hidden="true">●</span>
+                        <span>XAU</span>
+                    </button>
+                    <button class="chart-symbol" type="button" role="tab" aria-selected="false"
+                        aria-controls="activeTradingViewChart" data-chart="xbr">
+                        <span class="chart-symbol-icon" aria-hidden="true">🛢️</span>
+                        <span>XBR</span>
+                    </button>
+                    <button class="chart-symbol" type="button" role="tab" aria-selected="false"
+                        aria-controls="activeTradingViewChart" data-chart="total">
+                        <span class="chart-symbol-icon" aria-hidden="true">📊</span>
+                        <span>TOTAL</span>
+                    </button>
+                    <button class="chart-symbol" type="button" role="tab" aria-selected="false"
+                        aria-controls="activeTradingViewChart" data-chart="btc">
+                        <img class="chart-symbol-image" src="ico/bitcoin-btc-logo.png" alt="">
+                        <span>BTC</span>
+                    </button>
+                    <button class="chart-symbol" type="button" role="tab" aria-selected="false"
+                        aria-controls="activeTradingViewChart" data-chart="eth">
+                        <img class="chart-symbol-image" src="ico/ethereum-eth-logo.png" alt="">
+                        <span>ETH</span>
+                    </button>
+                    <button class="chart-symbol" type="button" role="tab" aria-selected="false"
+                        aria-controls="activeTradingViewChart" data-chart="sol">
+                        <img class="chart-symbol-image" src="ico/solana-sol-logo.svg" alt="">
+                        <span>SOL</span>
+                    </button>
+                    <button class="chart-symbol" type="button" role="tab" aria-selected="false"
+                        aria-controls="activeTradingViewChart" data-chart="chf">
+                        <span class="chart-symbol-icon" aria-hidden="true">🇨🇭</span>
+                        <span>CHF</span>
+                    </button>
+                    <button class="chart-symbol" type="button" role="tab" aria-selected="false"
+                        aria-controls="activeTradingViewChart" data-chart="aud">
+                        <span class="chart-symbol-icon" aria-hidden="true">🇦🇺</span>
+                        <span>AUD</span>
+                    </button>
+                    <button class="chart-symbol" type="button" role="tab" aria-selected="false"
+                        aria-controls="activeTradingViewChart" data-chart="nvda">
+                        <span class="chart-symbol-icon chart-symbol-icon--nvidia" aria-hidden="true">N</span>
+                        <span>NVIDIA</span>
+                    </button>
+                </div>
 
+                <div class="active-chart-title" aria-live="polite">
+                    <b id="activeChartTitle">Grafik - Zlato - XAU</b>
+                </div>
+                <div id="activeTradingViewChart" class="active-tradingview-chart" role="tabpanel"
+                    aria-labelledby="activeChartTitle"></div>
+            </section>
 
-
+            <template id="legacyTradingViewCharts">
             <div>
                 <b>Grafik - Zlato - XAU</b>
             </div>
@@ -1228,6 +1282,7 @@
             </lazy-load>
             <!-- TradingView Widget END -->
 
+            </template>
 
 
 
