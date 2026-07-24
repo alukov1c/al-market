@@ -961,6 +961,7 @@ lazy-load.market-summary {
         gap: 0.3em;
         margin: 0;
         align-self: center;
+        transform: translateY(-45px);
     }
 
     .chart-symbol-menu .chart-symbol {
