@@ -746,6 +746,63 @@ lazy-load.market-summary {
     margin-bottom: 0;
 }
 
+.market-widgets {
+    width: min(100%, 980px);
+    margin: 2em auto 0;
+}
+
+.technical-analysis-section {
+    width: min(100%, 980px);
+    margin: 2em auto 0;
+}
+
+.active-technical-analysis {
+    width: 100%;
+    min-height: 425px;
+}
+
+.technical-analysis-pane,
+.technical-analysis-pane tv-technical-analysis {
+    display: block;
+    width: 100%;
+    height: 425px;
+}
+
+.technical-analysis-pane[hidden] {
+    display: none;
+}
+
+.market-widget-title {
+    margin: 1.4em auto 0.8em;
+}
+
+lazy-load.heatmap-widget,
+lazy-load.crypto-screener-widget {
+    width: 100%;
+    max-width: 980px;
+    margin: 0 auto 24px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+lazy-load.heatmap-widget {
+    height: 560px;
+}
+
+lazy-load.crypto-screener-widget {
+    height: 580px;
+}
+
+.heatmap-widget .tradingview-widget-container,
+.crypto-screener-widget .tradingview-widget-container,
+.active-technical-analysis tv-technical-analysis {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    margin: 0;
+}
+
 .tradingview-widget-container {
     width: 100%;
     max-width: 980px;
@@ -925,6 +982,29 @@ lazy-load.market-summary {
 
     .active-tradingview-chart {
         min-height: 450px;
+    }
+
+    .market-widgets {
+        width: 100%;
+    }
+
+    .technical-analysis-section {
+        width: 100%;
+    }
+
+    .active-technical-analysis,
+    .technical-analysis-pane,
+    .technical-analysis-pane tv-technical-analysis {
+        min-height: 410px;
+        height: 410px;
+    }
+
+    lazy-load.heatmap-widget {
+        height: 480px;
+    }
+
+    lazy-load.crypto-screener-widget {
+        height: 570px;
     }
 
     .tradingview-widget-container {

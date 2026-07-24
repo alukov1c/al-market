@@ -837,6 +837,118 @@
                     aria-labelledby="activeChartTitle"></div>
             </section>
 
+            <section class="technical-analysis-section" aria-label="Tehnička analiza tržišta">
+                <div class="market-widget-title" aria-live="polite">
+                    <b id="technicalAnalysisTitle">Tehnička analiza - XAU <!-- Technical Analysis --></b>
+                </div>
+                <script type="module"
+                    src="https://widgets.tradingview-widget.com/w/en/tv-technical-analysis.js"></script>
+                <div id="activeTechnicalAnalysis" class="active-technical-analysis"
+                    aria-labelledby="technicalAnalysisTitle"></div>
+            </section>
+
+            <section class="market-widgets" aria-label="Dodatni pregledi tržišta">
+                <div class="market-widget-title">
+                    <b>Heatmap grafik akcija <!-- Stock Heatmap --></b>
+                </div>
+                <lazy-load class="heatmap-widget">
+                    <template>
+                        <div class="tradingview-widget-container">
+                            <div class="tradingview-widget-container__widget"></div>
+                            <div class="tradingview-widget-copyright"><a
+                                    href="https://www.tradingview.com/heatmap/stock/" rel="noopener nofollow"
+                                    target="_blank"><span class="blue-text">Heatmap grafik akcija
+                                        <!-- Stock Heatmap --></span></a><span
+                                    class="trademark"> <!-- by TradingView --> </span></div>
+                            <script type="text/javascript"
+                                src="https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js" async>
+                                    {
+                                        "exchanges": [],
+                                        "dataSource": "SPX500",
+                                        "grouping": "sector",
+                                        "blockSize": "market_cap_basic",
+                                        "blockColor": "change",
+                                        "locale": "en",
+                                        "symbolUrl": "",
+                                        "colorTheme": "light",
+                                        "hasTopBar": false,
+                                        "isDataSetEnabled": false,
+                                        "isZoomEnabled": true,
+                                        "hasSymbolTooltip": true,
+                                        "isMonoSize": false,
+                                        "width": "100%",
+                                        "height": "100%"
+                                    }
+                                </script>
+                        </div>
+                    </template>
+                </lazy-load>
+
+                <div class="market-widget-title">
+                    <b>Heatmap grafik kriptovaluta <!-- Crypto Coins Heatmap --></b>
+                </div>
+                <lazy-load class="heatmap-widget">
+                    <template>
+                        <div class="tradingview-widget-container">
+                            <div class="tradingview-widget-container__widget"></div>
+                            <div class="tradingview-widget-copyright"><a
+                                    href="https://www.tradingview.com/heatmap/crypto/" rel="noopener nofollow"
+                                    target="_blank"><span class="blue-text">Heatmap grafik kriptovaluta
+                                        <!-- Crypto Heatmap --></span></a><span
+                                    class="trademark"> <!-- by TradingView --></span></div>
+                            <script type="text/javascript"
+                                src="https://s3.tradingview.com/external-embedding/embed-widget-crypto-coins-heatmap.js"
+                                async>
+                                    {
+                                        "dataSource": "Crypto",
+                                        "blockSize": "market_cap_calc",
+                                        "blockColor": "24h_close_change|5",
+                                        "locale": "en",
+                                        "symbolUrl": "",
+                                        "colorTheme": "light",
+                                        "hasTopBar": false,
+                                        "isDataSetEnabled": false,
+                                        "isZoomEnabled": true,
+                                        "hasSymbolTooltip": true,
+                                        "isMonoSize": false,
+                                        "width": "100%",
+                                        "height": "100%"
+                                    }
+                                </script>
+                        </div>
+                    </template>
+                </lazy-load>
+
+                <div class="market-widget-title">
+                    <b>Tržište kriptovaluta <!-- Cryptocurrency Market --></b>
+                </div>
+                <lazy-load class="crypto-screener-widget">
+                    <template>
+                        <div class="tradingview-widget-container">
+                            <div class="tradingview-widget-container__widget"></div>
+                            <div class="tradingview-widget-copyright"><a
+                                    href="https://www.tradingview.com/markets/cryptocurrencies/prices-all/"
+                                    rel="noopener nofollow" target="_blank"><span class="blue-text">Tržište
+                                        kriptovaluta <!-- Crypto markets --></span></a><span class="trademark">
+                                    <!-- by TradingView --></span></div>
+                            <script type="text/javascript"
+                                src="https://s3.tradingview.com/external-embedding/embed-widget-screener.js" async>
+                                    {
+                                        "defaultColumn": "overview",
+                                        "screener_type": "crypto_mkt",
+                                        "displayCurrency": "USD",
+                                        "colorTheme": "light",
+                                        "isTransparent": false,
+                                        "locale": "en",
+                                        "width": "100%",
+                                        "height": 550
+                                    }
+                                </script>
+                        </div>
+                    </template>
+                </lazy-load>
+            </section>
+
             <template id="legacyTradingViewCharts">
             <div>
                 <b>Grafik - Zlato - XAU</b>
