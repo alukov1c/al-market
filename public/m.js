@@ -1181,16 +1181,22 @@ const tradingViewCharts = {
     }
 };
 
-function renderTradingViewChart(chartKey) {
+const tradingViewChartPanes = new Map();
+let tradingViewBackgroundLoadStarted = false;
+let activeTradingViewChartKey = "xau";
+
+function createTradingViewChart(chartKey) {
     const chart = tradingViewCharts[chartKey];
     const chartHost = document.querySelector("#activeTradingViewChart");
-    const chartTitle = document.querySelector("#activeChartTitle");
 
-    if (!chart || !chartHost || !chartTitle) return;
+    if (!chart || !chartHost) return Promise.resolve(null);
+    if (tradingViewChartPanes.has(chartKey)) {
+        return Promise.resolve(tradingViewChartPanes.get(chartKey));
+    }
 
-    chartTitle.textContent = chart.title;
-    chartHost.replaceChildren();
-    chartHost.setAttribute("aria-busy", "true");
+    const chartPane = document.createElement("div");
+    chartPane.className = "tradingview-chart-pane is-preloading";
+    chartPane.dataset.chart = chartKey;
 
     const widgetContainer = document.createElement("div");
     widgetContainer.className = "tradingview-widget-container";
@@ -1242,15 +1248,59 @@ function renderTradingViewChart(chartKey) {
         height: 500
     });
 
-    script.addEventListener("load", () => {
-        chartHost.setAttribute("aria-busy", "false");
-    }, { once: true });
-    script.addEventListener("error", () => {
-        chartHost.setAttribute("aria-busy", "false");
-    }, { once: true });
+    const chartLoaded = new Promise((resolve) => {
+        const finishLoading = () => {
+            chartPane.dataset.loaded = "true";
+            chartPane.classList.remove("is-preloading");
+            chartPane.hidden = chartKey !== activeTradingViewChartKey;
+            resolve(chartPane);
+        };
+
+        script.addEventListener("load", finishLoading, { once: true });
+        script.addEventListener("error", finishLoading, { once: true });
+        setTimeout(finishLoading, 2500);
+    });
 
     widgetContainer.append(widget, copyright, script);
-    chartHost.appendChild(widgetContainer);
+    chartPane.appendChild(widgetContainer);
+    chartHost.appendChild(chartPane);
+    tradingViewChartPanes.set(chartKey, chartPane);
+
+    return chartLoaded;
+}
+
+async function loadTradingViewChartsInBackground(activeChartKey) {
+    if (tradingViewBackgroundLoadStarted) return;
+    tradingViewBackgroundLoadStarted = true;
+
+    for (const chartKey of Object.keys(tradingViewCharts)) {
+        if (chartKey === activeChartKey) continue;
+        await createTradingViewChart(chartKey);
+    }
+}
+
+async function showTradingViewChart(chartKey) {
+    const chart = tradingViewCharts[chartKey];
+    const chartHost = document.querySelector("#activeTradingViewChart");
+    const chartTitle = document.querySelector("#activeChartTitle");
+
+    if (!chart || !chartHost || !chartTitle) return;
+
+    activeTradingViewChartKey = chartKey;
+    chartTitle.textContent = chart.title;
+    chartHost.setAttribute("aria-busy", "true");
+
+    const chartPane = await createTradingViewChart(chartKey);
+
+    if (chartKey !== activeTradingViewChartKey) return;
+
+    tradingViewChartPanes.forEach((pane, paneKey) => {
+        pane.classList.remove("is-preloading");
+        pane.hidden = paneKey !== chartKey;
+    });
+
+    chartHost.setAttribute("aria-busy", "false");
+    loadTradingViewChartsInBackground(chartKey);
 }
 
 function initTradingViewChartSwitcher() {
@@ -1268,7 +1318,7 @@ function initTradingViewChartSwitcher() {
             item.tabIndex = isActive ? 0 : -1;
         });
 
-        renderTradingViewChart(tab.dataset.chart);
+        showTradingViewChart(tab.dataset.chart);
     };
 
     menu.addEventListener("click", (event) => {
