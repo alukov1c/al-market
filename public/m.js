@@ -1341,7 +1341,7 @@ function createTechnicalAnalysis(chartKey) {
     if (chart.analysisUnavailable) {
         const message = document.createElement("div");
         message.className = "technical-analysis-unavailable";
-        message.textContent = "Tehnička analiza za XBR trenutno nije dostupna.";
+        message.textContent = "Tehnička analiza za XBR nije dostupna. Za sve ostale instrumente jeste. ";
         analysisPane.appendChild(message);
         analysisHost.appendChild(analysisPane);
         technicalAnalysisPanes.set(chartKey, analysisPane);
