@@ -1209,6 +1209,9 @@ let activeTradingViewChartKey = "xau";
 function createTradingViewChart(chartKey) {
     const chart = tradingViewCharts[chartKey];
     const chartHost = document.querySelector("#activeTradingViewChart");
+    const isCompactTablet = window.matchMedia(
+        "(min-width: 701px) and (max-width: 1366px) and (max-height: 900px)"
+    ).matches;
 
     if (!chart || !chartHost) return Promise.resolve(null);
     if (tradingViewChartPanes.has(chartKey)) {
@@ -1266,7 +1269,7 @@ function createTradingViewChart(chartKey) {
         compareSymbols: [],
         studies: [],
         width: "100%",
-        height: 500
+        height: isCompactTablet ? 390 : 500
     });
 
     const chartLoaded = new Promise((resolve) => {
