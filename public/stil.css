@@ -40,7 +40,7 @@ body {
     -webkit-mask-composite: xor;
     mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     mask-composite: exclude;
-    animation: alBorderMove 7s linear infinite;
+    animation: alBorderMove 14s linear infinite;
 }
 
 #odabirAplikacije
@@ -451,7 +451,7 @@ lazy-load.market-summary {
     #e11d48
   );
   background-size: 400% 400%;
-  animation: alBorderMove 7s linear infinite;
+  animation: alBorderMove 10s linear infinite;
   box-shadow: 0 0 18px rgba(37, 99, 235, 0.18);
 }
 
@@ -698,7 +698,7 @@ lazy-load.market-summary {
     -webkit-mask-composite: xor;
     mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     mask-composite: exclude;
-    animation: alBorderMove 7s linear infinite;
+    animation: alBorderMove 14s linear infinite;
 }
 
 .market-status-clock {
