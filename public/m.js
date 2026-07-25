@@ -1127,63 +1127,74 @@ if (!customElements.get("lazy-load")) {
 const tradingViewCharts = {
     xau: {
         title: "Grafik - Zlato - XAU",
-        analysisTitle: "Tehnička analiza - XAU",
+        analysisTitle: "XAU tehnička analiza",
+        analysisEnglishTitle: "XAUUSD Analysis on TradingView",
         symbol: "OANDA:XAUUSD",
         href: "https://www.tradingview.com/symbols/XAUUSD/?exchange=OANDA",
         label: "XAU grafik"
     },
     xbr: {
         title: "Grafik - Nafta - XBR",
-        analysisTitle: "Tehnička analiza - XBR",
+        analysisTitle: "XBR/Brent tehnička analiza",
+        analysisEnglishTitle: "UKOIL Analysis on TradingView",
+        analysisSymbol: "TVC:UKOIL",
+        analysisHref: "https://www.tradingview.com/symbols/UKOIL/",
         symbol: "ICMARKETS:XBRUSD",
         href: "https://www.tradingview.com/symbols/XBRUSD/?exchange=ICMARKETS",
         label: "XBR grafik"
     },
     total: {
         title: "Grafik - Crypto Total Market Cap - TOTAL ",
-        analysisTitle: "Tehnička analiza - TOTAL CRYPTO",
+        analysisTitle: "TOTAL tehnička analiza",
+        analysisEnglishTitle: "TOTAL Analysis on TradingView",
         symbol: "CRYPTOCAP:TOTAL",
         href: "https://www.tradingview.com/symbols/TOTAL/?exchange=CRYPTOCAP",
         label: "Kripto TOTAL"
     },
     btc: {
         title: "Grafik - BTC",
-        analysisTitle: "Tehnička analiza - BTC",
+        analysisTitle: "BTC tehnička analiza",
+        analysisEnglishTitle: "BTCUSD Analysis on TradingView",
         symbol: "BITSTAMP:BTCUSD",
         href: "https://www.tradingview.com/symbols/BTCUSD/?exchange=BITSTAMP",
         label: "BTC grafik"
     },
     eth: {
         title: "Grafik - ETH",
-        analysisTitle: "Tehnička analiza - ETH",
+        analysisTitle: "ETH tehnička analiza",
+        analysisEnglishTitle: "ETHUSD Analysis on TradingView",
         symbol: "COINBASE:ETHUSD",
         href: "https://www.tradingview.com/symbols/ETHUSD/?exchange=COINBASE",
         label: "ETH grafik"
     },
     sol: {
         title: "Grafik - Solana",
-        analysisTitle: "Tehnička analiza - SOL",
+        analysisTitle: "SOL tehnička analiza",
+        analysisEnglishTitle: "SOLUSDT Analysis on TradingView",
         symbol: "BINANCE:SOLUSDT",
         href: "https://www.tradingview.com/symbols/SOLUSDT/?exchange=BINANCE",
         label: "SOL grafik"
     },
     chf: {
         title: "Forex - Grafik - CHF",
-        analysisTitle: "Tehnička analiza - CHF",
+        analysisTitle: "CHF tehnička analiza",
+        analysisEnglishTitle: "CHFUSD Analysis on TradingView",
         symbol: "FX_IDC:CHFUSD",
         href: "https://www.tradingview.com/symbols/CHFUSD/?exchange=FX_IDC",
         label: "CHF grafik"
     },
     aud: {
         title: "Forex - Grafik - AUD",
-        analysisTitle: "Tehnička analiza - AUD",
+        analysisTitle: "AUD tehnička analiza",
+        analysisEnglishTitle: "AUDUSD Analysis on TradingView",
         symbol: "OANDA:AUDUSD",
         href: "https://www.tradingview.com/symbols/AUDUSD/?exchange=OANDA",
         label: "AUD grafik"
     },
     nvda: {
         title: "Berza - Grafik - NVIDIA",
-        analysisTitle: "Tehnička analiza - NVIDIA",
+        analysisTitle: "NVIDIA tehnička analiza",
+        analysisEnglishTitle: "NVDA Analysis on TradingView",
         symbol: "NASDAQ:NVDA",
         href: "https://www.tradingview.com/symbols/NVDA/?exchange=NASDAQ",
         label: "NVIDIA grafik"
@@ -1329,9 +1340,24 @@ function createTechnicalAnalysis(chartKey) {
     analysisPane.hidden = chartKey !== activeTradingViewChartKey;
 
     const analysisWidget = document.createElement("tv-technical-analysis");
-    analysisWidget.setAttribute("symbol", chart.symbol);
+    analysisWidget.setAttribute("symbol", chart.analysisSymbol || chart.symbol);
 
-    analysisPane.appendChild(analysisWidget);
+    const copyright = document.createElement("div");
+    copyright.className = "technical-analysis-copyright";
+
+    const link = document.createElement("a");
+    link.href = chart.analysisHref || chart.href;
+    link.rel = "noopener nofollow";
+    link.target = "_blank";
+
+    const label = document.createElement("span");
+    label.className = "blue-text";
+    label.textContent = chart.analysisTitle;
+    label.appendChild(document.createComment(` ${chart.analysisEnglishTitle} `));
+    link.appendChild(label);
+    copyright.appendChild(link);
+
+    analysisPane.append(analysisWidget, copyright);
     analysisHost.appendChild(analysisPane);
     technicalAnalysisPanes.set(chartKey, analysisPane);
 
