@@ -1170,17 +1170,18 @@ lazy-load.crypto-screener-widget {
         grid-column: 1;
         grid-row: 3;
         grid-template-columns: 1fr;
-        gap: 0.22em;
+        grid-template-rows: repeat(9, minmax(0, 1fr));
+        gap: 0.3em;
         margin: 0;
-        align-self: center;
-        transform: translateY(-35px);
+        align-self: stretch;
+        transform: none;
     }
 
     .chart-symbol-menu .chart-symbol {
         width: 100%;
-        min-height: 34px;
-        padding: 0.25em 0.15em;
-        font-size: 0.66rem;
+        min-height: 0;
+        padding: 0.4em 0.2em;
+        font-size: 0.7rem;
     }
 
     .chart-symbol-icon,
