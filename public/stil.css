@@ -794,6 +794,20 @@ lazy-load.market-summary {
     color: #2962ff;
 }
 
+.technical-analysis-unavailable {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    padding: 1.5em;
+    border: 1px solid rgba(165, 165, 165, 0.3);
+    border-radius: 0.8em;
+    background: rgba(0, 0, 0, 0.03);
+    color: #6b7280;
+}
+
 .market-widget-title {
     margin: 1.4em auto 0.8em;
 }

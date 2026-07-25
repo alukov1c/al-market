@@ -1135,10 +1135,9 @@ const tradingViewCharts = {
     },
     xbr: {
         title: "Grafik - Nafta - XBR",
-        analysisTitle: "XBR/Brent tehnička analiza",
-        analysisEnglishTitle: "UKOIL Analysis on TradingView",
-        analysisSymbol: "TVC:UKOIL",
-        analysisHref: "https://www.tradingview.com/symbols/UKOIL/",
+        analysisTitle: "XBR tehnička analiza",
+        analysisEnglishTitle: "XBRUSD Analysis on TradingView",
+        analysisUnavailable: true,
         symbol: "ICMARKETS:XBRUSD",
         href: "https://www.tradingview.com/symbols/XBRUSD/?exchange=ICMARKETS",
         label: "XBR grafik"
@@ -1338,6 +1337,16 @@ function createTechnicalAnalysis(chartKey) {
     analysisPane.className = "technical-analysis-pane";
     analysisPane.dataset.chart = chartKey;
     analysisPane.hidden = chartKey !== activeTradingViewChartKey;
+
+    if (chart.analysisUnavailable) {
+        const message = document.createElement("div");
+        message.className = "technical-analysis-unavailable";
+        message.textContent = "Tehnička analiza za XBR trenutno nije dostupna.";
+        analysisPane.appendChild(message);
+        analysisHost.appendChild(analysisPane);
+        technicalAnalysisPanes.set(chartKey, analysisPane);
+        return analysisPane;
+    }
 
     const analysisWidget = document.createElement("tv-technical-analysis");
     analysisWidget.setAttribute("symbol", chart.analysisSymbol || chart.symbol);
