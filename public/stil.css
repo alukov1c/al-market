@@ -1194,6 +1194,7 @@ lazy-load.crypto-screener-widget {
         grid-column: 2;
         grid-row: 2;
         margin: 0 0 0.55em;
+        display: none;
     }
 
     .active-tradingview-chart {
