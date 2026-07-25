@@ -698,7 +698,7 @@ lazy-load.market-summary {
     -webkit-mask-composite: xor;
     mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     mask-composite: exclude;
-    animation: alBorderMove 14s linear infinite;
+    animation: alBorderMove 10s linear infinite;
 }
 
 .market-status-clock {
@@ -991,15 +991,26 @@ lazy-load.crypto-screener-widget {
 ) {
 
     #prviMeni {
-        /* transform: scale(0.8); */
-        width: 85%;
+        box-sizing: content-box;
+        width: 100%;
+        margin-bottom: 0.25em;
+        padding: 1em 0;
+        flex-wrap: nowrap;
     }
 
     #prviMeni div {
+        width: auto;
+        min-width: 0;
+        flex: 1 1 20%;
+        justify-content: center;
+        margin: 0;
+        padding: 0.25em 0.05em;
+        transform: none;
+        font-size: clamp(0.5rem, 2.3vw, 0.72rem);
+    }
 
-        transform: scale(0.80);
-        font-size: smaller;
-
+    #prviMeni div a {
+        white-space: nowrap;
     }
 
     /*
@@ -1014,10 +1025,11 @@ lazy-load.crypto-screener-widget {
     }
 
     #portfolio {
-
+        width: 78%;
+        margin: 0.25em auto 0.35em;
         display: flex;
         flex-direction: column;
-
+        transform: none;
     }
 
     #portfolio div {
@@ -1037,11 +1049,13 @@ lazy-load.crypto-screener-widget {
     }
 
     #market {
-        width: 90%;
+        width: 78%;
         max-width: calc(100vw - 32px);
+        margin: 0.35em auto 0;
         padding: 0.45em;
         font-size: 14px;
         overflow: hidden;
+        transform: none;
     }
 
     #market,
