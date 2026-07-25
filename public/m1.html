@@ -782,6 +782,32 @@
             </lazy-load>
 
             <section class="chart-switcher" aria-label="Izbor tržišnog grafikona">
+                <div class="market-status-bar" aria-label="Vreme i status tržišta">
+                    <time id="marketStatusClock" class="market-status-clock"></time>
+                    <div class="market-status-items" aria-label="Aktivna tržišta">
+                        <span class="market-status-item" data-market-status="gold">
+                            <span class="market-status-dot" aria-hidden="true"></span>
+                            <span>Zlato</span>
+                        </span>
+                        <span class="market-status-item" data-market-status="brent">
+                            <span class="market-status-dot" aria-hidden="true"></span>
+                            <span>Brent</span>
+                        </span>
+                        <span class="market-status-item" data-market-status="crypto">
+                            <span class="market-status-dot" aria-hidden="true"></span>
+                            <span>Kripto</span>
+                        </span>
+                        <span class="market-status-item" data-market-status="forex">
+                            <span class="market-status-dot" aria-hidden="true"></span>
+                            <span>Forex</span>
+                        </span>
+                        <span class="market-status-item" data-market-status="nasdaq">
+                            <span class="market-status-dot" aria-hidden="true"></span>
+                            <span>Nasdaq</span>
+                        </span>
+                    </div>
+                    <p id="marketStatusMessage" class="market-status-message" aria-live="polite"></p>
+                </div>
                 <div class="chart-symbol-menu" role="tablist" aria-label="Simboli grafikona">
                     <button class="chart-symbol is-active" type="button" role="tab" aria-selected="true"
                         aria-controls="activeTradingViewChart" data-chart="xau">

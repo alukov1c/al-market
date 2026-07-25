@@ -646,6 +646,96 @@ lazy-load.market-summary {
     margin: 1.5em auto 30px;
 }
 
+.market-status-bar {
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65em 1.1em;
+    margin: 0 auto 1em;
+    padding: 0.75em 1em;
+    border: 0;
+    border-radius: 0.8em;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 0 14px rgba(37, 99, 235, 0.14);
+    color: #374151;
+    font: 600 0.78rem system-ui, sans-serif;
+}
+
+.market-status-bar::before {
+    position: absolute;
+    inset: 0;
+    padding: 1.5px;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #ffffff, #2563eb, #ffffff, #60a5fa, #ffffff);
+    background-size: 400% 400%;
+    content: "";
+    pointer-events: none;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    animation: alBorderMove 7s linear infinite;
+}
+
+.market-status-clock {
+    font-weight: 750;
+    font-variant-numeric: tabular-nums;
+}
+
+.market-status-items {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55em 0.9em;
+}
+
+.market-status-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+    white-space: nowrap;
+}
+
+.market-status-dot {
+    width: 10px;
+    height: 10px;
+    flex: 0 0 10px;
+    border-radius: 50%;
+    background: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+}
+
+.market-status-item.is-open .market-status-dot {
+    background: #16a34a;
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.14);
+    animation: market-status-pulse 2s ease-in-out infinite;
+}
+
+.market-status-message {
+    flex-basis: 100%;
+    margin: 0;
+    color: #1d4ed8;
+    text-align: center;
+}
+
+@keyframes market-status-pulse {
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.35;
+        transform: scale(0.82);
+    }
+}
+
 .chart-symbol-menu {
     display: grid;
     grid-template-columns: repeat(9, minmax(0, 1fr));
@@ -1065,14 +1155,20 @@ lazy-load.crypto-screener-widget {
         width: min(100%, 1120px);
         display: grid;
         grid-template-columns: 94px minmax(0, 1fr);
-        grid-template-rows: auto 1fr;
+        grid-template-rows: auto auto 1fr;
         column-gap: 0.8em;
         align-items: start;
     }
 
+    .market-status-bar {
+        grid-column: 1 / -1;
+        grid-row: 1;
+        margin-bottom: 0.7em;
+    }
+
     #grafikoni .chart-symbol-menu {
         grid-column: 1;
-        grid-row: 2;
+        grid-row: 3;
         grid-template-columns: 1fr;
         gap: 0.3em;
         margin: 0;
@@ -1096,13 +1192,13 @@ lazy-load.crypto-screener-widget {
 
     .active-chart-title {
         grid-column: 2;
-        grid-row: 1;
+        grid-row: 2;
         margin: 0 0 0.55em;
     }
 
     .active-tradingview-chart {
         grid-column: 2;
-        grid-row: 2;
+        grid-row: 3;
         min-height: 450px;
     }
 

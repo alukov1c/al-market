@@ -1398,14 +1398,141 @@ function showTechnicalAnalysis(chartKey) {
     loadTechnicalAnalysisInBackground(chartKey);
 }
 
+function getZonedTime(date, timeZone) {
+    const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone,
+        weekday: "short",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23"
+    }).formatToParts(date);
+
+    return Object.fromEntries(
+        parts.filter((part) => part.type !== "literal").map((part) => [part.type, part.value])
+    );
+}
+
+function getMarketStatus(date) {
+    const newYork = getZonedTime(date, "America/New_York");
+    const utc = getZonedTime(date, "UTC");
+    const newYorkMinutes = Number(newYork.hour) * 60 + Number(newYork.minute);
+    const utcMinutes = Number(utc.hour) * 60 + Number(utc.minute);
+    const weekdayIndex = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+    const newYorkDay = weekdayIndex[newYork.weekday];
+    const utcDay = weekdayIndex[utc.weekday];
+    const dateKey = `${newYork.year}-${newYork.month}-${newYork.day}`;
+    const nasdaqHolidays2026 = new Set([
+        "2026-01-01", "2026-01-19", "2026-02-16", "2026-04-03", "2026-05-25",
+        "2026-06-19", "2026-07-03", "2026-09-07", "2026-11-26", "2026-12-25"
+    ]);
+    const nasdaqEarlyClose2026 = new Set(["2026-11-27", "2026-12-24"]);
+    const isForexOpen = (newYorkDay === 0 && newYorkMinutes >= 17 * 60)
+        || (newYorkDay >= 1 && newYorkDay <= 4)
+        || (newYorkDay === 5 && newYorkMinutes < 17 * 60);
+    const isGoldOpen = (newYorkDay === 0 && newYorkMinutes >= 18 * 60)
+        || (newYorkDay >= 1 && newYorkDay <= 4
+            && (newYorkMinutes < 17 * 60 || newYorkMinutes >= 18 * 60))
+        || (newYorkDay === 5 && newYorkMinutes < 17 * 60);
+    const isBrentOpen = (utcDay === 0 && utcMinutes >= 22 * 60)
+        || (utcDay >= 1 && utcDay <= 4 && utcMinutes < 22 * 60)
+        || (utcDay === 5 && utcMinutes < 22 * 60);
+    const nasdaqClose = nasdaqEarlyClose2026.has(dateKey) ? 13 * 60 : 16 * 60;
+    const isNasdaqOpen = newYorkDay >= 1 && newYorkDay <= 5
+        && !nasdaqHolidays2026.has(dateKey)
+        && newYorkMinutes >= 9 * 60 + 30
+        && newYorkMinutes < nasdaqClose;
+
+    return {
+        gold: isGoldOpen,
+        brent: isBrentOpen,
+        crypto: true,
+        forex: isForexOpen,
+        nasdaq: isNasdaqOpen
+    };
+}
+
+function updateMarketStatusMessage(chartKey, leadText) {
+    const message = document.querySelector("#marketStatusMessage");
+    const chartLabels = { nvda: "NVIDIA" };
+
+    if (!message || !chartKey) return;
+    if (leadText) message.dataset.leadText = leadText;
+    if (!message.dataset.leadText) return;
+
+    const chartLabel = chartLabels[chartKey] || chartKey.toUpperCase();
+    message.textContent = `${message.dataset.leadText} — prikazan je ${chartLabel} grafikon.`;
+}
+
+function initMarketStatusBar(activateDefaultChart, hasManualSelection) {
+    const clock = document.querySelector("#marketStatusClock");
+    const message = document.querySelector("#marketStatusMessage");
+    const items = Array.from(document.querySelectorAll("[data-market-status]"));
+
+    if (!clock || !message || !items.length) return;
+
+    const clockFormatter = new Intl.DateTimeFormat("sr-RS", {
+        timeZone: "Europe/Belgrade",
+        weekday: "short",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hourCycle: "h23"
+    });
+    let previousGoldStatus = null;
+
+    const updateStatus = () => {
+        const now = new Date();
+        const status = getMarketStatus(now);
+        const belgrade = getZonedTime(now, "Europe/Belgrade");
+        const isWeekend = belgrade.weekday === "Sat" || belgrade.weekday === "Sun";
+
+        clock.dateTime = now.toISOString();
+        clock.textContent = clockFormatter.format(now);
+
+        items.forEach((item) => {
+            const isOpen = status[item.dataset.marketStatus];
+            item.classList.toggle("is-open", isOpen);
+            item.title = isOpen ? "Tržište je aktivno" : "Tržište nije aktivno";
+        });
+
+        if (previousGoldStatus === null) {
+            if (isWeekend || !status.gold) {
+                activateDefaultChart("total");
+                updateMarketStatusMessage("total", "Kripto tržište je otvoreno 24/7");
+            } else {
+                activateDefaultChart("xau");
+                updateMarketStatusMessage("xau", "Tržište zlata je otvoreno");
+            }
+        } else if (!previousGoldStatus && status.gold && !hasManualSelection()) {
+            activateDefaultChart("xau");
+            updateMarketStatusMessage("xau", "Tržište zlata je otvoreno");
+        }
+
+        previousGoldStatus = status.gold;
+    };
+
+    updateStatus();
+    window.setInterval(updateStatus, 1000);
+}
+
 function initTradingViewChartSwitcher() {
     const menu = document.querySelector(".chart-symbol-menu");
 
     if (!menu) return;
 
     const tabs = Array.from(menu.querySelectorAll(".chart-symbol"));
+    let hasManualChartSelection = false;
 
-    const activateTab = (tab) => {
+    const activateTab = (tab, isManual = false) => {
+        if (!tab) return;
+        if (isManual) hasManualChartSelection = true;
+
         tabs.forEach((item) => {
             const isActive = item === tab;
             item.classList.toggle("is-active", isActive);
@@ -1415,11 +1542,12 @@ function initTradingViewChartSwitcher() {
 
         showTradingViewChart(tab.dataset.chart);
         showTechnicalAnalysis(tab.dataset.chart);
+        updateMarketStatusMessage(tab.dataset.chart);
     };
 
     menu.addEventListener("click", (event) => {
         const tab = event.target.closest(".chart-symbol");
-        if (tab) activateTab(tab);
+        if (tab) activateTab(tab, true);
     });
 
     menu.addEventListener("keydown", (event) => {
@@ -1435,10 +1563,13 @@ function initTradingViewChartSwitcher() {
         if (event.key === "End") nextIndex = tabs.length - 1;
 
         tabs[nextIndex].focus();
-        activateTab(tabs[nextIndex]);
+        activateTab(tabs[nextIndex], true);
     });
 
-    activateTab(tabs.find((tab) => tab.classList.contains("is-active")) || tabs[0]);
+    initMarketStatusBar(
+        (chartKey) => activateTab(tabs.find((tab) => tab.dataset.chart === chartKey)),
+        () => hasManualChartSelection
+    );
 }
 
 if (document.readyState === "loading") {
