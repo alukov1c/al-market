@@ -1473,7 +1473,9 @@ function updateMarketStatusMessage(chartKey, leadText) {
         sol: "Kripto tržište je otvoreno 24/7",
         chf: "Forex tržište je otvoreno",
         aud: "Forex tržište je otvoreno",
-        nvda: "Nasdaq tržište je otvoreno"
+        nvda: getMarketStatus(new Date()).nasdaq
+            ? "Nasdaq berza je otvorena"
+            : "Nasdaq berza je zatvorena"
     };
 
     if (!message || !chartKey) return;
@@ -1518,6 +1520,9 @@ function initMarketStatusBar(activateDefaultChart, hasManualSelection) {
             item.classList.toggle("is-open", isOpen);
             item.title = isOpen ? "Tržište je aktivno" : "Tržište nije aktivno";
         });
+
+        const activeChartKey = document.querySelector(".chart-symbol.is-active")?.dataset.chart;
+        if (activeChartKey === "nvda") updateMarketStatusMessage(activeChartKey);
 
         if (previousGoldStatus === null) {
             if (isWeekend || !status.gold) {
