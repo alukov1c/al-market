@@ -873,6 +873,73 @@
                     aria-labelledby="technicalAnalysisTitle"></div>
             </section>
 
+            <section class="forex-sessions-section" aria-labelledby="forexSessionsTitle">
+                <div class="forex-sessions-header">
+                    <div>
+                        <p class="forex-sessions-kicker">Forex sesije</p>
+                        <h2 id="forexSessionsTitle">Trenutno aktivne sesije</h2>
+                    </div>
+                    <div class="forex-sessions-clocks" aria-label="Trenutno vreme">
+                        <span>
+                            <small>Lokalno vreme</small>
+                            <time id="forexLocalClock"></time>
+                        </span>
+                        <span>
+                            <small>UTC vreme</small>
+                            <time id="forexUtcClock"></time>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="forex-session-list">
+                    <article class="forex-session-card" data-forex-session="sydney">
+                        <span class="forex-session-dot" aria-hidden="true"></span>
+                        <div class="forex-session-info">
+                            <h3>Sidnej</h3>
+                            <p>08:00–17:00</p>
+                        </div>
+                        <div class="forex-session-state">
+                            <strong>Zatvorena</strong>
+                            <time data-session-clock></time>
+                        </div>
+                    </article>
+                    <article class="forex-session-card" data-forex-session="tokyo">
+                        <span class="forex-session-dot" aria-hidden="true"></span>
+                        <div class="forex-session-info">
+                            <h3>Tokio</h3>
+                            <p>09:00–18:00</p>
+                        </div>
+                        <div class="forex-session-state">
+                            <strong>Zatvorena</strong>
+                            <time data-session-clock></time>
+                        </div>
+                    </article>
+                    <article class="forex-session-card" data-forex-session="london">
+                        <span class="forex-session-dot" aria-hidden="true"></span>
+                        <div class="forex-session-info">
+                            <h3>London</h3>
+                            <p>08:00–17:00</p>
+                        </div>
+                        <div class="forex-session-state">
+                            <strong>Zatvorena</strong>
+                            <time data-session-clock></time>
+                        </div>
+                    </article>
+                    <article class="forex-session-card" data-forex-session="newYork">
+                        <span class="forex-session-dot" aria-hidden="true"></span>
+                        <div class="forex-session-info">
+                            <h3>Njujork</h3>
+                            <p>08:00–17:00</p>
+                        </div>
+                        <div class="forex-session-state">
+                            <strong>Zatvorena</strong>
+                            <time data-session-clock></time>
+                        </div>
+                    </article>
+                </div>
+                <p id="forexSessionsSummary" class="forex-sessions-summary" aria-live="polite"></p>
+            </section>
+
             <section class="market-widgets" aria-label="Dodatni pregledi tržišta">
                 <div class="market-widget-title">
                     <b>Heatmap grafik akcija <!-- Stock Heatmap --></b>

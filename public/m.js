@@ -1544,6 +1544,118 @@ function initMarketStatusBar(activateDefaultChart, hasManualSelection) {
     window.setInterval(updateStatus, 1000);
 }
 
+const forexSessions = {
+    sydney: {
+        label: "Sidnej",
+        timeZone: "Australia/Sydney",
+        openMinutes: 8 * 60,
+        closeMinutes: 17 * 60
+    },
+    tokyo: {
+        label: "Tokio",
+        timeZone: "Asia/Tokyo",
+        openMinutes: 9 * 60,
+        closeMinutes: 18 * 60
+    },
+    london: {
+        label: "London",
+        timeZone: "Europe/London",
+        openMinutes: 8 * 60,
+        closeMinutes: 17 * 60
+    },
+    newYork: {
+        label: "Njujork",
+        timeZone: "America/New_York",
+        openMinutes: 8 * 60,
+        closeMinutes: 17 * 60
+    }
+};
+
+function isForexSessionOpen(date, session) {
+    const zonedTime = getZonedTime(date, session.timeZone);
+    const weekdayIndex = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+    const day = weekdayIndex[zonedTime.weekday];
+    const minutes = Number(zonedTime.hour) * 60 + Number(zonedTime.minute);
+
+    return day >= 1 && day <= 5
+        && minutes >= session.openMinutes
+        && minutes < session.closeMinutes;
+}
+
+function initForexSessions() {
+    const section = document.querySelector(".forex-sessions-section");
+    const localClock = document.querySelector("#forexLocalClock");
+    const utcClock = document.querySelector("#forexUtcClock");
+    const summary = document.querySelector("#forexSessionsSummary");
+
+    if (!section || !localClock || !utcClock || !summary) return;
+
+    const localFormatter = new Intl.DateTimeFormat("sr-RS", {
+        weekday: "short",
+        day: "2-digit",
+        month: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hourCycle: "h23"
+    });
+    const utcFormatter = new Intl.DateTimeFormat("sr-RS", {
+        timeZone: "UTC",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hourCycle: "h23"
+    });
+    const sessionClockFormatters = Object.fromEntries(
+        Object.entries(forexSessions).map(([key, session]) => [
+            key,
+            new Intl.DateTimeFormat("sr-RS", {
+                timeZone: session.timeZone,
+                hour: "2-digit",
+                minute: "2-digit",
+                hourCycle: "h23"
+            })
+        ])
+    );
+
+    const updateSessions = () => {
+        const now = new Date();
+        const openSessions = [];
+
+        localClock.dateTime = now.toISOString();
+        localClock.textContent = localFormatter.format(now);
+        utcClock.dateTime = now.toISOString();
+        utcClock.textContent = `${utcFormatter.format(now)} UTC`;
+
+        Object.entries(forexSessions).forEach(([key, session]) => {
+            const card = section.querySelector(`[data-forex-session="${key}"]`);
+            if (!card) return;
+
+            const isOpen = isForexSessionOpen(now, session);
+            const state = card.querySelector(".forex-session-state strong");
+            const clock = card.querySelector("[data-session-clock]");
+
+            card.classList.toggle("is-open", isOpen);
+            card.setAttribute(
+                "aria-label",
+                `${session.label} sesija je ${isOpen ? "otvorena" : "zatvorena"}`
+            );
+            state.textContent = isOpen ? "Otvorena" : "Zatvorena";
+            clock.dateTime = now.toISOString();
+            clock.textContent = sessionClockFormatters[key].format(now);
+
+            if (isOpen) openSessions.push(session.label);
+        });
+
+        summary.textContent = openSessions.length
+            ? `Aktivne sesije: ${openSessions.join(", ")}.`
+            : "Trenutno nema aktivnih glavnih forex sesija.";
+    };
+
+    updateSessions();
+    window.setInterval(updateSessions, 1000);
+}
+
 function initTradingViewChartSwitcher() {
     const menu = document.querySelector(".chart-symbol-menu");
 
@@ -1597,8 +1709,10 @@ function initTradingViewChartSwitcher() {
 
 if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", initTradingViewChartSwitcher, { once: true });
+    document.addEventListener("DOMContentLoaded", initForexSessions, { once: true });
 } else {
     initTradingViewChartSwitcher();
+    initForexSessions();
 }
 
 
