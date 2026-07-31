@@ -1464,9 +1464,20 @@ function getMarketStatus(date) {
 function updateMarketStatusMessage(chartKey, leadText) {
     const message = document.querySelector("#marketStatusMessage");
     const chartLabels = { nvda: "NVIDIA" };
+    const marketLeadTexts = {
+        xau: "Tržište zlata je otvoreno",
+        xbr: "Tržište nafte je otvoreno",
+        total: "Kripto tržište je otvoreno 24/7",
+        btc: "Kripto tržište je otvoreno 24/7",
+        eth: "Kripto tržište je otvoreno 24/7",
+        sol: "Kripto tržište je otvoreno 24/7",
+        chf: "Forex tržište je otvoreno",
+        aud: "Forex tržište je otvoreno",
+        nvda: "Nasdaq tržište je otvoreno"
+    };
 
     if (!message || !chartKey) return;
-    if (leadText) message.dataset.leadText = leadText;
+    message.dataset.leadText = leadText || marketLeadTexts[chartKey] || "Tržište je otvoreno";
     if (!message.dataset.leadText) return;
 
     const chartLabel = chartLabels[chartKey] || chartKey.toUpperCase();
