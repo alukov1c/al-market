@@ -866,6 +866,12 @@ lazy-load.market-summary {
     margin: 2em auto 0;
 }
 
+@media screen and (min-width: 1367px) {
+    .technical-analysis-section {
+        display: none;
+    }
+}
+
 .forex-sessions-section {
     position: relative;
     width: min(100%, 980px);
