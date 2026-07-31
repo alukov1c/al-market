@@ -960,7 +960,7 @@ lazy-load.market-summary {
 .forex-session-card {
     min-width: 0;
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
     gap: 0.25em 0.65em;
     padding: 0.85em;
@@ -1011,12 +1011,14 @@ lazy-load.market-summary {
 }
 
 .forex-session-state {
-    grid-column: 2;
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.4em;
-    margin-top: 0.35em;
+    grid-column: 3;
+    grid-row: 1 / span 2;
+    align-self: stretch;
+    display: grid;
+    justify-items: end;
+    align-content: space-between;
+    gap: 0.2em;
+    text-align: right;
 }
 
 .forex-session-state strong {
@@ -1032,6 +1034,14 @@ lazy-load.market-summary {
     color: #6b7280;
     font-size: 0.68rem;
     font-variant-numeric: tabular-nums;
+}
+
+.forex-session-state [data-session-countdown] {
+    color: #15803d;
+    font-size: 0.65rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
 }
 
 .forex-sessions-summary {

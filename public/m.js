@@ -1582,6 +1582,21 @@ function isForexSessionOpen(date, session) {
         && minutes < session.closeMinutes;
 }
 
+function getForexSessionCloseCountdown(date, session) {
+    const zonedTime = getZonedTime(date, session.timeZone);
+    const currentSeconds = Number(zonedTime.hour) * 3600
+        + Number(zonedTime.minute) * 60
+        + date.getSeconds();
+    const remainingSeconds = Math.max(0, session.closeMinutes * 60 - currentSeconds);
+    const hours = Math.floor(remainingSeconds / 3600);
+    const minutes = Math.floor((remainingSeconds % 3600) / 60);
+    const seconds = remainingSeconds % 60;
+
+    return [hours, minutes, seconds]
+        .map((value) => String(value).padStart(2, "0"))
+        .join(":");
+}
+
 function initForexSessions() {
     const section = document.querySelector(".forex-sessions-section");
     const localClock = document.querySelector("#forexLocalClock");
@@ -1634,6 +1649,7 @@ function initForexSessions() {
             const isOpen = isForexSessionOpen(now, session);
             const state = card.querySelector(".forex-session-state strong");
             const clock = card.querySelector("[data-session-clock]");
+            const countdown = card.querySelector("[data-session-countdown]");
 
             card.classList.toggle("is-open", isOpen);
             card.setAttribute(
@@ -1643,6 +1659,10 @@ function initForexSessions() {
             state.textContent = isOpen ? "Otvorena" : "Zatvorena";
             clock.dateTime = now.toISOString();
             clock.textContent = sessionClockFormatters[key].format(now);
+            countdown.hidden = !isOpen;
+            countdown.textContent = isOpen
+                ? `Zatvara se za ${getForexSessionCloseCountdown(now, session)}`
+                : "";
 
             if (isOpen) openSessions.push(session.label);
         });
