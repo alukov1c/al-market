@@ -1467,10 +1467,10 @@ function updateMarketStatusMessage(chartKey, leadText) {
     const marketLeadTexts = {
         xau: "Tržište zlata je otvoreno",
         xbr: "Tržište nafte je otvoreno",
-        total: "Kripto tržište je otvoreno 24/7",
-        btc: "Kripto tržište je otvoreno 24/7",
-        eth: "Kripto tržište je otvoreno 24/7",
-        sol: "Kripto tržište je otvoreno 24/7",
+        total: "Kripto tržište je otvoreno (24/7)",
+        btc: "Kripto tržište je otvoreno (24/7)",
+        eth: "Kripto tržište je otvoreno (24/7)",
+        sol: "Kripto tržište je otvoreno (24/7)",
         chf: "Forex tržište je otvoreno",
         aud: "Forex tržište je otvoreno",
         nvda: getMarketStatus(new Date()).nasdaq
@@ -1527,7 +1527,7 @@ function initMarketStatusBar(activateDefaultChart, hasManualSelection) {
         if (previousGoldStatus === null) {
             if (isWeekend || !status.gold) {
                 activateDefaultChart("total");
-                updateMarketStatusMessage("total", "Kripto tržište je otvoreno 24/7");
+                updateMarketStatusMessage("total", "Kripto tržište je otvoreno (24/7)");
             } else {
                 activateDefaultChart("xau");
                 updateMarketStatusMessage("xau", "Tržište zlata je otvoreno");
