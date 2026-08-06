@@ -1597,6 +1597,39 @@ function getForexSessionCloseCountdown(date, session) {
         .join(":");
 }
 
+function formatForexCountdown(totalSeconds) {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    return [hours, minutes, seconds]
+        .map((value) => String(value).padStart(2, "0"))
+        .join(":");
+}
+
+function findNextForexSessionOpen(date, session) {
+    const searchStep = 30 * 60 * 1000;
+    let closedTime = date.getTime();
+    let openTime = closedTime + searchStep;
+
+    while (!isForexSessionOpen(new Date(openTime), session)) {
+        closedTime = openTime;
+        openTime += searchStep;
+    }
+
+    while (openTime - closedTime > 1000) {
+        const middleTime = Math.floor((closedTime + openTime) / 2000) * 1000;
+
+        if (isForexSessionOpen(new Date(middleTime), session)) {
+            openTime = middleTime;
+        } else {
+            closedTime = middleTime;
+        }
+    }
+
+    return openTime;
+}
+
 function initForexSessions() {
     const section = document.querySelector(".forex-sessions-section");
     const localClock = document.querySelector("#forexLocalClock");
@@ -1632,6 +1665,7 @@ function initForexSessions() {
             })
         ])
     );
+    const nextSessionOpenTimes = new Map();
 
     const updateSessions = () => {
         const now = new Date();
@@ -1659,10 +1693,26 @@ function initForexSessions() {
             state.textContent = isOpen ? "Otvorena" : "Zatvorena";
             clock.dateTime = now.toISOString();
             clock.textContent = sessionClockFormatters[key].format(now);
-            countdown.hidden = !isOpen;
-            countdown.textContent = isOpen
-                ? `Zatvara se za ${getForexSessionCloseCountdown(now, session)}`
-                : "";
+
+            if (isOpen) {
+                nextSessionOpenTimes.delete(key);
+                countdown.textContent = `Zatvara se za ${getForexSessionCloseCountdown(now, session)}`;
+            } else {
+                let nextOpenTime = nextSessionOpenTimes.get(key);
+
+                if (!nextOpenTime || nextOpenTime <= now.getTime()) {
+                    nextOpenTime = findNextForexSessionOpen(now, session);
+                    nextSessionOpenTimes.set(key, nextOpenTime);
+                }
+
+                const remainingSeconds = Math.max(
+                    0,
+                    Math.ceil((nextOpenTime - now.getTime()) / 1000)
+                );
+                countdown.textContent = `Otvara se za ${formatForexCountdown(remainingSeconds)}`;
+            }
+
+            countdown.hidden = false;
 
             if (isOpen) openSessions.push(session.label);
         });

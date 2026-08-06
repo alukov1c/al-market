@@ -1,5 +1,108 @@
 [
   {
+    "id": "2026-08-01T08-00-00-129",
+    "date": "2026-08-01",
+    "generatedAt": "2026-08-01 08:00:00",
+    "generatedAtIso": "2026-08-01T06:00:00.129Z",
+    "marketState": "neutralno",
+    "riskLevel": "srednji",
+    "signal": "WAIT",
+    "btc": {
+      "price": 0,
+      "change24h": 0,
+      "base7d": null,
+      "change7d": null,
+      "base30d": null,
+      "change30d": null
+    },
+    "eth": {
+      "price": 0,
+      "change24h": 0,
+      "base7d": null,
+      "change7d": null,
+      "base30d": null,
+      "change30d": null
+    },
+    "sol": {
+      "price": 0,
+      "change24h": 0,
+      "base7d": null,
+      "change7d": null,
+      "base30d": null,
+      "change30d": null
+    },
+    "gold": {
+      "price": 4088,
+      "change24h": 1.18
+    },
+    "oil": {
+      "price": 75.71,
+      "change24h": 3.37
+    },
+    "sp500": {
+      "price": 7352,
+      "change24h": -0.78
+    },
+    "cryptoTotal": {
+      "value": 2.02,
+      "change24h": -2.79
+    },
+    "indicators": {
+      "avgCrypto24h": 0,
+      "avgCrypto7d": 0,
+      "avgCrypto30d": 0,
+      "maxAbsCrypto7d": 0,
+      "riskIndex": 66,
+      "riskLevel": "srednji",
+      "marketState": "neutralno",
+      "signal": "WAIT"
+    },
+    "snapshot": {
+      "collectedAt": "2026-07-31T12:07:28.825Z",
+      "btc": {
+        "price": 0,
+        "change24h": 0,
+        "base7d": null,
+        "change7d": null,
+        "base30d": null,
+        "change30d": null
+      },
+      "eth": {
+        "price": 0,
+        "change24h": 0,
+        "base7d": null,
+        "change7d": null,
+        "base30d": null,
+        "change30d": null
+      },
+      "sol": {
+        "price": 0,
+        "change24h": 0,
+        "base7d": null,
+        "change7d": null,
+        "base30d": null,
+        "change30d": null
+      },
+      "gold": {
+        "price": 4088,
+        "change24h": 1.18
+      },
+      "oil": {
+        "price": 75.71,
+        "change24h": 3.37
+      },
+      "sp500": {
+        "price": 7352,
+        "change24h": -0.78
+      },
+      "cryptoTotal": {
+        "value": 2.02,
+        "change24h": -2.79
+      }
+    },
+    "summary": "BTC se trenutno kreće oko 0 USD, uz dnevnu promenu od 0,00%.\nETH je na 0,00 USD, a SOL na 0,00 USD.\nProsečna 7d promena BTC/ETH/SOL je 0,00%, a indeks rizika je 66/100.\nProsečna 30d promena BTC/ETH/SOL je 0,00%.\nTrenutno stanje tržišta je: neutralno. Rizik je srednji. Signal: WAIT."
+  },
+  {
     "id": "2026-07-09T22-29-19-822",
     "date": "2026-07-09",
     "generatedAt": "2026-07-09 22:29:19",

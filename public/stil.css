@@ -1043,11 +1043,15 @@ lazy-load.market-summary {
 }
 
 .forex-session-state [data-session-countdown] {
-    color: #15803d;
+    color: #dc2626;
     font-size: 0.65rem;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
+}
+
+.forex-session-card.is-open .forex-session-state [data-session-countdown] {
+    color: #15803d;
 }
 
 .forex-sessions-summary {
