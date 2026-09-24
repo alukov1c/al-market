@@ -1,0 +1,21 @@
+{
+  "name": "al-market",
+  "version": "2.0.0",
+  "private": true,
+  "description": "MT5 / MT4 portfolio and market dashboard",
+  "type": "module",
+  "main": "A/server.js",
+  "engines": {
+    "node": ">=22.16.0 <25"
+  },
+  "scripts": {
+    "start": "node A/server.js",
+    "publisher": "node A/publisher.js",
+    "test": "node --test A/*.test.js"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "node-cron": "^4.6.0",
+    "ws": "^8.21.3"
+  }
+}

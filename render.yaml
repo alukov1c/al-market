@@ -1,0 +1,17 @@
+# Configuration reference for the existing al-market service, without a second service.
+services:
+  - type: web
+    name: al-market
+    runtime: node
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: PORTFOLIO_MODE
+        value: remote
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORTFOLIO_UPLOAD_TOKEN
+        sync: false

@@ -1,0 +1,68 @@
+# Exclusion of all files except the explicit allowlist below.
+*
+
+# Application and deployment configuration
+!/.gitignore
+!/.env.example
+!/package.json
+!/package-lock.json
+!/render.yaml
+
+# GitHub validation
+!/.github/
+!/.github/workflows/
+!/.github/workflows/test.yml
+
+# Application source, exporter source and automated tests
+!/A/
+!/A/m1.html
+!/A/stil.css
+!/A/AL-market.png
+!/A/config.js
+!/A/data.js
+!/A/ingest.js
+!/A/load-env.js
+!/A/market-server.js
+!/A/market.js
+!/A/portfolio.js
+!/A/public-network.js
+!/A/publisher.js
+!/A/server.js
+!/A/PortfolioExporterMT4.mq4
+!/A/PortfolioExporterMT5.mq5
+!/A/data.test.js
+!/A/deployment.test.js
+
+# Images referenced by the page
+!/A/ico/
+!/A/ico/AL-profil.ico
+!/A/ico/lukovic-logo.ico
+!/A/ico/BTC-kalkulator-logo.ico
+!/A/ico/btc-ap-logo.ico
+!/A/ico/IoT-EPP-logo.ico
+!/A/ico/bitcoin-btc-logo.png
+!/A/ico/ethereum-eth-logo.png
+!/A/ico/solana-sol-logo.svg
+
+# Protection of private and local files regardless of allowlist changes.
+.env
+.env.*
+!/.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+secrets*.json
+.myfxbook_session.json
+loginMyfxbook.txt
+README.md
+node_modules/
+A/data/
+A/backups/
+A/qa/
+**/portfolio-A.json
+**/portfolio-B.json
+*.ex4
+*.ex5
+*.log
