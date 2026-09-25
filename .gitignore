@@ -27,6 +27,8 @@
 !/A/portfolio.js
 !/A/public-network.js
 !/A/publisher.js
+!/A/publisher-status.js
+!/A/publisher-status.test.js
 !/A/server.js
 !/A/PortfolioExporterMT4.mq4
 !/A/PortfolioExporterMT5.mq5

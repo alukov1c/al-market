@@ -5,7 +5,7 @@ import {mkdtemp,readFile,rm,writeFile} from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import {fileURLToPath} from 'node:url';
-import {sendExport} from './publisher.js';
+import {sendExport,sendPublisherStatus} from './publisher.js';
 import {publicAgent} from './public-network.js';
 
 const sample = (exportedAt=Date.now()/1000) => ({schemaVersion:2,historyMode:'closed-trades',exporterBuild:'1.11',portfolio:'A',platform:'MT5',login:'123456',currency:'CHF',balance:100,equity:75,connected:true,exportedAt,historyAvailable:true,lastTrade:{profit:50,swap:-3,closedAt:'2026.09.24 12:00:00',ticket:'private-ticket'},positionsComplete:true,positionCount:1,positions:[{symbol:'private-symbol',marketValue:1500}],marketValue:1500,fxToCHF:1,fxAgeSeconds:0});
@@ -27,6 +27,10 @@ test('Render mode: routes, authenticated publisher, freshness and private data',
   assert.equal((await post(sample(Date.now()/1000-90))).status,400);
   assert.equal((await post({...sample(),login:'999'})).status,400);
   assert.equal((await post({...sample(),historyMode:'all-history'})).status,400);
+  const event={session:'11111111-1111-1111-1111-111111111111',startedAt:Date.now()-1000,eventAt:Date.now(),state:'running'};
+  assert.equal((await fetch(base+'/api/publisher-status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(event)})).status,401);
+  await sendPublisherStatus(base,token,event);
+  assert.equal((await (await fetch(base+'/api/portfolios')).json()).publisher.state,'running');
   const raw=sample();
   await sendExport(base,token,'A',raw);
   const received=JSON.parse(await readFile(path.join(directory,'incoming','portfolio-A.json'),'utf8'));
@@ -36,6 +40,10 @@ test('Render mode: routes, authenticated publisher, freshness and private data',
   assert.equal(pub.portfolios[0].strength,5);assert.equal(pub.portfolios[0].lastTrade.adjustedProfit,47);
   const text=JSON.stringify(pub);
   for(const secret of ['123456','private-ticket','private-symbol','positions','balance','marketValue'])assert.ok(!text.includes(secret),secret);
+  assert.ok(pub.publisher.lastReceivedAt);
+  await sendPublisherStatus(base,token,{...event,state:'stopped',eventAt:Date.now()});
+  const stopped=(await (await fetch(base+'/api/portfolios')).json()).publisher;
+  assert.equal(stopped.state,'stopped');assert.equal(stopped.startedAt,event.startedAt);
   received.exportedAt-=90;await writeFile(path.join(directory,'incoming','portfolio-A.json'),JSON.stringify(received));
   assert.equal((await (await fetch(base+'/api/portfolios')).json()).portfolios[0].state,'stale');
  }finally{

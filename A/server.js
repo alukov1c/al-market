@@ -23,8 +23,8 @@ for (const name of ['portfolio.js', 'market.js', 'stil.css', 'AL-market.png']) {
   app.get(['/' + name, '/A/' + name], (_req, res) => res.sendFile(local(name)));
 }
 app.use(['/ico', '/A/ico'], express.static(local('ico/'), { dotfiles: 'deny', index: false }));
-installIngest(app, config);
-app.get('/api/portfolios', async (_req, res) => res.json(publicSnapshot(await snapshot(config))));
+const publisher = installIngest(app, config);
+app.get('/api/portfolios', async (_req, res) => res.json({...publicSnapshot(await snapshot(config)), publisher:await publisher.snapshot()}));
 const closeMarket = installMarket(app, server);
 app.use((_req, res) => res.status(404).end());
 app.use((error, _req, res, _next) => {

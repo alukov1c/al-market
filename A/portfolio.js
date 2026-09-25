@@ -85,29 +85,34 @@
     series.data = series.data.filter(point => point.x >= Date.now() - 12 * 3600000).slice(-14400);
     combined.update('none');
   }
-  const lastActiveKey = 'al-market.portfolioLastActive';
-  function displayLastActive(timestamp) {
-    const date = new Date(timestamp);
-    if (!Number.isFinite(timestamp) || timestamp <= 0 || timestamp > Date.now() || Number.isNaN(date.getTime())) return;
-    const pad = value => String(value).padStart(2, '0');
+  function displayPublisher(status) {
     const field = $('portfolioLastActive');
-    if (field.hidden) {
-      $('portfolioLastActiveMessage').textContent = 'Poslednje vreme aktivnog prikaza portfolija je: ';
-      field.hidden = false;
-      field.after(document.createTextNode(' • '));
+    const label = $('portfolioLastActiveMessage');
+    const timestamp = status?.state === 'stopped' ? status.stoppedAt :
+      status?.state === 'running' ? status.startedAt : status?.lastReceivedAt;
+    const suffix = $('portfolioStatusSuffix');
+    if (!Number.isFinite(timestamp) || timestamp <= 0) {
+      label.textContent = 'Nema zabeleženog aktivnog prikaza.';
+      field.hidden = true;
+      if (suffix) suffix.remove();
+      return;
     }
-    field.dateTime = date.toISOString();
-    field.textContent = `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()}. ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
-    field.title = 'Lokalno vreme pregledača; poslednji aktivni prikaz na ovom uređaju.';
+    label.textContent = status.state === 'stopped' ? 'Server isključen: ' :
+      status.state === 'running' ? 'Server aktiviran: ' : 'Poslednji prijem podataka: ';
+    field.hidden = false;
+    field.dateTime = new Date(timestamp).toISOString();
+    const parts = new Intl.DateTimeFormat('en-GB', {timeZone:'Europe/Belgrade',
+      day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit', hourCycle:'h23'}).formatToParts(timestamp);
+    const values = Object.fromEntries(parts.map(p => [p.type, p.value]));
+    field.textContent = values.day + '.' + values.month + '.' + values.year + '. ' + values.hour + ':' + values.minute + ':' + values.second;
+    field.title = 'Vreme publisher-a; vremenska zona Europe/Belgrade.';
+    if (!suffix) {
+      const separator = document.createElement('span');
+      separator.id = 'portfolioStatusSuffix'; separator.textContent = ' • ';
+      field.after(separator);
+    }
   }
-  function recordLastActive() {
-    const timestamp = Date.now();
-    displayLastActive(timestamp);
-    try { localStorage.setItem(lastActiveKey, String(timestamp)); } catch {}
-  }
-  try { displayLastActive(Number(localStorage.getItem(lastActiveKey))); } catch {}
   function setAvailability(available) {
-    if (available || !$('portfolio').hidden) recordLastActive();
     const changed = $('portfolio').hidden === available;
     $('portfolio').hidden = !available;
     $('portfolioNotice').hidden = available;
@@ -122,7 +127,8 @@
       const response = await fetch('/api/portfolios', { cache: 'no-store', signal: AbortSignal.timeout(5000) });
       if (!response.ok) throw Error('Server');
       const data = await response.json();
-      const available = ['A', 'B'].every(id => data.portfolios.some(p =>
+      displayPublisher(data.publisher);
+      const available = data.publisher?.state !== 'stopped' && ['A', 'B'].every(id => data.portfolios.some(p =>
         p.id === id && p.state === 'live' && Number.isFinite(p.exportedAt) &&
         Date.now() - p.exportedAt <= 30000 && p.exportedAt - Date.now() <= 5000));
       setAvailability(available);

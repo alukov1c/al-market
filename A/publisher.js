@@ -1,5 +1,6 @@
 import './load-env.js';
 import https from 'node:https';
+import {randomUUID} from 'node:crypto';
 import http from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
@@ -9,7 +10,13 @@ import { validate } from './data.js';
 import { publicAgent } from './public-network.js';
 
 export function sendExport(base, token, id, payload) {
-  const url = new URL('/api/ingest/' + id, base);
+  return sendPayload(base, token, '/api/ingest/' + id, payload);
+}
+export function sendPublisherStatus(base, token, payload) {
+  return sendPayload(base, token, '/api/publisher-status', payload);
+}
+function sendPayload(base, token, endpoint, payload) {
+  const url = new URL(endpoint, base);
   const loopback = ['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname);
   if (url.protocol !== 'https:' && !(url.protocol === 'http:' && loopback)) throw Error('Koristiti HTTPS za udaljeni server.');
   if (url.username || url.password) throw Error('URL ne sme sadržati pristupne podatke.');
@@ -32,12 +39,19 @@ async function main() {
   const token = process.env.PORTFOLIO_UPLOAD_TOKEN;
   if (!destination || !token || token.length < 32) throw Error('Podesiti PORTFOLIO_REMOTE_URL i PORTFOLIO_UPLOAD_TOKEN u lokalnom .env fajlu.');
   if (config.mode !== 'local') throw Error('Publisher pokrenuti na računaru sa MT terminalima, u local režimu.');
+  const session = randomUUID();
+  const startedAt = Date.now();
+  let stoppedAt;
+  let wake;
   let running = true;
-  for (const signal of ['SIGINT','SIGTERM']) process.on(signal, () => { running = false; });
+  for (const signal of ['SIGINT','SIGTERM']) process.on(signal, () => { stoppedAt ??= Date.now(); running = false; wake?.(); });
   let lastState = '';
   while (running) {
     const status = [];
+    try { await sendPublisherStatus(destination, token, {session, startedAt, eventAt:Date.now(), state:'running'}); }
+    catch (error) { status.push('Publisher: ' + error.message); }
     for (const [id, settings] of Object.entries(config.portfolios)) {
+      if (!running) break;
       try {
         const file = path.join(config.sourceDir, settings.file);
         const raw = validate(JSON.parse(await readFile(file, 'utf8')), id, settings);
@@ -50,8 +64,13 @@ async function main() {
     }
     const state = status.join(' | ');
     if (state !== lastState) { console.log(state); lastState = state; }
-    if (running) await new Promise(resolve => setTimeout(resolve, 5000));
+    if (running) await new Promise(resolve => {
+      const timer = setTimeout(() => { wake = null; resolve(); }, 5000);
+      wake = () => { clearTimeout(timer); wake = null; resolve(); };
+    });
   }
+  try { await sendPublisherStatus(destination, token, {session, startedAt, eventAt:stoppedAt ?? Date.now(), state:'stopped'}); }
+  catch (error) { console.error('Odjava publisher-a nije potvrđena: ' + error.message); }
   publicAgent.destroy();
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) main().catch(error => { console.error(error.message); publicAgent.destroy(); process.exitCode = 1; });

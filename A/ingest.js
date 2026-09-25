@@ -2,6 +2,7 @@ import { createHash, timingSafeEqual, randomUUID } from 'node:crypto';
 import { mkdir, writeFile, rename, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { validate } from './data.js';
+import { publisherStatus } from './publisher-status.js';
 export function authorized(header, token) {
   if (!token || token.length < 32 || typeof header !== 'string') return false;
   const digest = value => createHash('sha256').update(value).digest();
@@ -9,6 +10,15 @@ export function authorized(header, token) {
 }
 export function installIngest(app, config) {
   const pending = new Map();
+  const status = publisherStatus(config);
+  app.post('/api/publisher-status', async (req, res, next) => {
+    if (config.mode !== 'remote') return res.status(404).end();
+    if (!authorized(req.headers.authorization, config.uploadToken)) return res.status(401).end();
+    let task;
+    try { task = status.event(req.body); }
+    catch { return res.status(400).json({error:'Invalid publisher event'}); }
+    try { await task; res.status(204).end(); } catch (error) { next(error); }
+  });
   app.post('/api/ingest/:id', async (req, res, next) => {
     if (config.mode !== 'remote') return res.status(404).end();
     if (!authorized(req.headers.authorization, config.uploadToken)) return res.status(401).json({error:'Unauthorized'});
@@ -32,10 +42,12 @@ export function installIngest(app, config) {
       const temporary = target + '.' + randomUUID() + '.tmp';
       await writeFile(temporary, JSON.stringify(raw), { encoding:'utf8', mode:0o600 });
       await rename(temporary, target);
+      await status.received();
     });
     pending.set(id, task);
     try { await task; res.status(204).end(); }
     catch (error) { next(error); }
     finally { if (pending.get(id) === task) pending.delete(id); }
   });
+  return status;
 }
