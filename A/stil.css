@@ -1650,3 +1650,43 @@ lazy-load.crypto-screener-widget {
 
 
 }
+
+#portfolio[hidden], #portfolioNotice[hidden] {
+    display: none !important;
+}
+
+#portfolioNotice {
+    box-sizing: border-box;
+    width: 80%;
+    margin: 1em auto;
+    padding: 0.85em 0;
+    overflow: hidden;
+    border: 2px solid rgba(13, 131, 228, 0.5);
+    border-radius: 10px;
+    color: rgb(121, 119, 119);
+    background: rgba(255, 255, 255, 0.94);
+    text-align: left;
+}
+
+#portfolioNotice span {
+    display: block;
+    width: max-content;
+    padding-left: 100%;
+    white-space: nowrap;
+    animation: portfolioNoticeScroll 22s linear infinite;
+}
+
+@keyframes portfolioNoticeScroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #portfolioNotice span {
+        width: auto;
+        padding: 0 1em;
+        white-space: normal;
+        text-align: center;
+        animation: none;
+    }
+}

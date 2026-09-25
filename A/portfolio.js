@@ -85,15 +85,30 @@
     series.data = series.data.filter(point => point.x >= Date.now() - 12 * 3600000).slice(-14400);
     combined.update('none');
   }
+  function setAvailability(available) {
+    const changed = $('portfolio').hidden === available;
+    $('portfolio').hidden = !available;
+    $('portfolioNotice').hidden = available;
+    if (available && changed) {
+      styleFields();
+      Object.values(charts).forEach(chart => chart.resize());
+      if (combined) combined.resize();
+    }
+  }
   async function refresh() {
     try {
       const response = await fetch('/api/portfolios', { cache: 'no-store', signal: AbortSignal.timeout(5000) });
       if (!response.ok) throw Error('Server');
       const data = await response.json();
+      const available = ['A', 'B'].every(id => data.portfolios.some(p =>
+        p.id === id && p.state === 'live' && Number.isFinite(p.exportedAt) &&
+        Date.now() - p.exportedAt <= 30000 && p.exportedAt - Date.now() <= 5000));
+      setAvailability(available);
       data.portfolios.forEach(renderPortfolio);
       try { renderCombined(data.combined); }
       catch { $('chartPortfolioInfo').title = 'Grafikon nije dostupan; proveriti učitavanje Chart.js vremenskog adaptera.'; }
     } catch {
+      setAvailability(false);
       ['A', 'B'].forEach(id => renderPortfolio({ id, state: 'offline' }));
       if (combined) { combined.data.datasets[0].label = 'Ukupno (CHF) — server nije dostupan'; combined.update('none'); }
     } finally { setTimeout(refresh, 3000); }
