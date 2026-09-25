@@ -85,7 +85,24 @@
     series.data = series.data.filter(point => point.x >= Date.now() - 12 * 3600000).slice(-14400);
     combined.update('none');
   }
+  const lastActiveKey = 'al-market.portfolioLastActive';
+  function displayLastActive(timestamp) {
+    const date = new Date(timestamp);
+    if (!Number.isFinite(timestamp) || timestamp <= 0 || timestamp > Date.now() || Number.isNaN(date.getTime())) return;
+    const pad = value => String(value).padStart(2, '0');
+    const field = $('portfolioLastActive');
+    field.dateTime = date.toISOString();
+    field.textContent = `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()}. ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+    field.title = 'Lokalno vreme pregledača; poslednji aktivni prikaz na ovom uređaju.';
+  }
+  function recordLastActive() {
+    const timestamp = Date.now();
+    displayLastActive(timestamp);
+    try { localStorage.setItem(lastActiveKey, String(timestamp)); } catch {}
+  }
+  try { displayLastActive(Number(localStorage.getItem(lastActiveKey))); } catch {}
   function setAvailability(available) {
+    if (available || !$('portfolio').hidden) recordLastActive();
     const changed = $('portfolio').hidden === available;
     $('portfolio').hidden = !available;
     $('portfolioNotice').hidden = available;
