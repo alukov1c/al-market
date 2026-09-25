@@ -91,6 +91,11 @@
     if (!Number.isFinite(timestamp) || timestamp <= 0 || timestamp > Date.now() || Number.isNaN(date.getTime())) return;
     const pad = value => String(value).padStart(2, '0');
     const field = $('portfolioLastActive');
+    if (field.hidden) {
+      $('portfolioLastActiveMessage').textContent = 'Poslednje vreme aktivnog prikaza portfolija je: ';
+      field.hidden = false;
+      field.after(document.createTextNode(' • '));
+    }
     field.dateTime = date.toISOString();
     field.textContent = `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()}. ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
     field.title = 'Lokalno vreme pregledača; poslednji aktivni prikaz na ovom uređaju.';

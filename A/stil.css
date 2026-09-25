@@ -1668,7 +1668,7 @@ lazy-load.crypto-screener-widget {
     text-align: left;
 }
 
-#portfolioNotice span {
+#portfolioNotice > span {
     display: block;
     width: max-content;
     padding-left: 100%;
@@ -1682,7 +1682,7 @@ lazy-load.crypto-screener-widget {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    #portfolioNotice span {
+    #portfolioNotice > span {
         width: auto;
         padding: 0 1em;
         white-space: normal;
