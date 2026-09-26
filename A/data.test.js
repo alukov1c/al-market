@@ -64,3 +64,30 @@ test('Missing quote, no positions, or old exporter never use manual exposure', (
   await put(c,'A',sample({lastTrade:{profit:50,closedAt:'2026.09.24 12:00:00'}}));
   assert.equal((await readPortfolio('A',settings,c)).lastTrade.adjustedProfit,null);
 }));
+
+test('Explicit last broker quote restores weekend conversions without making stale exports live', () => fixture(async c => {
+ const quotes={schemaVersion:2,conversionPolicy:'last-broker-quote',positionsComplete:true,positionCount:1,positions:[{marketValue:1500}],marketValue:1500,positionsFxAgeSeconds:172800};
+ await put(c,'A',sample(quotes));
+ await put(c,'B',sample({...quotes,portfolio:'B',platform:'MT4',currency:'AUD',equity:200,fxToCHF:0.5,fxAgeSeconds:172800}));
+ let result=await snapshot(c);
+ assert.equal(result.combined.value,175);assert.equal(result.combined.usesLastQuote,true);
+ assert.equal(result.portfolios[0].strength,5);assert.equal(result.portfolios[0].strengthUsesLastQuote,true);
+ await put(c,'B',sample({...quotes,portfolio:'B',platform:'MT4',currency:'AUD',fxToCHF:null,fxAgeSeconds:172800}));
+ assert.equal((await snapshot(c)).combined.value,null);
+ await put(c,'A',sample({...quotes,exportedAt:Date.now()/1000-60}));
+ assert.equal((await snapshot(c)).portfolios[0].state,'stale');
+ await put(c,'A',sample({...quotes,positionsFxAgeSeconds:0}));
+ assert.equal((await snapshot(c)).portfolios[0].strengthUsesLastQuote,false);
+}));
+
+test('Native broker quote time remains stable when export time and quote age change', () => fixture(async c => {
+ const quote={schemaVersion:2,conversionPolicy:'last-broker-quote',positionsComplete:true,positionCount:1,positions:[{marketValue:1500}],marketValue:1500,positionsFxAgeSeconds:50000,positionsFxQuoteTime:'2026.09.25 23:56:46'};
+ await put(c,'A',sample(quote));
+ const first=await readPortfolio('A',settings,c);
+ await put(c,'A',sample({...quote,positionsFxAgeSeconds:50003,exportedAt:Date.now()/1000+1}));
+ const second=await readPortfolio('A',settings,c);
+ assert.equal(first.strengthQuoteTime,'2026.09.25 23:56:46');
+ assert.equal(second.strengthQuoteTime,first.strengthQuoteTime);
+ await put(c,'A',sample({...quote,positionsFxQuoteTime:null}));
+ assert.equal((await readPortfolio('A',settings,c)).strengthQuoteTime,null);
+}));

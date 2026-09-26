@@ -1,5 +1,5 @@
 #property strict
-#property version "1.11"
+#property version "1.13"
 // Izvoz podataka bez slanja ili menjanja trgovačkih naloga.
 input int RefreshSeconds = 5;
 input long ExpectedLogin = 0;
@@ -63,7 +63,8 @@ string LastTrade(bool &available) {
       ",\"ticket\":"+JsonString(ticketText)+",\"symbol\":"+JsonString(symbol)+",\"kind\":"+JsonString(kind)+"}";
 }
 // Pronalaženje direktnog ili obrnutog kursa preko valutnih svojstava brokerskog simbola.
-double QuoteRate(string symbol,string from,string to,double &age) {
+double QuoteRate(string symbol,string from,string to,double &age,datetime &quotedAt) {
+   quotedAt=0;
    string base=SymbolInfoString(symbol,SYMBOL_CURRENCY_BASE);
    string quote=SymbolInfoString(symbol,SYMBOL_CURRENCY_PROFIT);
    bool direct=base==from && quote==to;
@@ -71,37 +72,43 @@ double QuoteRate(string symbol,string from,string to,double &age) {
    if(!direct && !inverse) return 0;
    if(!SymbolSelect(symbol,true)) return 0;
    MqlTick tick;
-   if(!SymbolInfoTick(symbol,tick) || tick.bid<=0 || tick.ask<=0) return 0;
+   if(!SymbolInfoTick(symbol,tick) || tick.time<=0 || tick.bid<=0 || tick.ask<=0) return 0;
    age=(double)(TimeCurrent()-tick.time);
-   if(age<0 || age>120) return 0;
+   if(age<0) return 0;
+   quotedAt=tick.time;
    double mid=(tick.bid+tick.ask)/2;
    return direct ? mid : 1/mid;
 }
-double DirectRate(string from,string to,double &age,string preferred="") {
-   age=0;
+double DirectRate(string from,string to,double &age,datetime &quotedAt,string preferred="") {
+   age=0; quotedAt=0;
    if(from==to) return 1;
    if(from=="" || to=="") return 0;
-   if(preferred!="") return QuoteRate(preferred,from,to,age);
+   if(preferred!="") return QuoteRate(preferred,from,to,age,quotedAt);
+   double bestRate=0,bestAge=0;
+   datetime bestTime=0,candidateTime=0;
    for(int i=0;i<SymbolsTotal(false);i++) {
       string symbol=SymbolName(i,false);
-      double rate=QuoteRate(symbol,from,to,age);
-      if(rate>0) return rate;
+      double rate=QuoteRate(symbol,from,to,age,candidateTime);
+      if(rate>0 && (bestRate==0 || age<bestAge)) { bestRate=rate; bestAge=age; bestTime=candidateTime; }
    }
-   return 0;
+   age=bestAge; quotedAt=bestTime;
+   return bestRate;
 }
-double CurrencyRate(string from,string to,double &age,string preferred="") {
-   double rate=DirectRate(from,to,age,preferred);
+double CurrencyRate(string from,string to,double &age,datetime &quotedAt,string preferred="") {
+   double rate=DirectRate(from,to,age,quotedAt,preferred);
    if(rate>0 || preferred!="" || from=="USD" || to=="USD") return rate;
    double firstAge=0,secondAge=0;
-   double first=DirectRate(from,"USD",firstAge);
-   double second=DirectRate("USD",to,secondAge);
+   datetime firstTime=0,secondTime=0;
+   double first=DirectRate(from,"USD",firstAge,firstTime);
+   double second=DirectRate("USD",to,secondAge,secondTime);
    age=MathMax(firstAge,secondAge);
+   quotedAt=first>0 && second>0 ? (firstTime<secondTime ? firstTime : secondTime) : 0;
    return first>0 && second>0 ? first*second : 0;
 }
 // Zbir bruto tržišnih vrednosti otvorenih pozicija u valuti računa.
-string PositionValues(string currency,double &total,bool &complete,int &count) {
+string PositionValues(string currency,double &total,bool &complete,int &count,double &maxFxAge,datetime &oldestQuote) {
    string result="[";
-   total=0; count=0; complete=true;
+   total=0; count=0; complete=true; maxFxAge=0; oldestQuote=0;
 #ifdef __MQL5__
    int size=PositionsTotal();
 #else
@@ -124,11 +131,12 @@ string PositionValues(string currency,double &total,bool &complete,int &count) {
 #endif
       string quote=SymbolInfoString(symbol,SYMBOL_CURRENCY_PROFIT);
       double age=0;
-      double rate=CurrencyRate(quote,currency,age);
+      datetime quoteTime=0;
+      double rate=CurrencyRate(quote,currency,age,quoteTime);
       bool valid=volume>0 && price>0 && contract>0 && rate>0;
       double value=volume*contract*price*rate;
       if(!MathIsValidNumber(value)) valid=false;
-      if(valid) total+=value; else complete=false;
+      if(valid) { total+=value; maxFxAge=MathMax(maxFxAge,age); if(quoteTime>0 && (oldestQuote==0 || quoteTime<oldestQuote)) oldestQuote=quoteTime; } else complete=false;
       if(count>0) result+=",";
       result+="{\"symbol\":"+JsonString(symbol)+",\"volume\":"+NumberJson(volume)+
          ",\"contractSize\":"+NumberJson(contract)+",\"price\":"+NumberJson(price)+
@@ -152,19 +160,23 @@ void ExportPortfolio() {
    if(login<=0 || (ExpectedLogin!=0 && login!=ExpectedLogin)) return;
    bool connected=(bool)TerminalInfoInteger(TERMINAL_CONNECTED);
    bool historyAvailable,positionsComplete;
-   double marketValue,fxAge;
+   double marketValue,fxAge,positionsFxAge;
    int positionCount;
+   datetime positionsQuoteTime=0,fxQuoteTime=0;
    string last=LastTrade(historyAvailable);
-   string positions=PositionValues(currency,marketValue,positionsComplete,positionCount);
-   double fx=CurrencyRate(currency,"CHF",fxAge,ConversionSymbol);
-   string payload="{\"schemaVersion\":2,\"exporterBuild\":\"1.11\",\"historyMode\":\"closed-trades\",\"portfolio\":"+JsonString(PortfolioId)+",\"platform\":"+JsonString(Platform)+
+   string positions=PositionValues(currency,marketValue,positionsComplete,positionCount,positionsFxAge,positionsQuoteTime);
+   double fx=CurrencyRate(currency,"CHF",fxAge,fxQuoteTime,ConversionSymbol);
+   string quoteMetadata=",\"conversionPolicy\":\"last-broker-quote\",\"positionsFxAgeSeconds\":"+NumberJson(positionsFxAge);
+   quoteMetadata+=",\"positionsFxQuoteTime\":"+(positionsQuoteTime>0 ? JsonString(TimeToString(positionsQuoteTime,TIME_DATE|TIME_SECONDS)) : "null");
+   quoteMetadata+=",\"fxQuoteTime\":"+(fxQuoteTime>0 ? JsonString(TimeToString(fxQuoteTime,TIME_DATE|TIME_SECONDS)) : "null");
+   string payload="{\"schemaVersion\":2,\"exporterBuild\":\"1.13\",\"historyMode\":\"closed-trades\",\"portfolio\":"+JsonString(PortfolioId)+",\"platform\":"+JsonString(Platform)+
       ",\"login\":"+JsonString(IntegerToString(login))+",\"currency\":"+JsonString(currency)+
       ",\"balance\":"+NumberJson(balance)+",\"equity\":"+NumberJson(equity)+",\"margin\":"+NumberJson(margin)+
       ",\"connected\":"+(connected ? "true" : "false")+",\"exportedAt\":"+IntegerToString((long)TimeGMT())+
       ",\"fxToCHF\":"+(fx>0 ? NumberJson(fx) : "null")+",\"fxAgeSeconds\":"+NumberJson(fxAge)+
       ",\"historyAvailable\":"+(historyAvailable ? "true" : "false")+",\"lastTrade\":"+last+
       ",\"positionsComplete\":"+(positionsComplete ? "true" : "false")+",\"positionCount\":"+IntegerToString(positionCount)+
-      ",\"marketValue\":"+(positionsComplete ? NumberJson(marketValue) : "null")+",\"positions\":"+positions+"}";
+      ",\"marketValue\":"+(positionsComplete ? NumberJson(marketValue) : "null")+",\"positions\":"+positions+quoteMetadata+"}";
    FolderCreate("al-market",FILE_COMMON);
    string target="al-market\\portfolio-"+PortfolioId+".json", temporary=target+".tmp";
    int handle=FileOpen(temporary,FILE_WRITE|FILE_TXT|FILE_ANSI|FILE_COMMON,0,CP_UTF8);

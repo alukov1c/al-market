@@ -32,6 +32,20 @@
     $('valuta' + suffix).value = p.currency || '—';
     $('jacinaPozicije' + p.id).value = available && p.strength !== null ? number(p.strength) + ' %' : '—';
     $('jacinaPozicije' + p.id).title = 'Jačina = equity / zbir tržišnih vrednosti otvorenih pozicija × 100, u valuti računa.';
+    let quoteNote = $('quoteNote' + p.id);
+    if (!quoteNote) {
+      quoteNote = document.createElement('small'); quoteNote.id = 'quoteNote' + p.id;
+      quoteNote.style.display = 'block';
+      $('jacinaPozicije' + p.id).after(quoteNote);
+    }
+    const showQuote = available && p.strengthUsesLastQuote;
+    let quoteTime = '';
+    if (typeof p.strengthQuoteTime === 'string' && /^\d{4}\.\d{2}\.\d{2} \d{2}:\d{2}:\d{2}$/.test(p.strengthQuoteTime)) {
+      const [day, time] = p.strengthQuoteTime.split(' ');
+      quoteTime = day.split('.').reverse().join('.') + '. ' + time;
+    }
+    quoteNote.textContent = showQuote ? 'Konverzija: poslednja kotacija' + (quoteTime ? ' ' + quoteTime : '') : '';
+    quoteNote.title = showQuote ? 'Izvorno vreme brokerskog servera. Kod više kurseva: najstarija korišćena kotacija.' : '';
     const profit = $('lastProfit' + suffix);
     const date = $('lastDate' + suffix);
     profit.style.color = '#6b7280'; profit.style.fontWeight = 'bold';
@@ -77,7 +91,7 @@
       }
     });
     const series = combined.data.datasets[0];
-    series.label = p.value === null ? 'Ukupno (CHF) — čekanje podataka / kursa' : 'Ukupno (CHF)';
+    series.label = p.value === null ? 'Ukupno (CHF) — čekanje podataka / kursa' : p.usesLastQuote ? 'Ukupno (CHF) — poslednja kotacija' : 'Ukupno (CHF)';
     if (p.value !== null && p.sampledAt !== lastSample) {
       series.data.push({ x: p.sampledAt, y: p.value }); lastSample = p.sampledAt;
       combined.options.scales.y.suggestedMin = p.value - 5; combined.options.scales.y.suggestedMax = p.value + 5;

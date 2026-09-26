@@ -24,7 +24,10 @@ export async function readPortfolio(id, settings, config, now = Date.now()) {
     const age = now - raw.exportedAt * 1000;
     const state = !raw.connected ? 'disconnected' : age < -5000 || age > config.staleAfterMs || now - info.mtimeMs > config.staleAfterMs ? 'stale' : 'live';
     const level = raw.balance > 0 ? raw.equity / raw.balance * 100 : null;
-    const rate = raw.currency === 'CHF' ? 1 : finite(raw.fxToCHF) && raw.fxToCHF > 0 && finite(raw.fxAgeSeconds) && raw.fxAgeSeconds >= 0 && raw.fxAgeSeconds <= 120 ? raw.fxToCHF : null;
+    const lastQuote = raw.conversionPolicy === 'last-broker-quote';
+    const conversionAgeSeconds = Math.max(0, finite(raw.fxAgeSeconds) && raw.currency !== 'CHF' ? raw.fxAgeSeconds : 0);
+    const positionsFxAgeSeconds = finite(raw.positionsFxAgeSeconds) ? Math.max(0, raw.positionsFxAgeSeconds) : 0;
+    const rate = raw.currency === 'CHF' ? 1 : finite(raw.fxToCHF) && raw.fxToCHF > 0 && finite(raw.fxAgeSeconds) && raw.fxAgeSeconds >= 0 && (raw.fxAgeSeconds <= 120 || lastQuote) ? raw.fxToCHF : null;
     return { id, platform: raw.platform, state, currency: raw.currency, balance: raw.balance,
       equity: raw.equity, level: finite(level) ? level : null, exportedAt: raw.exportedAt * 1000,
       historyAvailable: raw.historyAvailable,
@@ -34,6 +37,10 @@ export async function readPortfolio(id, settings, config, now = Date.now()) {
       positions: raw.positions ?? [],
       exporterVersion: raw.schemaVersion ?? 1,
       exporterBuild: raw.exporterBuild ?? '1.00',
+      conversionAgeSeconds, positionsFxAgeSeconds,
+      strengthQuoteTime: typeof raw.positionsFxQuoteTime === 'string' && /^\d{4}\.\d{2}\.\d{2} \d{2}:\d{2}:\d{2}$/.test(raw.positionsFxQuoteTime) ? raw.positionsFxQuoteTime : null,
+      conversionUsesLastQuote: lastQuote && conversionAgeSeconds > 120,
+      strengthUsesLastQuote: lastQuote && positionsFxAgeSeconds > 120,
       equityCHF: rate === null ? null : raw.equity * rate,
       strength: raw.positionsComplete === true && finite(raw.marketValue) && raw.marketValue > 0 ? raw.equity / raw.marketValue * 100 : null };
   } catch (error) {
@@ -43,7 +50,7 @@ export async function readPortfolio(id, settings, config, now = Date.now()) {
 export async function snapshot(config) {
   const portfolios = await Promise.all(Object.entries(config.portfolios).map(([id, settings]) => readPortfolio(id, settings, config)));
   const ready = portfolios.every(p => p.state === 'live' && Number.isFinite(p.equityCHF));
-  return { portfolios, combined: { currency: 'CHF', value: ready ? portfolios.reduce((sum, p) => sum + p.equityCHF, 0) : null,
+  return { portfolios, combined: { currency: 'CHF', usesLastQuote: portfolios.some(p => p.conversionUsesLastQuote), quoteAgeSeconds: Math.max(0, ...portfolios.map(p => p.conversionAgeSeconds || 0)), value: ready ? portfolios.reduce((sum, p) => sum + p.equityCHF, 0) : null,
     sampledAt: ready ? Math.max(...portfolios.map(p => p.exportedAt)) : null } };
 }
 
@@ -53,7 +60,7 @@ export function publicSnapshot(data) {
     portfolios: data.portfolios.map(p => ({
       id:p.id, platform:p.platform, state:p.state, currency:p.currency, level:p.level,
       exportedAt:p.exportedAt, historyAvailable:p.historyAvailable, exporterVersion:p.exporterVersion, exporterBuild:p.exporterBuild,
-      strength:p.strength,
+      strength:p.strength, strengthUsesLastQuote:p.strengthUsesLastQuote, strengthQuoteAgeSeconds:p.positionsFxAgeSeconds, strengthQuoteTime:p.strengthQuoteTime,
       lastTrade:p.lastTrade ? {profit:p.lastTrade.profit, swap:p.lastTrade.swap,
         adjustedProfit:p.lastTrade.adjustedProfit, closedAt:p.lastTrade.closedAt} : null
     }))
