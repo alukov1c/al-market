@@ -32,20 +32,6 @@
     $('valuta' + suffix).value = p.currency || '—';
     $('jacinaPozicije' + p.id).value = available && p.strength !== null ? number(p.strength) + ' %' : '—';
     $('jacinaPozicije' + p.id).title = 'Jačina = equity / zbir tržišnih vrednosti otvorenih pozicija × 100, u valuti računa.';
-    let quoteNote = $('quoteNote' + p.id);
-    if (!quoteNote) {
-      quoteNote = document.createElement('small'); quoteNote.id = 'quoteNote' + p.id;
-      quoteNote.style.display = 'block';
-      $('jacinaPozicije' + p.id).after(quoteNote);
-    }
-    const showQuote = available && p.strengthUsesLastQuote;
-    let quoteTime = '';
-    if (typeof p.strengthQuoteTime === 'string' && /^\d{4}\.\d{2}\.\d{2} \d{2}:\d{2}:\d{2}$/.test(p.strengthQuoteTime)) {
-      const [day, time] = p.strengthQuoteTime.split(' ');
-      quoteTime = day.split('.').reverse().join('.') + '. ' + time;
-    }
-    quoteNote.textContent = showQuote ? 'Konverzija: poslednja kotacija' + (quoteTime ? ' ' + quoteTime : '') : '';
-    quoteNote.title = showQuote ? 'Izvorno vreme brokerskog servera. Kod više kurseva: najstarija korišćena kotacija.' : '';
     const profit = $('lastProfit' + suffix);
     const date = $('lastDate' + suffix);
     profit.style.color = '#6b7280'; profit.style.fontWeight = 'bold';
@@ -81,17 +67,51 @@
     });
     else { charts[chartId].data.datasets[0].data = data; charts[chartId].update('none'); }
   }
+  function fitCombinedLegend() {
+    const legend = $('combinedPortfolioLegend');
+    if (!legend || !legend.clientWidth) return;
+    const css = getComputedStyle(legend);
+    const available = legend.clientWidth - parseFloat(css.paddingLeft) - parseFloat(css.paddingRight);
+    const context = document.createElement('canvas').getContext('2d');
+    context.font = '12px ' + css.fontFamily;
+    const width = context.measureText(legend.textContent).width;
+    if (available > 0 && width > 0) legend.style.fontSize = Math.min(12, 12 * available / (width + 2)) + 'px';
+  }
   function renderCombined(p) {
     if (!window.Chart) return;
     if (!combined) combined = new Chart($('chartPortfolioInfo'), {
       type: 'scatter', data: { datasets: [{ label: 'Ukupno (CHF)', data: [], showLine: false, stepped: true, borderWidth: 2, tension: 0, pointRadius: 2, pointHoverRadius: 4 }] },
       options: { responsive: true, maintainAspectRatio: false, parsing: false,
-        plugins: { tooltip: { enabled: false }, legend: { display: true } },
+        plugins: { tooltip: { enabled: false }, legend: { display: false } },
         scales: { x: { type: 'time', time: { unit: 'minute' }, title: { display: true, text: 'Vreme' } }, y: { title: { display: false }, ticks: { display: false } } }
       }
     });
     const series = combined.data.datasets[0];
     series.label = p.value === null ? 'Ukupno (CHF) — čekanje podataka / kursa' : p.usesLastQuote ? 'Ukupno (CHF) — poslednja kotacija' : 'Ukupno (CHF)';
+    if (p.value !== null && p.usesLastQuote && typeof p.quoteTime === 'string' && /^\d{4}\.\d{2}\.\d{2} \d{2}:\d{2}:\d{2}$/.test(p.quoteTime)) {
+      const [day, time] = p.quoteTime.split(' ');
+      series.label += ' (' + day.split('.').reverse().join('.') + '. ' + time + ')';
+    }
+    let legend = $('combinedPortfolioLegend');
+    if (!legend) {
+      legend = document.createElement('button');
+      legend.id = 'combinedPortfolioLegend';
+      legend.type = 'button';
+      legend.addEventListener('click', () => {
+        const visible = !combined.isDatasetVisible(0);
+        combined.setDatasetVisibility(0, visible);
+        legend.setAttribute('aria-pressed', String(visible));
+        combined.update('none');
+      });
+      legend.setAttribute('aria-pressed', 'true');
+      $('chartPortfolioInfo').before(legend);
+      new ResizeObserver(fitCombinedLegend).observe(legend);
+    }
+    legend.textContent = series.label;
+    fitCombinedLegend();
+    const dataset = series;
+    legend.style.setProperty('--legend-color', typeof dataset.borderColor === 'string' ? dataset.borderColor : '#36a2eb');
+    $('chartPortfolioInfo').title = series.label + (p.usesLastQuote ? ' — izvorno vreme brokerskog servera' : '');
     if (p.value !== null && p.sampledAt !== lastSample) {
       series.data.push({ x: p.sampledAt, y: p.value }); lastSample = p.sampledAt;
       combined.options.scales.y.suggestedMin = p.value - 5; combined.options.scales.y.suggestedMax = p.value + 5;

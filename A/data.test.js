@@ -91,3 +91,11 @@ test('Native broker quote time remains stable when export time and quote age cha
  await put(c,'A',sample({...quote,positionsFxQuoteTime:null}));
  assert.equal((await readPortfolio('A',settings,c)).strengthQuoteTime,null);
 }));
+
+test('Combined quote timestamp uses CHF conversion, not position conversion', () => fixture(async c => {
+ await put(c,'A',sample({fxQuoteTime:'2026.09.20 01:02:03'}));
+ await put(c,'B',sample({portfolio:'B',platform:'MT4',currency:'AUD',equity:200,fxToCHF:0.5,fxAgeSeconds:50000,conversionPolicy:'last-broker-quote',fxQuoteTime:'2026.09.25 23:56:46',positionsFxQuoteTime:'2026.09.24 10:00:00'}));
+ const result=await snapshot(c);
+ assert.equal(result.combined.value,175);
+ assert.equal(result.combined.quoteTime,'2026.09.25 23:56:46');
+}));

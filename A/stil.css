@@ -1690,3 +1690,38 @@ lazy-load.crypto-screener-widget {
         animation: none;
     }
 }
+#combinedPortfolioLegend {
+    display: block;
+    box-sizing: border-box;
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto 6px;
+    padding: 4px 22px;
+    border: 0;
+    background: transparent;
+    color: #666;
+    font: 12px/1.4 system-ui, sans-serif;
+    text-align: center;
+    white-space: nowrap;
+    overflow-wrap: normal;
+    cursor: pointer;
+}
+
+#combinedPortfolioLegend::before {
+    content: '';
+    display: inline-block;
+    position: absolute;
+    left: 3px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 12px;
+    height: 10px;
+    margin-right: 6px;
+    border: 2px solid var(--legend-color, #36a2eb);
+    vertical-align: middle;
+}
+
+#combinedPortfolioLegend[aria-pressed="false"] {
+    text-decoration: line-through;
+}

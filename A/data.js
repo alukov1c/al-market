@@ -38,6 +38,7 @@ export async function readPortfolio(id, settings, config, now = Date.now()) {
       exporterVersion: raw.schemaVersion ?? 1,
       exporterBuild: raw.exporterBuild ?? '1.00',
       conversionAgeSeconds, positionsFxAgeSeconds,
+      conversionQuoteTime: raw.currency !== 'CHF' && typeof raw.fxQuoteTime === 'string' && /^\d{4}\.\d{2}\.\d{2} \d{2}:\d{2}:\d{2}$/.test(raw.fxQuoteTime) ? raw.fxQuoteTime : null,
       strengthQuoteTime: typeof raw.positionsFxQuoteTime === 'string' && /^\d{4}\.\d{2}\.\d{2} \d{2}:\d{2}:\d{2}$/.test(raw.positionsFxQuoteTime) ? raw.positionsFxQuoteTime : null,
       conversionUsesLastQuote: lastQuote && conversionAgeSeconds > 120,
       strengthUsesLastQuote: lastQuote && positionsFxAgeSeconds > 120,
@@ -50,7 +51,9 @@ export async function readPortfolio(id, settings, config, now = Date.now()) {
 export async function snapshot(config) {
   const portfolios = await Promise.all(Object.entries(config.portfolios).map(([id, settings]) => readPortfolio(id, settings, config)));
   const ready = portfolios.every(p => p.state === 'live' && Number.isFinite(p.equityCHF));
-  return { portfolios, combined: { currency: 'CHF', usesLastQuote: portfolios.some(p => p.conversionUsesLastQuote), quoteAgeSeconds: Math.max(0, ...portfolios.map(p => p.conversionAgeSeconds || 0)), value: ready ? portfolios.reduce((sum, p) => sum + p.equityCHF, 0) : null,
+  const quoteTimes = portfolios.filter(p => p.currency !== 'CHF').map(p => p.conversionQuoteTime);
+  const quoteTime = ready && quoteTimes.length && quoteTimes.every(Boolean) ? quoteTimes.sort()[0] : null;
+  return { portfolios, combined: { currency: 'CHF', quoteTime, usesLastQuote: portfolios.some(p => p.conversionUsesLastQuote), quoteAgeSeconds: Math.max(0, ...portfolios.map(p => p.conversionAgeSeconds || 0)), value: ready ? portfolios.reduce((sum, p) => sum + p.equityCHF, 0) : null,
     sampledAt: ready ? Math.max(...portfolios.map(p => p.exportedAt)) : null } };
 }
 
