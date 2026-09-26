@@ -1758,7 +1758,10 @@ lazy-load.crypto-screener-widget {
 }
 
 #portfolio textarea {
+
     max-width: 100%;
+    border: 2px;
+    
 
 }
 
