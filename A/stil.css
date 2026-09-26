@@ -1725,3 +1725,50 @@ lazy-load.crypto-screener-widget {
 #combinedPortfolioLegend[aria-pressed="false"] {
     text-decoration: line-through;
 }
+
+/* Razmak portfolija i tržišta bez praznog prostora nakon skaliranja. */
+@media screen and (min-width: 701px) {
+    #portfolio {
+        transform: none;
+        zoom: 0.87;
+        width: 78.3%;
+        margin-bottom: 8px;
+    }
+    #market {
+        transform: none;
+        zoom: 0.87;
+        width: 78.3%;
+    }
+    #portfolio > div {
+        min-width: 0;
+        max-height: none;
+        overflow: visible;
+    }
+    #portfolio p {
+        margin-block: 12px;
+    }
+}
+
+@media screen and (min-width: 701px) and (max-width: 1000px) {
+    #portfolio {
+        zoom: 0.8;
+        width: 80%;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+#portfolio textarea {
+    max-width: 100%;
+
+}
+
+#portfolioInfo > div {
+    max-height: none;
+    overflow: visible;
+}
+
+@media screen and (max-width: 700px) {
+    #portfolioNotice {
+        width: 90%;
+    }
+}
