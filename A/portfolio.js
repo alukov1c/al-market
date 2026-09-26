@@ -97,8 +97,8 @@
       if (suffix) suffix.remove();
       return;
     }
-    label.textContent = status.state === 'stopped' ? 'Server isključen: ' :
-      status.state === 'running' ? 'Server aktiviran: ' : 'Poslednji prijem podataka: ';
+    label.textContent = status.state === 'stopped' ? 'Server je isključen: ' :
+      status.state === 'running' ? 'Server je aktiviran: ' : 'Poslednji prijem podataka: ';
     field.hidden = false;
     field.dateTime = new Date(timestamp).toISOString();
     const parts = new Intl.DateTimeFormat('en-GB', {timeZone:'Europe/Belgrade',
