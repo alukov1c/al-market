@@ -70,6 +70,13 @@
   function fitCombinedLegend() {
     const legend = $('combinedPortfolioLegend');
     if (!legend || !legend.clientWidth) return;
+    if (window.matchMedia('(max-width: 700px)').matches) {
+      const font = Chart.helpers.toFont(combined?.options.scales.x.title.font, Chart.defaults.font);
+      legend.style.fontSize = font.size + 'px';
+      legend.style.fontFamily = font.family;
+      return;
+    }
+    legend.style.fontFamily = '';
     const css = getComputedStyle(legend);
     const available = legend.clientWidth - parseFloat(css.paddingLeft) - parseFloat(css.paddingRight);
     const context = document.createElement('canvas').getContext('2d');
