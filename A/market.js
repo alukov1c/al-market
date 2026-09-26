@@ -1375,17 +1375,21 @@ function setLiveStatus(isOnline) {
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
 
+let analysisHistorySelected = false;
 async function loadLatestAnalysis() {
   const res = await fetch("/api/self-analysis/latest");
+  if (!res.ok) throw new Error('Analiza trenutno nije dostupna.');
   const report = await res.json();
-  renderAnalysis(report);
+  if (!analysisHistorySelected) renderAnalysis(report);
 }
 
 async function loadAnalysisHistory() {
   const res = await fetch("/api/self-analysis/history");
+  if (!res.ok) throw new Error('Istorija analiza trenutno nije dostupna.');
   const reports = await res.json();
 
   const select = document.getElementById("analysisHistorySelect");
+  const selected = select.value;
   select.innerHTML = "";
 
   reports.forEach(report => {
@@ -1396,23 +1400,34 @@ async function loadAnalysisHistory() {
       : `${report.date} | ${report.signal}`;
     select.appendChild(option);
   });
+  if (analysisHistorySelected) select.value = selected;
 
   select.onchange = async () => {
+    analysisHistorySelected = true;
+    try {
     const res = await fetch(`/api/self-analysis/${encodeURIComponent(select.value)}`);
+    if (!res.ok) throw new Error('Izabrana analiza trenutno nije dostupna.');
     const report = await res.json();
     renderAnalysis(report);
+    } catch (error) { document.getElementById('analysisSummary').textContent = error.message; }
   };
 }
 
 async function generateSelfAnalysisNow() {
-
-    await sendMarketSnapshotToServer();
-
+    const button = document.getElementById('btnGenALmeh');
+    if (button.disabled) return;
+    button.disabled = true;
+    document.getElementById('analysisSummary').textContent = 'Generisanje analize tržišta…';
+    try {
     const res = await fetch("/api/self-analysis/generate");
+    if (!res.ok) throw new Error('Analiza nije generisana. Tržišni podaci trenutno nisu dostupni. Ponovni pokušaj je moguć.');
     const report = await res.json();
-
+    analysisHistorySelected = false;
     renderAnalysis(report);
     await loadAnalysisHistory();
+    } catch (error) {
+      document.getElementById('analysisSummary').textContent = error.message;
+    } finally { button.disabled = false; }
 }
 
 function renderAnalysis(report) {
@@ -1528,8 +1543,15 @@ function startAutoAnalysisCountdown() {
   autoAnalysisScheduleRefreshTimer = setInterval(refreshAutoAnalysisSchedule, 60 * 1000);
 }
 
-loadLatestAnalysis();
-loadAnalysisHistory();
+async function refreshAnalysis() {
+  if (document.getElementById('btnGenALmeh')?.disabled) return;
+  try {
+    await loadLatestAnalysis();
+    await loadAnalysisHistory();
+  } catch (error) { console.warn('Učitavanje analize:', error.message); }
+}
+refreshAnalysis();
+setInterval(refreshAnalysis, 60000);
 startAutoAnalysisCountdown();
 
 

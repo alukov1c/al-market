@@ -23,6 +23,8 @@
 !/A/ingest.js
 !/A/load-env.js
 !/A/market-server.js
+!/A/analysis-runner.js
+!/A/analysis-runner.test.js
 !/A/market.js
 !/A/portfolio.js
 !/A/public-network.js

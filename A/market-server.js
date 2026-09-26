@@ -4,6 +4,7 @@ import fsp from 'node:fs/promises';
 import { WebSocketServer, WebSocket } from 'ws';
 import cron from 'node-cron';
 import { fetchPublic, publicAgent } from './public-network.js';
+import { createAnalysisRunner } from './analysis-runner.js';
 
 // Izdvajanje postojeće tržišne logike i čuvanje podataka unutar A.
 export function installMarket(app, server) {
@@ -15,10 +16,7 @@ const selfAnalysisCronTask = cron.schedule(SELF_ANALYSIS_CRON_EXPRESSION, async 
   console.log("Generisanje dnevne A-L Market analize...");
 
   try {
-    const data = await fetchMarketData();
-    const indicators = calculateIndicators(data);
-    const report = generateScoredDailyReport(indicators);
-    await saveReport(report);
+    await analysisRunner.run(true);
   } catch (error) { console.warn('Dnevna analiza nije generisana:', error.message); }
 }, {
   timezone: SELF_ANALYSIS_CRON_TIMEZONE
@@ -76,7 +74,7 @@ wss.on("connection", (ws) => {
 let binanceWs = null;
 let reconnectTimer = null;
 let restTimer = null;
-let restInFlight = false;
+let restInFlight = null;
 
 // Prijem samo potpunih numeričkih kotacija i čuvanje vremena za svaki simbol.
 function acceptTicker(data, source) {
@@ -87,9 +85,9 @@ function acceptTicker(data, source) {
   marketTick[key] = { price, changePercent, updatedAt: Date.now() };
   marketTick.t = Date.now(); marketTick.note = source;
 }
-async function refreshMarketRest() {
-  if (restInFlight) return;
-  restInFlight = true;
+function refreshMarketRest() {
+  if (restInFlight) return restInFlight;
+  restInFlight = (async () => {
   try {
     const symbols = encodeURIComponent(JSON.stringify(['BTCUSDT','ETHUSDT','SOLUSDT']));
     const response = await fetchPublic('https://data-api.binance.vision/api/v3/ticker/24hr?symbols=' + symbols);
@@ -99,7 +97,9 @@ async function refreshMarketRest() {
     rows.forEach(row => acceptTicker(row, 'binance REST'));
     broadcastMarketTick();
   } catch (error) { console.warn('Binance REST:', error.message); }
-  finally { restInFlight = false; }
+  finally { restInFlight = null; }
+  })();
+  return restInFlight;
 }
 function connectBinanceMarketStream() {
   if (binanceWs && [WebSocket.OPEN, WebSocket.CONNECTING].includes(binanceWs.readyState)) return;
@@ -622,12 +622,7 @@ app.get("/api/self-analysis/history", async (req, res) => {
 });
 
 app.get("/api/self-analysis/generate", async (req, res) => {
-    const data = await fetchMarketData();
-    const indicators = calculateIndicators(data);
-    const report = generateScoredDailyReport(indicators);
-
-    await saveReport(report);
-
+    const report = await analysisRunner.run();
     res.json(report);
 });
 
@@ -650,14 +645,25 @@ app.get("/api/self-analysis/:id", async (req, res) => {
 });
 
 
+const analysisRunner = createAnalysisRunner({
+  readReports,
+  generate: async () => generateScoredDailyReport(calculateIndicators(await fetchMarketData())),
+  saveReport
+});
+let analysisRetryTimer = null;
+const retryDailyAnalysis = () => analysisRunner.run(true)
+  .catch(error => console.warn('Dnevna analiza nije generisana; novi pokušaj za minut:', error.message));
 if (process.env.PORTFOLIO_TEST_MODE !== '1') {
   connectBinanceMarketStream();
   refreshMarketRest();
   restTimer = setInterval(refreshMarketRest, 10000);
+  retryDailyAnalysis();
+  analysisRetryTimer = setInterval(retryDailyAnalysis, 60000);
 }
 else selfAnalysisCronTask.stop();
 return () => {
   selfAnalysisCronTask.stop();
+  if (analysisRetryTimer) clearInterval(analysisRetryTimer);
   if (restTimer) clearInterval(restTimer);
   publicAgent.destroy();
   if (reconnectTimer) clearTimeout(reconnectTimer);
