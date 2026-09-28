@@ -22,6 +22,15 @@
   function clearChart(id) {
     if (charts[id]) { charts[id].data.datasets[0].data = []; charts[id].update('none'); }
   }
+  // Korekcija brokerskog vremena za -1 sat, uz prelazak datuma.
+  function formatLastTradeTime(value) {
+    const match = /^(\d{4})\.(\d{2})\.(\d{2}) (\d{2}):(\d{2}):(\d{2})$/.exec(value || '');
+    if (!match) return '—';
+    const [, year, month, day, hour, minute, second] = match.map(Number);
+    const shifted = new Date(Date.UTC(year, month - 1, day, hour - 1, minute, second));
+    const pad = number => String(number).padStart(2, '0');
+    return `${pad(shifted.getUTCDate())}.${pad(shifted.getUTCMonth() + 1)}.${shifted.getUTCFullYear()}. ${pad(shifted.getUTCHours())}:${pad(shifted.getUTCMinutes())}:${pad(shifted.getUTCSeconds())}`;
+  }
   function renderPortfolio(p) {
     const suffix = p.id === 'A' ? 'PA' : 'PB';
     const chartId = p.id === 'A' ? 'chartP2' : 'chartPB';
@@ -44,14 +53,12 @@
       const value = p.lastTrade.adjustedProfit;
       if (!Number.isFinite(value)) {
         profit.textContent = 'Ponovo dodati izvoznik v1.11 na grafikon';
-        const [day, time] = p.lastTrade.closedAt.split(' ');
-        date.textContent = day.split('.').reverse().join('.') + '. ' + time;
+        date.textContent = formatLastTradeTime(p.lastTrade.closedAt);
       } else {
       profit.textContent = (value > 0 ? '+' : '') + number(value) + ' ' + p.currency;
       profit.style.color = value > 0 ? '#16a34a' : value < 0 ? '#dc2626' : '#6b7280';
-      const [day, time] = p.lastTrade.closedAt.split(' ');
-      date.textContent = day.split('.').reverse().join('.') + '. ' + time;
-      date.title = 'Vreme brokera; poslednja zatvorena trgovina iz History / All History.';
+      date.textContent = formatLastTradeTime(p.lastTrade.closedAt);
+      date.title = 'Vreme brokera umanjeno za 1 sat; poslednja zatvorena trgovina iz History / All History.';
       profit.title = 'Profit ' + number(p.lastTrade.profit) + ' + swap (' + number(p.lastTrade.swap) + ')';
       }
     } else {
@@ -144,9 +151,27 @@
     field.dateTime = new Date(timestamp).toISOString();
     const parts = new Intl.DateTimeFormat('en-GB', {timeZone:'Europe/Belgrade',
       day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit', hourCycle:'h23'}).formatToParts(timestamp);
-    const values = Object.fromEntries(parts.map(p => [p.type, p.value]));
+    
+      const values = Object.fromEntries(parts.map(p => [p.type, p.value]));
+
     field.textContent = values.day + '.' + values.month + '.' + values.year + '. ' + values.hour + ':' + values.minute + ':' + values.second;
+    
+    /*
+    // Pomeranje za -1 sat, uz ispravno prelivanje dana/meseca/godine
+    const shifted = new Date(Date.UTC(
+      +values.year, +values.month - 1, +values.day,
+      +values.hour - 1, +values.minute, +values.second
+    ));
+    const pad = n => String(n).padStart(2, '0');
+
+    field.textContent = pad(shifted.getUTCDate()) + '.' + pad(shifted.getUTCMonth() + 1) + '.' +
+      shifted.getUTCFullYear() + '. ' + pad(shifted.getUTCHours()) + ':' +
+      pad(shifted.getUTCMinutes()) + ':' + pad(shifted.getUTCSeconds());
+    */
+   
     field.title = 'Vreme publisher-a; vremenska zona Europe/Belgrade.';
+
+
     if (!suffix) {
       const separator = document.createElement('span');
       separator.id = 'portfolioStatusSuffix'; separator.textContent = ' • ';
