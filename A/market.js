@@ -1577,6 +1577,9 @@ function setSectionNavExpanded(expanded) {
 
 const dashboard = document.getElementById("glavniDiv");
 const sectionStatusStrip = document.querySelector(".section-status-strip");
+const portfolioNotice = document.getElementById("portfolioNotice");
+const portfolioNoticeDialog = document.getElementById("portfolio-notice-dialog");
+const portfolioNoticeText = document.getElementById("portfolio-notice-text");
 const sectionPanels = [...dashboard.querySelectorAll("[data-section-panel]")];
 const previousSectionIds = new Map([
   ["market", "market-section"],
@@ -1584,6 +1587,32 @@ const previousSectionIds = new Map([
   ["market-ticker", "market-overview"],
   ["market-fx", "market-time"]
 ]);
+
+function syncPortfolioNoticeDialog() {
+  const showNotice = document.getElementById("portfolio-section").classList.contains("is-selected-section")
+    && !portfolioNotice.hidden;
+  if (showNotice) {
+    const text = portfolioNotice.innerText.trim();
+    if (portfolioNoticeText.textContent !== text) portfolioNoticeText.textContent = text;
+    if (!portfolioNoticeDialog.open) portfolioNoticeDialog.showModal();
+  } else if (portfolioNoticeDialog.open) {
+    portfolioNoticeDialog.close();
+  }
+}
+
+function dismissPortfolioNotice() {
+  history.replaceState(null, "", "#prviMeni");
+  showCurrentSection(true);
+}
+
+portfolioNoticeDialog.querySelector("button").addEventListener("click", dismissPortfolioNotice);
+portfolioNoticeDialog.addEventListener("cancel", event => {
+  event.preventDefault();
+  dismissPortfolioNotice();
+});
+new MutationObserver(syncPortfolioNoticeDialog).observe(portfolioNotice, {
+  attributes: true, attributeFilter: ["hidden"], childList: true, characterData: true, subtree: true
+});
 
 function showCurrentSection(moveFocus = false) {
   const id = window.location.hash.slice(1);
@@ -1614,6 +1643,7 @@ function showCurrentSection(moveFocus = false) {
       link.removeAttribute("aria-current");
     }
   }
+  syncPortfolioNoticeDialog();
 }
 
 sectionNavToggle.addEventListener("click", () => {

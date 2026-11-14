@@ -42,7 +42,7 @@
                 <span>Početak</span>
             </a>
             <a href="#portfolio-section" title="Portfoliji A i B">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h18v13H3zM8 7V4h8v3M3 12l9 3 9-3M10 14h4"/></svg>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path class="portfolio-icon-outline" d="M3 7h18v13H3zM8 7V4h8v3"/><path d="M3 12l9 3 9-3M10 14h4"/></svg>
                 <span>Portfoliji A i B</span>
             </a>
             <a href="#market-section" title="BTC, ETH i SOL · Live i analiza">
@@ -1559,18 +1559,26 @@
     </div>
 
     <aside class="section-status-strip" aria-label="Sažetak tržišta i FX sesija" tabindex="0" hidden>
-        <time id="sectionStatusClock"></time>
-        <span class="market-status-item" data-market-status="gold"><span class="market-status-dot" aria-hidden="true"></span>Zlato</span>
-        <span class="market-status-item" data-market-status="brent"><span class="market-status-dot" aria-hidden="true"></span>Brent</span>
-        <span class="market-status-item" data-market-status="crypto"><span class="market-status-dot" aria-hidden="true"></span>Kripto</span>
-        <span class="market-status-item" data-market-status="forex"><span class="market-status-dot" aria-hidden="true"></span>Forex</span>
-        <span class="market-status-item" data-market-status="nasdaq"><span class="market-status-dot" aria-hidden="true"></span>Nasdaq</span>
-        <strong>FX sesije</strong>
-        <span class="market-status-item" data-summary-session="sydney"><span class="market-status-dot" aria-hidden="true"></span>Sidnej <span class="session-strip-times"></span></span>
-        <span class="market-status-item" data-summary-session="tokyo"><span class="market-status-dot" aria-hidden="true"></span>Tokio <span class="session-strip-times"></span></span>
-        <span class="market-status-item" data-summary-session="london"><span class="market-status-dot" aria-hidden="true"></span>London <span class="session-strip-times"></span></span>
-        <span class="market-status-item" data-summary-session="newYork"><span class="market-status-dot" aria-hidden="true"></span>Njujork <span class="session-strip-times"></span></span>
+        <div class="section-status-track">
+            <time id="sectionStatusClock"></time>
+            <span class="market-status-item" data-market-status="gold"><span class="market-status-dot" aria-hidden="true"></span>Zlato</span>
+            <span class="market-status-item" data-market-status="brent"><span class="market-status-dot" aria-hidden="true"></span>Brent</span>
+            <span class="market-status-item" data-market-status="crypto"><span class="market-status-dot" aria-hidden="true"></span>Kripto</span>
+            <span class="market-status-item" data-market-status="forex"><span class="market-status-dot" aria-hidden="true"></span>Forex</span>
+            <span class="market-status-item" data-market-status="nasdaq"><span class="market-status-dot" aria-hidden="true"></span>Nasdaq</span>
+            <strong>FX sesije</strong>
+            <span class="market-status-item" data-summary-session="sydney"><span class="market-status-dot" aria-hidden="true"></span>Sidnej <span class="session-strip-times"></span></span>
+            <span class="market-status-item" data-summary-session="tokyo"><span class="market-status-dot" aria-hidden="true"></span>Tokio <span class="session-strip-times"></span></span>
+            <span class="market-status-item" data-summary-session="london"><span class="market-status-dot" aria-hidden="true"></span>London <span class="session-strip-times"></span></span>
+            <span class="market-status-item" data-summary-session="newYork"><span class="market-status-dot" aria-hidden="true"></span>Njujork <span class="session-strip-times"></span></span>
+        </div>
     </aside>
+
+    <dialog id="portfolio-notice-dialog" aria-labelledby="portfolio-notice-title" aria-describedby="portfolio-notice-text">
+        <button type="button" aria-label="Zatvori obaveštenje" autofocus>×</button>
+        <h2 id="portfolio-notice-title">Status portfolija</h2>
+        <p id="portfolio-notice-text"></p>
+    </dialog>
 
     <script src="portfolio.js"></script>
     <script src="market.js"></script>
