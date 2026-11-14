@@ -2569,7 +2569,7 @@ lazy-load.crypto-screener-widget {
 
 .alarm-tone-row {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-columns: minmax(0, 1fr) auto auto auto;
     align-items: center;
     gap: 0.4rem;
 }

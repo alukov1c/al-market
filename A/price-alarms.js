@@ -16,6 +16,8 @@
       ? (tone === "high" ? "usporavanje" : "oprez")
       : (tone === "high" || tone === "clear" ? "zamah" : "napredak");
   }
+  const melodyVolumes = () => form.querySelectorAll("[data-melody-volume]");
+  const volumeLevel = value => [1, 5, 10].includes(Number(value)) ? Number(value) : 1;
   const storageKey = "al-market-price-alarms";
   const quotes = new Map();
   const format = new Intl.NumberFormat("sr-Latn-RS", { maximumFractionDigits: 6 });
@@ -97,6 +99,9 @@
     fields.sound.checked = item?.sound ?? true;
     fields.duration.value = item?.duration ?? 120;
     fields.tone.value = resolveMelody(item?.tone, fields.direction.value);
+    for (const control of melodyVolumes()) {
+      control.value = volumeLevel(item?.volumes?.[control.dataset.melodyVolume]);
+    }
     syncToneControls();
     toggle.disabled = !item;
     remove.disabled = !item;
@@ -132,9 +137,11 @@
     }
   }
 
-  function playMelody(tone, seconds) {
+  function playMelody(tone, seconds, volume) {
     const { notes, beat, wave } = melodies[tone];
     const gain = audio.createGain();
+    const output = audio.createGain();
+    output.gain.value = volumeLevel(volume);
     const node = audio.createOscillator();
     const start = audio.currentTime;
     const end = start + seconds;
@@ -155,11 +162,15 @@
     }
 
     node.connect(gain);
-    gain.connect(audio.destination);
-    node.addEventListener("ended", () => gain.disconnect(), { once: true });
+    gain.connect(output);
+    output.connect(audio.destination);
+    node.addEventListener("ended", () => {
+      gain.disconnect();
+      output.disconnect();
+    }, { once: true });
     node.start(start);
     node.stop(end);
-    return node;
+    return { node, output };
   }
 
   function stopPreview() {
@@ -172,10 +183,10 @@
     }
   }
 
-  function startSound(seconds, tone) {
+  function startSound(seconds, tone, volume) {
     stopPreview();
     if (audio?.state !== "running") return;
-    oscillator = playMelody(tone, seconds);
+    oscillator = playMelody(tone, seconds, volume).node;
     get("mute-price-alert").disabled = false;
     soundTimer = setTimeout(stopSound, seconds * 1000);
   }
@@ -231,7 +242,8 @@
     updateAlertElapsed();
     renderAlarmCards();
     get("mute-price-alert").disabled = true;
-    if (sound) startSound(duration, resolveMelody(tone, item.direction));
+    const melody = resolveMelody(tone, item.direction);
+    if (sound) startSound(duration, melody, item.volumes?.[melody]);
   }
 
   function checkAlarm(symbol) {
@@ -336,7 +348,9 @@
     alarms.set(symbol, { target, duration, direction,
       thresholdReached: sameThreshold && previous.thresholdReached,
       hitCount: sameThreshold ? (previous.hitCount ?? 0) : 0,
-      sound: fields.sound.checked, tone: fields.tone.value, enabled: true, armedAt: Date.now() });
+      sound: fields.sound.checked, tone: fields.tone.value,
+      volumes: Object.fromEntries(Array.from(melodyVolumes(), control =>
+        [control.dataset.melodyVolume, volumeLevel(control.value)])), enabled: true, armedAt: Date.now() });
     const saved = persist();
     if (saved) status.textContent = "Alarm je sačuvan i aktiviran.";
     if (returnToAlarmList) {
@@ -477,6 +491,7 @@
       row.hidden = row.dataset.melodyDirection !== fields.direction.value;
       row.querySelector("input").disabled = row.hidden || !soundOption.checked;
       row.querySelector("[data-preview-tone]").disabled = row.hidden || !soundOption.checked;
+      row.querySelector("[data-melody-volume]").disabled = row.hidden || !soundOption.checked;
     }
   }
 
@@ -491,9 +506,15 @@
     }
     const tone = button.dataset.previewTone;
     const pause = form.querySelector('[data-pause-tone="' + tone + '"]');
-    preview = { node: playMelody(tone, 3), pause };
+    const volume = button.closest(".alarm-tone-row").querySelector("[data-melody-volume]");
+    preview = { ...playMelody(tone, 3, volume.value), pause, tone };
     pause.disabled = false;
     previewTimer = setTimeout(stopPreview, 3000);
+  }));
+  melodyVolumes().forEach(control => control.addEventListener("change", () => {
+    if (preview?.tone === control.dataset.melodyVolume) {
+      preview.output.gain.setTargetAtTime(volumeLevel(control.value), audio.currentTime, 0.02);
+    }
   }));
   pauseButtons.forEach(button => button.addEventListener("click", stopPreview));
   for (const input of fields.direction) input.addEventListener("change", () => {
