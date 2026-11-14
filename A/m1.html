@@ -1599,9 +1599,11 @@
 
     <dialog id="alarm-list-dialog" class="alarm-dialog market-settings-dialog" aria-labelledby="alarm-list-title">
         <button class="alarm-close" type="button" aria-label="Zatvori alarme">×</button>
-        <h2 id="alarm-list-title">Alarmi za cenu</h2>
-        <button type="button" id="new-price-alarm"><span aria-hidden="true">＋</span> Novi alarm</button>
-        <p id="alarm-list-status" role="status"></p>
+        <header class="alarm-list-heading">
+            <h2 id="alarm-list-title">Alarmi za cenu</h2>
+            <button type="button" id="new-price-alarm"><span aria-hidden="true">＋</span> Novi alarm</button>
+            <p id="alarm-list-status" role="status"></p>
+        </header>
         <section id="price-alert" aria-labelledby="price-alert-title" hidden>
             <h3 id="price-alert-title">Aktiviran alarm</h3>
             <p id="price-alert-instrument"></p>
@@ -1643,25 +1645,25 @@
                         <label><input type="radio" name="tone" value="napredak" checked> Napredak</label>
                         <button type="button" data-preview-tone="napredak" aria-label="Pusti melodiju Napredak">▶</button>
                         <button type="button" data-pause-tone="napredak" aria-label="Pauziraj melodiju Napredak" disabled>⏸</button>
-                        <select data-melody-volume="napredak" aria-label="Jačina melodije napredak"><option value="1">×1</option><option value="5">×5</option><option value="10">×10</option></select>
+                        <select data-melody-volume="napredak" aria-label="Jačina melodije napredak"><option value="1">×1</option><option value="5">×5</option><option value="10" selected>×10</option></select>
                     </div>
                     <div class="alarm-tone-row" data-melody-direction="above">
                         <label><input type="radio" name="tone" value="zamah"> Zamah</label>
                         <button type="button" data-preview-tone="zamah" aria-label="Pusti melodiju Zamah">▶</button>
                         <button type="button" data-pause-tone="zamah" aria-label="Pauziraj melodiju Zamah" disabled>⏸</button>
-                        <select data-melody-volume="zamah" aria-label="Jačina melodije zamah"><option value="1">×1</option><option value="5">×5</option><option value="10">×10</option></select>
+                        <select data-melody-volume="zamah" aria-label="Jačina melodije zamah"><option value="1">×1</option><option value="5" selected>×5</option><option value="10">×10</option></select>
                     </div>
                     <div class="alarm-tone-row" data-melody-direction="below" hidden>
                         <label><input type="radio" name="tone" value="oprez"> Oprez</label>
                         <button type="button" data-preview-tone="oprez" aria-label="Pusti melodiju Oprez">▶</button>
                         <button type="button" data-pause-tone="oprez" aria-label="Pauziraj melodiju Oprez" disabled>⏸</button>
-                        <select data-melody-volume="oprez" aria-label="Jačina melodije oprez"><option value="1">×1</option><option value="5">×5</option><option value="10">×10</option></select>
+                        <select data-melody-volume="oprez" aria-label="Jačina melodije oprez"><option value="1">×1</option><option value="5" selected>×5</option><option value="10">×10</option></select>
                     </div>
                     <div class="alarm-tone-row" data-melody-direction="below" hidden>
-                        <label><input type="radio" name="tone" value="usporavanje"> Usporavanje</label>
-                        <button type="button" data-preview-tone="usporavanje" aria-label="Pusti melodiju Usporavanje">▶</button>
-                        <button type="button" data-pause-tone="usporavanje" aria-label="Pauziraj melodiju Usporavanje" disabled>⏸</button>
-                        <select data-melody-volume="usporavanje" aria-label="Jačina melodije usporavanje"><option value="1">×1</option><option value="5">×5</option><option value="10">×10</option></select>
+                        <label><input type="radio" name="tone" value="usporavanje"> Usporenje</label>
+                        <button type="button" data-preview-tone="usporavanje" aria-label="Pusti melodiju Usporenje">▶</button>
+                        <button type="button" data-pause-tone="usporavanje" aria-label="Pauziraj melodiju Usporenje" disabled>⏸</button>
+                        <select data-melody-volume="usporavanje" aria-label="Jačina melodije Usporenje"><option value="1">×1</option><option value="5">×5</option><option value="10" selected>×10</option></select>
                     </div>
                 </fieldset>
                 <label>Trajanje zvuka (s) <input name="duration" type="number" min="1" max="120" step="1" value="120" required></label>

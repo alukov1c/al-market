@@ -13,11 +13,12 @@
   function resolveMelody(tone, direction) {
     if (Object.hasOwn(melodies, tone) && melodies[tone].direction === direction) return tone;
     return direction === "below"
-      ? (tone === "high" ? "usporavanje" : "oprez")
+      ? "usporavanje"
       : (tone === "high" || tone === "clear" ? "zamah" : "napredak");
   }
   const melodyVolumes = () => form.querySelectorAll("[data-melody-volume]");
-  const volumeLevel = value => [1, 5, 10].includes(Number(value)) ? Number(value) : 1;
+  const defaultVolumes = { napredak: 10, zamah: 5, oprez: 5, usporavanje: 10 };
+  const volumeLevel = (value, tone) => [1, 5, 10].includes(Number(value)) ? Number(value) : defaultVolumes[tone];
   const storageKey = "al-market-price-alarms";
   const quotes = new Map();
   const format = new Intl.NumberFormat("sr-Latn-RS", { maximumFractionDigits: 6 });
@@ -100,7 +101,7 @@
     fields.duration.value = item?.duration ?? 120;
     fields.tone.value = resolveMelody(item?.tone, fields.direction.value);
     for (const control of melodyVolumes()) {
-      control.value = volumeLevel(item?.volumes?.[control.dataset.melodyVolume]);
+      control.value = volumeLevel(item?.volumes?.[control.dataset.melodyVolume], control.dataset.melodyVolume);
     }
     syncToneControls();
     toggle.disabled = !item;
@@ -114,6 +115,7 @@
     stopSound();
     currentAlert = null;
     triggeredDetails.hidden = true;
+    delete alarmList.dataset.pricePosition;
   }
 
   function stopSound() {
@@ -141,7 +143,7 @@
     const { notes, beat, wave } = melodies[tone];
     const gain = audio.createGain();
     const output = audio.createGain();
-    output.gain.value = volumeLevel(volume);
+    output.gain.value = volumeLevel(volume, tone);
     const node = audio.createOscillator();
     const start = audio.currentTime;
     const end = start + seconds;
@@ -200,8 +202,11 @@
 
   function renderAlert() {
     if (!currentAlert) return;
-    const { symbol, trigger } = currentAlert;
+    const { symbol, trigger, target } = currentAlert;
     const quote = currentQuote(symbol);
+    if (!quote) delete alarmList.dataset.pricePosition;
+    else if (quote.price === target) alarmList.dataset.pricePosition = currentAlert.crossingSide;
+    else alarmList.dataset.pricePosition = quote.price > target ? "above" : "below";
     get("price-alert-current").textContent = quote ? priceText(quote.price, symbol) : "Nema sveže kotacije";
     const change = get("price-alert-change");
     const difference = quote ? quote.price - trigger : 0;
@@ -228,10 +233,10 @@
     label.append(" " + instrument.label);
   }
 
-  function showTriggeredAlarm(symbol, item, trigger) {
+  function showTriggeredAlarm(symbol, item, trigger, crossingSide) {
     stopPreview();
     stopSound();
-    currentAlert = { ...item, symbol, trigger, triggeredAt: Date.now() };
+    currentAlert = { ...item, symbol, trigger, crossingSide, triggeredAt: Date.now() };
     const { target, sound, duration, tone } = currentAlert;
     appendInstrument(get("price-alert-instrument"), symbol);
     get("price-alert-target").textContent = priceText(target, symbol);
@@ -242,7 +247,7 @@
     updateAlertElapsed();
     renderAlarmCards();
     get("mute-price-alert").disabled = true;
-    const melody = resolveMelody(tone, item.direction);
+    const melody = resolveMelody(tone, crossingSide);
     if (sound) startSound(duration, melody, item.volumes?.[melody]);
   }
 
@@ -250,12 +255,26 @@
     const item = alarms.get(symbol);
     const quote = currentQuote(symbol);
     if (!item?.enabled || !quote || quote.updatedAt < (item.armedAt ?? 0)) return;
-    const reached = item.direction === "above" ? quote.price >= item.target : quote.price <= item.target;
-    if (reached === Boolean(item.thresholdReached)) return;
-    item.thresholdReached = reached;
-    if (reached) item.hitCount = (item.hitCount ?? 0) + 1;
+    const previousSide = item.priceSide ?? (item.thresholdReached ? item.direction : null);
+    const atTarget = quote.price === item.target;
+    if (atTarget && item.atTarget) return;
+
+    const side = atTarget
+      ? (previousSide === "above" ? "below" : previousSide === "below" ? "above" : item.direction)
+      : (quote.price > item.target ? "above" : "below");
+    const trigger = previousSide ? side !== previousSide : side === item.direction;
+    if (side === item.priceSide && atTarget === item.atTarget) return;
+
+    item.priceSide = side;
+    item.atTarget = atTarget;
+    delete item.thresholdReached;
+    if (trigger) {
+      item.hitCount = (item.hitCount ?? 0) + 1;
+      const counter = side === "above" ? "riseCount" : "fallCount";
+      item[counter] = (item[counter] ?? 0) + 1;
+    }
     persist();
-    if (reached) showTriggeredAlarm(symbol, item, quote.price);
+    if (trigger) showTriggeredAlarm(symbol, item, quote.price, side);
   }
 
   function acceptQuote(symbol, quote) {
@@ -346,11 +365,14 @@
     const sameThreshold = previous?.enabled && previous.target === target && previous.direction === direction;
     if (!sameThreshold) clearTriggeredAlarm(symbol);
     alarms.set(symbol, { target, duration, direction,
-      thresholdReached: sameThreshold && previous.thresholdReached,
+      priceSide: sameThreshold ? (previous.priceSide ?? (previous.thresholdReached ? previous.direction : null)) : null,
+      atTarget: sameThreshold && previous.atTarget,
       hitCount: sameThreshold ? (previous.hitCount ?? 0) : 0,
+      riseCount: sameThreshold ? (previous.riseCount ?? 0) : 0,
+      fallCount: sameThreshold ? (previous.fallCount ?? 0) : 0,
       sound: fields.sound.checked, tone: fields.tone.value,
       volumes: Object.fromEntries(Array.from(melodyVolumes(), control =>
-        [control.dataset.melodyVolume, volumeLevel(control.value)])), enabled: true, armedAt: Date.now() });
+        [control.dataset.melodyVolume, volumeLevel(control.value, control.dataset.melodyVolume)])), enabled: true, armedAt: Date.now() });
     const saved = persist();
     if (saved) status.textContent = "Alarm je sačuvan i aktiviran.";
     if (returnToAlarmList) {
@@ -366,8 +388,12 @@
     item.enabled = !item.enabled;
     if (item.enabled) {
       item.armedAt = Date.now();
-      item.thresholdReached = false;
+      delete item.thresholdReached;
+      item.priceSide = null;
+      item.atTarget = false;
       item.hitCount = 0;
+      item.riseCount = 0;
+      item.fallCount = 0;
       if (item.sound) prepareSound();
     }
     if (!item.enabled) clearTriggeredAlarm(fields.symbol.value);
@@ -412,12 +438,14 @@
 
       const prices = document.createElement("dl");
       prices.className = "alarm-card-prices";
-      for (const label of ["Ciljna cena", "Trenutna cena", "Razlika od praga"]) {
+      for (const label of ["Ciljna cena", "Trenutna cena", "Razlika od praga", "Prelazi naviše", "Prelazi naniže"]) {
         const name = document.createElement("dt");
         name.textContent = label;
         prices.append(name, document.createElement("dd"));
       }
-      const [target, current, difference] = prices.querySelectorAll("dd");
+      const [target, current, difference, rise, fall] = prices.querySelectorAll("dd");
+      rise.textContent = item.riseCount ?? 0;
+      fall.textContent = item.fallCount ?? 0;
       target.textContent = (item.direction === "above" ? "≥ " : "≤ ") + priceText(item.target, symbol);
       alarmCardPrices.set(symbol, { current, difference });
 
@@ -513,7 +541,7 @@
   }));
   melodyVolumes().forEach(control => control.addEventListener("change", () => {
     if (preview?.tone === control.dataset.melodyVolume) {
-      preview.output.gain.setTargetAtTime(volumeLevel(control.value), audio.currentTime, 0.02);
+      preview.output.gain.setTargetAtTime(volumeLevel(control.value, control.dataset.melodyVolume), audio.currentTime, 0.02);
     }
   }));
   pauseButtons.forEach(button => button.addEventListener("click", stopPreview));
