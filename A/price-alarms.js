@@ -59,6 +59,7 @@
   let audio = null;
   let oscillator = null;
   let soundTimer = null;
+  let soundEndsAt = 0;
   let goldRequest = null;
   let preview = null;
   let previewTimer;
@@ -106,7 +107,7 @@
     syncToneControls();
     toggle.disabled = !item;
     remove.disabled = !item;
-    toggle.textContent = item?.enabled ? "⏸ Deaktiviraj" : "▶ Aktiviraj";
+    toggle.textContent = item?.enabled ? "⏸ Deaktiviraj" : item?.paused ? "▶ Nastavi" : "▶ Aktiviraj";
     renderQuote();
   }
 
@@ -120,6 +121,7 @@
 
   function stopSound() {
     clearTimeout(soundTimer);
+    soundEndsAt = 0;
     if (oscillator) {
       oscillator.stop();
       oscillator.disconnect();
@@ -190,12 +192,13 @@
     if (audio?.state !== "running") return;
     oscillator = playMelody(tone, seconds, volume).node;
     get("mute-price-alert").disabled = false;
+    soundEndsAt = Date.now() + seconds * 1000;
     soundTimer = setTimeout(stopSound, seconds * 1000);
   }
 
   function updateAlertElapsed() {
     if (!currentAlert || !alarmList.open) return;
-    const elapsed = Math.floor((Date.now() - currentAlert.triggeredAt) / 1000);
+    const elapsed = Math.floor(((currentAlert.pausedAt ?? Date.now()) - currentAlert.triggeredAt) / 1000);
     get("price-alert-elapsed").textContent = "Od aktiviranja: " + elapsed + " s · Trajanje zvuka: " +
       (currentAlert.sound ? currentAlert.duration + " s" : "isključen");
   }
@@ -362,7 +365,7 @@
     if (fields.sound.checked) prepareSound();
     const previous = alarms.get(symbol);
     const direction = fields.direction.value;
-    const sameThreshold = previous?.enabled && previous.target === target && previous.direction === direction;
+    const sameThreshold = (previous?.enabled || previous?.paused) && previous.target === target && previous.direction === direction;
     if (!sameThreshold) clearTriggeredAlarm(symbol);
     alarms.set(symbol, { target, duration, direction,
       priceSide: sameThreshold ? (previous.priceSide ?? (previous.thresholdReached ? previous.direction : null)) : null,
@@ -371,10 +374,11 @@
       riseCount: sameThreshold ? (previous.riseCount ?? 0) : 0,
       fallCount: sameThreshold ? (previous.fallCount ?? 0) : 0,
       sound: fields.sound.checked, tone: fields.tone.value,
+      paused: sameThreshold && previous.paused,
       volumes: Object.fromEntries(Array.from(melodyVolumes(), control =>
-        [control.dataset.melodyVolume, volumeLevel(control.value, control.dataset.melodyVolume)])), enabled: true, armedAt: Date.now() });
+        [control.dataset.melodyVolume, volumeLevel(control.value, control.dataset.melodyVolume)])), enabled: !(sameThreshold && previous.paused), armedAt: Date.now() });
     const saved = persist();
-    if (saved) status.textContent = "Alarm je sačuvan i aktiviran.";
+    if (saved) status.textContent = alarms.get(symbol).paused ? "Pauzirani alarm je sačuvan." : "Alarm je sačuvan i aktiviran.";
     if (returnToAlarmList) {
       get("alarm-list-status").textContent = saved ? status.textContent : "Promena važi dok je stranica otvorena.";
       settings.close();
@@ -385,6 +389,10 @@
   toggle.addEventListener("click", () => {
     const item = alarms.get(fields.symbol.value);
     if (!item) return;
+    if (item.paused) {
+      toggleAlarmPause(fields.symbol.value);
+      return;
+    }
     item.enabled = !item.enabled;
     if (item.enabled) {
       item.armedAt = Date.now();
@@ -420,6 +428,43 @@
     }
   }
 
+  function toggleAlarmPause(symbol) {
+    const item = alarms.get(symbol);
+    const resuming = item.paused === true;
+    item.paused = !resuming;
+    item.enabled = resuming;
+    if (resuming) {
+      item.armedAt = Date.now();
+      if (item.sound) prepareSound();
+    }
+
+    if (currentAlert?.symbol === symbol) {
+      if (resuming && currentAlert.pausedAt != null) {
+        currentAlert.triggeredAt += Date.now() - currentAlert.pausedAt;
+        delete currentAlert.pausedAt;
+        const remaining = currentAlert.remainingSound;
+        delete currentAlert.remainingSound;
+        if (remaining > 0) {
+          const melody = resolveMelody(currentAlert.tone, currentAlert.crossingSide);
+          startSound(remaining / 1000, melody, currentAlert.volumes?.[melody]);
+        }
+      } else if (!resuming) {
+        currentAlert.pausedAt = Date.now();
+        currentAlert.remainingSound = Math.max(0, soundEndsAt - currentAlert.pausedAt);
+        stopSound();
+      }
+      updateAlertElapsed();
+    }
+
+    const saved = persist();
+    const message = resuming ? "Alarm je nastavljen." : "Alarm je pauziran.";
+    get("alarm-list-status").textContent = saved ? message : status.textContent;
+    if (saved) status.textContent = message;
+    renderForm();
+    renderAlarmCards();
+    refreshGold();
+  }
+
   function renderAlarmCards() {
     if (!alarmList.open) return;
     alarmCards.replaceChildren();
@@ -434,7 +479,7 @@
       const title = document.createElement("strong");
       title.className = "alarm-card-title";
       appendInstrument(title, symbol);
-      title.append((item.enabled ? " · aktivan" : " · neaktivan") + " · Dostizanja: " + (item.hitCount ?? 0));
+      title.append((item.enabled ? " · aktivan" : item.paused ? " · pauziran" : " · neaktivan") + " · Dostizanja: " + (item.hitCount ?? 0));
 
       const prices = document.createElement("dl");
       prices.className = "alarm-card-prices";
@@ -468,7 +513,18 @@
         renderForm();
         (alarmCards.querySelector("button") ?? newAlarm).focus();
       });
-      card.append(title, edit, remove, prices);
+      const pause = document.createElement("button");
+      pause.type = "button";
+      pause.disabled = !item.enabled && !item.paused;
+      pause.textContent = item.enabled ? "⏸" : "▶";
+      pause.title = (item.enabled ? "Pauziraj alarm za " : "Nastavi alarm za ") + instrument.label;
+      pause.setAttribute("aria-label", pause.title);
+      pause.dataset.pauseAlarm = symbol;
+      pause.addEventListener("click", () => {
+        toggleAlarmPause(symbol);
+        alarmCards.querySelector('[data-pause-alarm="' + symbol + '"]')?.focus();
+      });
+      card.append(title, edit, remove, pause, prices);
       if (alarmCards.childElementCount) alarmCards.append(document.createElement("hr"));
       alarmCards.append(card);
     }
