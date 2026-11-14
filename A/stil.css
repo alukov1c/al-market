@@ -177,9 +177,6 @@ input {
 
     display: flex;
     flex-direction: row;
-    border: 1px solid rgba(165, 165, 165, 0.3);
-    border-radius: 1em;
-
     padding: 0.6em;
     font-size: smaller;
 
@@ -364,9 +361,6 @@ button {
     width: 90%;
     margin: 0 auto 0 auto;
 
-    /* border: 1px solid rgb(134, 133, 133);
-        border-radius: 10px; */
-
     display: flex;
     flex-direction: row;
     text-align: justify;
@@ -383,13 +377,31 @@ button {
 #analiza-r div {
 
     width: 100%;
-    margin-right: 0.6em;
-    border: 1px solid rgba(165, 165, 165, 0.3);
-    border-radius: 1em;
     margin: 0 auto 0.6em auto;
     padding: 1em;
     box-sizing: border-box;
 
+}
+
+#analiza div {
+    border: 1px solid rgba(165, 165, 165, 0.3);
+    border-radius: 1em;
+}
+
+#market,
+#analiza-r > div {
+    border: 1px solid rgba(96, 135, 191, 0.38);
+    border-radius: 1em;
+    background: linear-gradient(155deg, rgba(96, 165, 250, 0.09), transparent 68%);
+    box-shadow: 0 4px 12px rgba(30, 64, 117, 0.09), inset 0 1px rgba(255, 255, 255, 0.28);
+}
+
+#analiza-r {
+    gap: 0.6em;
+}
+
+#analiza-r > div {
+    min-width: 0;
 }
 
 .analiza-r-naslov {
@@ -1804,5 +1816,148 @@ lazy-load.crypto-screener-widget {
     }
     #market {
         padding-block: 0.4em;
+    }
+}
+
+.section-nav {
+    position: fixed;
+    z-index: 20;
+    top: 8px;
+    left: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    max-height: calc(100dvh - 16px);
+    box-sizing: border-box;
+    padding: 4px;
+    border: 1px solid #dbe5f4;
+    border-radius: 14px;
+    background: #f5f8fd;
+    box-shadow: 0 3px 14px rgba(15, 42, 82, 0.15);
+}
+
+.section-nav-links {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    gap: 2px;
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
+.section-nav a,
+.section-nav-toggle {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #23436b;
+    cursor: pointer;
+}
+
+.section-nav-toggle {
+    display: none;
+}
+
+.section-nav a:hover,
+.section-nav-toggle:hover,
+.section-nav a[aria-current="location"] {
+    background: #dceaff;
+    color: #174ba6;
+}
+
+.section-nav :focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: -2px;
+}
+
+.section-nav svg {
+    width: 21px;
+    height: 21px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.65;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    pointer-events: none;
+}
+
+.section-nav a span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+#glavniDiv [tabindex="-1"] {
+    scroll-margin-top: 12px;
+}
+
+#market,
+#analiza-r {
+    box-sizing: border-box;
+}
+
+@media screen and (min-width: 701px) {
+    body {
+        margin-left: 64px;
+    }
+
+    .section-nav {
+        inset: 0 auto 0 0;
+        max-height: none;
+        padding: 8px;
+        border-width: 0 1px 0 0;
+        border-radius: 0;
+    }
+
+    .section-nav-links {
+        flex: 1;
+        justify-content: space-between;
+    }
+
+    #analiza-r {
+        width: 78.3%;
+        padding-inline: 0;
+    }
+}
+
+@media screen and (max-width: 700px) {
+    #analiza-r {
+        width: 78%;
+        max-width: calc(100vw - 32px);
+    }
+
+    .section-nav {
+        top: auto;
+        bottom: max(8px, env(safe-area-inset-bottom));
+        max-height: calc(100dvh - 24px - env(safe-area-inset-bottom));
+    }
+
+    .section-nav-toggle {
+        display: grid;
+        order: 1;
+    }
+
+    .section-nav a,
+    .section-nav-toggle {
+        width: 44px;
+        height: 44px;
+    }
+
+    .section-nav-toggle[aria-expanded="false"] + .section-nav-links {
+        display: none;
+    }
+
+    .section-nav-toggle[aria-expanded="true"] svg {
+        transform: scaleX(-1);
     }
 }

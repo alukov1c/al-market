@@ -1554,5 +1554,51 @@ refreshAnalysis();
 setInterval(refreshAnalysis, 60000);
 startAutoAnalysisCountdown();
 
+const sectionNavigation = document.querySelector(".section-nav");
+const sectionNavToggle = sectionNavigation.querySelector(".section-nav-toggle");
+const isMobileSectionNav = window.matchMedia("(max-width: 700px)");
+const sectionLinks = sectionNavigation.querySelectorAll("a");
 
+function setSectionNavExpanded(expanded) {
+  const label = expanded ? "Zatvori navigaciju" : "Otvori navigaciju";
+  sectionNavToggle.setAttribute("aria-expanded", String(expanded));
+  sectionNavToggle.setAttribute("aria-label", label);
+  sectionNavToggle.title = label;
+}
 
+function markCurrentSection() {
+  const hash = window.location.hash || "#prviMeni";
+  for (const link of sectionLinks) {
+    if (link.hash === hash) {
+      link.setAttribute("aria-current", "location");
+    } else {
+      link.removeAttribute("aria-current");
+    }
+  }
+}
+
+sectionNavToggle.addEventListener("click", () => {
+  const expanded = sectionNavToggle.getAttribute("aria-expanded") === "true";
+  setSectionNavExpanded(!expanded);
+  if (!expanded) {
+    sectionLinks[0].focus();
+  }
+});
+
+sectionNavigation.addEventListener("click", (event) => {
+  const link = event.target.closest("a");
+  if (link && isMobileSectionNav.matches && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) {
+    setSectionNavExpanded(false);
+  }
+});
+
+sectionNavigation.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && isMobileSectionNav.matches) {
+    setSectionNavExpanded(false);
+    sectionNavToggle.focus();
+  }
+});
+
+isMobileSectionNav.addEventListener("change", () => setSectionNavExpanded(false));
+window.addEventListener("hashchange", markCurrentSection);
+markCurrentSection();

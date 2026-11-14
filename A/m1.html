@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sr-Latn">
 
 <head>
 
@@ -29,6 +29,75 @@
 
     <!-- <div class="sneg" aria-hidden="false"></div> -->
 
+    <nav class="section-nav" aria-label="Navigacija kroz sekcije">
+        <button class="section-nav-toggle" type="button" aria-controls="section-nav-links"
+            aria-expanded="false" aria-label="Otvori navigaciju" title="Otvori navigaciju">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM9 4v16m4-11 3 3-3 3"/></svg>
+        </button>
+        <div class="section-nav-links" id="section-nav-links">
+            <a href="#prviMeni" title="Početak">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8M5 10v11h5v-6h4v6h5V10"/></svg>
+                <span>Početak</span>
+            </a>
+            <a href="#portfolio-section" title="Portfoliji A i B">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h18v13H3zM8 7V4h8v3M3 12l9 3 9-3M10 14h4"/></svg>
+                <span>Portfoliji A i B</span>
+            </a>
+            <a href="#market" title="BTC, ETH i SOL · Live i analiza">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg>
+                <span>BTC, ETH i SOL · Live i analiza</span>
+            </a>
+            <a href="#selfAnalysis" title="A-L market analitički mehanizam i analiza">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 17v-3m3 3v-6m3 6v-4"/></svg>
+                <span>A-L market analitički mehanizam i analiza</span>
+            </a>
+            <a href="#market-ticker" title="Pokretna traka">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v12H3zM6 12h4m-2-2 2 2-2 2m6-2h4"/></svg>
+                <span>Pokretna traka</span>
+            </a>
+            <a href="#market-overview" title="Kratak pregled tržišta">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM4 10h16M4 14h16M11 5v14"/></svg>
+                <span>Kratak pregled tržišta</span>
+            </a>
+            <a href="#market-news" title="Vesti sa tržišta">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h13v16H4zM17 8h3v10a2 2 0 0 1-2 2M7 8h7M7 12h7m-7 4h5"/></svg>
+                <span>Vesti sa tržišta</span>
+            </a>
+            <a href="#market-time" title="Vreme i status tržišta">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 4v5l4 2"/></svg>
+                <span>Vreme i status tržišta</span>
+            </a>
+            <a href="#market-chart" title="Izbor grafikona i simbola">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4v16h16M7 15l4-4 3 2 5-6M15 7h4v4"/></svg>
+                <span>Izbor grafikona i simbola</span>
+            </a>
+            <a href="#market-technical" title="Tehnička analiza instrumenta">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3v4m0 7v6M4 7h4v7H4zM12 5v7m0 5v4m-2-9h4v5h-4zm8-9v3m0 5v8m-2-13h4v5h-4z"/></svg>
+                <span>Tehnička analiza instrumenta</span>
+            </a>
+            <a href="#market-fx" title="Forex sesije">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM3 12h18M12 3c-5 5-5 13 0 18 5-5 5-13 0-18z"/></svg>
+                <span>Forex sesije</span>
+            </a>
+            <a href="#market-stock-heatmap" title="Mapa akcija · po kapitalizaciji">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18v16H3zM13 4v16m0-7h8M3 15h10"/></svg>
+                <span>Mapa akcija · po kapitalizaciji</span>
+            </a>
+            <a href="#market-crypto-heatmap" title="Mapa kriptovaluta">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18v16H3zM14 4v16m0-8h7M6 12l2.5-4L11 12l-2.5 4z"/></svg>
+                <span>Mapa kriptovaluta</span>
+            </a>
+            <a href="#market-stock-equal-heatmap" title="Mapa akcija · jednaka polja">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18v16H3zM9 4v16m6-16v16M3 12h18"/></svg>
+                <span>Mapa akcija · jednaka polja</span>
+            </a>
+            <a href="#market-crypto-cap" title="Kapitalizacija tržišta kriptovaluta">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16M6 16v-4h3v4m3 0V8h3v8m3 0V4h3v12"/></svg>
+                <span>Kapitalizacija tržišta kriptovaluta</span>
+            </a>
+        </div>
+    </nav>
+
     <div id="glavniDiv">
         <!-- 
         <div id="naslov">
@@ -43,7 +112,7 @@
         
         </div>
         -->
-        <div id="prviMeni">
+        <div id="prviMeni" tabindex="-1">
 
             <div id="prviMeni A2">
                 <a href="https://a-lukovic.web.app/profil/profil.html"><img src="ico/AL-profil.ico" alt=""> A-L
@@ -75,6 +144,7 @@
         </div>
 
 
+        <section id="portfolio-section" tabindex="-1" aria-label="Performanse i status portfolija">
         <div id="portfolioNotice" role="status" aria-live="polite"><span>Menadžer je privremeno isključio prikaz portfolija ili podaci nisu poslati preko portfolio izvoznika • Sačekati aktiviranje servera ili testirati druge mogućnosti A-L platforme • <span id="portfolioLastActiveMessage">Nema zabeleženog aktivnog prikaza.</span><time id="portfolioLastActive" hidden></time></span></div>
         <div id="portfolio" hidden>
 
@@ -188,7 +258,9 @@
 
         </div>
 
-        <div id="market">
+        </section>
+
+        <div id="market" tabindex="-1">
 
             <div class="instrument">
 
@@ -442,7 +514,7 @@
         </section>
         -->
 
-        <section id="selfAnalysis" class="self-analysis">
+        <section id="selfAnalysis" tabindex="-1" class="self-analysis">
             <div class="sa-content">
                 <div class="sa-title">
                 <span class="sa-icon">📊</span>
@@ -576,7 +648,7 @@
             -->
 
             <!-- TradingView Ticker Tape Widget BEGIN -->
-            <lazy-load class="ticker-tape">
+            <lazy-load id="market-ticker" tabindex="-1" class="ticker-tape">
                 <template>
                     <div class="tradingview-widget-container">
                         <div class="tradingview-widget-container__widget"></div>
@@ -641,7 +713,7 @@
             -->
 
             <!-- TradingView Widget BEGIN -->
-            <lazy-load class="market-summary">
+            <lazy-load id="market-overview" tabindex="-1" class="market-summary">
                 <template>
                     <div class="tradingview-widget-container">
                         <div class="tradingview-widget-container__widget"></div>
@@ -725,7 +797,7 @@
             <!-- 
                 ###### Vesti sa tržišta ######
             -->
-            <div>
+            <div id="market-news" tabindex="-1">
                 <b>Pregled najvažnijih vesti sa tržišta </b>
             </div>
 
@@ -760,7 +832,7 @@
             </lazy-load>
 
             <section class="chart-switcher" aria-label="Izbor tržišnog grafikona">
-                <div class="market-status-bar" aria-label="Vreme i status tržišta">
+                <div id="market-time" tabindex="-1" class="market-status-bar" aria-label="Vreme i status tržišta">
                     <time id="marketStatusClock" class="market-status-clock"></time>
                     <div class="market-status-items" aria-label="Aktivna tržišta">
                         <span class="market-status-item" data-market-status="gold">
@@ -786,7 +858,7 @@
                     </div>
                     <p id="marketStatusMessage" class="market-status-message" aria-live="polite"></p>
                 </div>
-                <div class="chart-symbol-menu" role="tablist" aria-label="Simboli grafikona">
+                <div id="market-chart" tabindex="-1" class="chart-symbol-menu" role="tablist" aria-label="Simboli grafikona">
                     <button class="chart-symbol is-active" type="button" role="tab" aria-selected="true"
                         aria-controls="activeTradingViewChart" data-chart="xau">
                         <span class="chart-symbol-icon chart-symbol-icon--gold" aria-hidden="true">●</span>
@@ -841,7 +913,7 @@
                     aria-labelledby="activeChartTitle"></div>
             </section>
 
-            <section class="technical-analysis-section" aria-label="Tehnička analiza tržišta">
+            <section id="market-technical" tabindex="-1" class="technical-analysis-section" aria-label="Tehnička analiza tržišta">
                 <div class="market-widget-title" aria-live="polite">
                     <b id="technicalAnalysisTitle">XAU tehnička analiza <!-- Technical Analysis - XAU --></b>
                 </div>
@@ -851,7 +923,7 @@
                     aria-labelledby="technicalAnalysisTitle"></div>
             </section>
 
-            <section class="forex-sessions-section" aria-labelledby="forexSessionsTitle">
+            <section id="market-fx" tabindex="-1" class="forex-sessions-section" aria-labelledby="forexSessionsTitle">
                 <div class="forex-sessions-header">
                     <div>
                         <p class="forex-sessions-kicker">FX sesije <!-- Forex sesije --></p>
@@ -923,8 +995,8 @@
             </section>
 
             <section class="market-widgets" aria-label="Dodatni pregledi tržišta">
-                <div class="market-widget-title">
-                    <b>Heatmap grafik akcija <!-- Stock Heatmap --></b>
+                <div id="market-stock-heatmap" tabindex="-1" class="market-widget-title">
+                    <b>Heatmap grafik akcija · po kapitalizaciji</b>
                 </div>
                 <lazy-load class="heatmap-widget">
                     <template>
@@ -959,7 +1031,7 @@
                     </template>
                 </lazy-load>
 
-                <div class="market-widget-title">
+                <div id="market-crypto-heatmap" tabindex="-1" class="market-widget-title">
                     <b>Heatmap grafik kriptovaluta <!-- Crypto Coins Heatmap --></b>
                 </div>
                 <lazy-load class="heatmap-widget">
@@ -994,8 +1066,44 @@
                     </template>
                 </lazy-load>
 
-                <div class="market-widget-title">
-                    <b>Tržište kriptovaluta <!-- Cryptocurrency Market --></b>
+                <div id="market-stock-equal-heatmap" tabindex="-1" class="market-widget-title">
+                    <b>Heatmap grafik akcija · jednaka polja</b>
+                </div>
+                <lazy-load class="heatmap-widget">
+                    <template>
+                        <div class="tradingview-widget-container">
+                            <div class="tradingview-widget-container__widget"></div>
+                            <div class="tradingview-widget-copyright"><a
+                                    href="https://www.tradingview.com/heatmap/stock/" rel="noopener nofollow"
+                                    target="_blank"><span class="blue-text">Heatmap grafik akcija
+                                        <!-- Stock Heatmap --></span></a><span
+                                    class="trademark"> <!-- by TradingView --> </span></div>
+                            <script type="text/javascript"
+                                src="https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js" async>
+                                    {
+                                        "exchanges": [],
+                                        "dataSource": "SPX500",
+                                        "grouping": "sector",
+                                        "blockSize": "market_cap_basic",
+                                        "blockColor": "change",
+                                        "locale": "en",
+                                        "symbolUrl": "",
+                                        "colorTheme": "light",
+                                        "hasTopBar": false,
+                                        "isDataSetEnabled": false,
+                                        "isZoomEnabled": true,
+                                        "hasSymbolTooltip": true,
+                                        "isMonoSize": true,
+                                        "width": "100%",
+                                        "height": "100%"
+                                    }
+                                </script>
+                        </div>
+                    </template>
+                </lazy-load>
+
+                <div id="market-crypto-cap" tabindex="-1" class="market-widget-title">
+                    <b>Kapitalizacija tržišta kriptovaluta</b>
                 </div>
                 <lazy-load class="crypto-screener-widget">
                     <template>
