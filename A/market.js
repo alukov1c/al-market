@@ -585,10 +585,6 @@ class LazyLoad extends HTMLElement {
         element.dataset.queued = "true";
         element.dataset.state = "queued";
         LazyLoad.queue.push(element);
-        LazyLoad.queue.sort((a, b) => {
-            const order = a.compareDocumentPosition(b);
-            return order & Node.DOCUMENT_POSITION_PRECEDING ? 1 : -1;
-        });
 
         LazyLoad.processQueue();
 
@@ -599,10 +595,12 @@ class LazyLoad extends HTMLElement {
         if (LazyLoad.isLoading)
             return;
 
-        const element = LazyLoad.queue.shift();
+        const index = LazyLoad.queue.findIndex(element => element.getClientRects().length > 0);
 
-        if (!element)
+        if (index < 0)
             return;
+
+        const [element] = LazyLoad.queue.splice(index, 1);
 
         LazyLoad.isLoading = true;
         await element.loadContent();
@@ -612,6 +610,8 @@ class LazyLoad extends HTMLElement {
     }
 
     async loadContent() {
+
+        if (this.dataset.loaded === "true" || this.dataset.state === "loading") return;
 
         const template = this.querySelector("template");
 
@@ -756,9 +756,8 @@ const tradingViewCharts = {
 };
 
 const tradingViewChartPanes = new Map();
+const tradingViewChartLoads = new Map();
 const technicalAnalysisPanes = new Map();
-let tradingViewBackgroundLoadStarted = false;
-let technicalAnalysisBackgroundLoadStarted = false;
 let activeTradingViewChartKey = "xau";
 
 function createTradingViewChart(chartKey) {
@@ -769,8 +768,8 @@ function createTradingViewChart(chartKey) {
     ).matches;
 
     if (!chart || !chartHost) return Promise.resolve(null);
-    if (tradingViewChartPanes.has(chartKey)) {
-        return Promise.resolve(tradingViewChartPanes.get(chartKey));
+    if (tradingViewChartLoads.has(chartKey)) {
+        return tradingViewChartLoads.get(chartKey);
     }
 
     const chartPane = document.createElement("div");
@@ -844,18 +843,9 @@ function createTradingViewChart(chartKey) {
     chartPane.appendChild(widgetContainer);
     chartHost.appendChild(chartPane);
     tradingViewChartPanes.set(chartKey, chartPane);
+    tradingViewChartLoads.set(chartKey, chartLoaded);
 
     return chartLoaded;
-}
-
-async function loadTradingViewChartsInBackground(activeChartKey) {
-    if (tradingViewBackgroundLoadStarted) return;
-    tradingViewBackgroundLoadStarted = true;
-
-    for (const chartKey of Object.keys(tradingViewCharts)) {
-        if (chartKey === activeChartKey) continue;
-        await createTradingViewChart(chartKey);
-    }
 }
 
 async function showTradingViewChart(chartKey) {
@@ -869,7 +859,7 @@ async function showTradingViewChart(chartKey) {
     chartTitle.textContent = chart.title;
     chartHost.setAttribute("aria-busy", "true");
 
-    const chartPane = await createTradingViewChart(chartKey);
+    await createTradingViewChart(chartKey);
 
     if (chartKey !== activeTradingViewChartKey) return;
 
@@ -879,7 +869,6 @@ async function showTradingViewChart(chartKey) {
     });
 
     chartHost.setAttribute("aria-busy", "false");
-    loadTradingViewChartsInBackground(chartKey);
 }
 
 function createTechnicalAnalysis(chartKey) {
@@ -931,15 +920,6 @@ function createTechnicalAnalysis(chartKey) {
     return analysisPane;
 }
 
-function loadTechnicalAnalysisInBackground(activeChartKey) {
-    if (technicalAnalysisBackgroundLoadStarted) return;
-    technicalAnalysisBackgroundLoadStarted = true;
-
-    Object.keys(tradingViewCharts).forEach((chartKey) => {
-        if (chartKey !== activeChartKey) createTechnicalAnalysis(chartKey);
-    });
-}
-
 function showTechnicalAnalysis(chartKey) {
     const chart = tradingViewCharts[chartKey];
     const analysisTitle = document.querySelector("#technicalAnalysisTitle");
@@ -947,13 +927,13 @@ function showTechnicalAnalysis(chartKey) {
     if (!chart || !analysisTitle) return;
 
     analysisTitle.textContent = chart.analysisTitle;
+    if (!analysisTitle.getClientRects().length) return;
     createTechnicalAnalysis(chartKey);
 
     technicalAnalysisPanes.forEach((pane, paneKey) => {
         pane.hidden = paneKey !== chartKey;
     });
 
-    loadTechnicalAnalysisInBackground(chartKey);
 }
 
 function getZonedTime(date, timeZone) {
@@ -1038,11 +1018,11 @@ function updateMarketStatusMessage(chartKey, leadText) {
 }
 
 function initMarketStatusBar(activateDefaultChart, hasManualSelection) {
-    const clock = document.querySelector("#marketStatusClock");
+    const clocks = document.querySelectorAll("#marketStatusClock, #sectionStatusClock");
     const message = document.querySelector("#marketStatusMessage");
     const items = Array.from(document.querySelectorAll("[data-market-status]"));
 
-    if (!clock || !message || !items.length) return;
+    if (!clocks.length || !message || !items.length) return;
 
     const clockFormatter = new Intl.DateTimeFormat("sr-RS", {
         timeZone: "Europe/Belgrade",
@@ -1063,13 +1043,16 @@ function initMarketStatusBar(activateDefaultChart, hasManualSelection) {
         const belgrade = getZonedTime(now, "Europe/Belgrade");
         const isWeekend = belgrade.weekday === "Sat" || belgrade.weekday === "Sun";
 
-        clock.dateTime = now.toISOString();
-        clock.textContent = clockFormatter.format(now);
+        const localTime = clockFormatter.format(now);
+        clocks.forEach(clock => {
+            clock.dateTime = now.toISOString();
+            clock.textContent = localTime;
+        });
 
         items.forEach((item) => {
             const isOpen = status[item.dataset.marketStatus];
             item.classList.toggle("is-open", isOpen);
-            item.title = isOpen ? "Tržište je aktivno" : "Tržište nije aktivno";
+            item.title = item.textContent.trim() + (isOpen ? " – aktivno" : " – zatvoreno");
         });
 
         const activeChartKey = document.querySelector(".chart-symbol.is-active")?.dataset.chart;
@@ -1216,6 +1199,17 @@ function initForexSessions() {
             })
         ])
     );
+    const summaryItems = new Map(Array.from(document.querySelectorAll("[data-summary-session]"),
+        item => [item.dataset.summarySession, item]));
+    const summaryTimeFormatters = new Map(Object.entries(forexSessions).map(([key, session]) => [
+        key, new Intl.DateTimeFormat("sr-Latn-RS", {
+            timeZone: session.timeZone,
+            weekday: "short",
+            hour: "2-digit",
+            minute: "2-digit",
+            hourCycle: "h23"
+        })
+    ]));
     const nextSessionOpenTimes = new Map();
 
     const updateSessions = () => {
@@ -1245,8 +1239,12 @@ function initForexSessions() {
             clock.dateTime = now.toISOString();
             clock.textContent = sessionClockFormatters[key].format(now);
 
+            let transitionTime;
             if (isOpen) {
                 nextSessionOpenTimes.delete(key);
+                const hours = String(Math.floor(session.closeMinutes / 60)).padStart(2, "0");
+                const minutes = String(session.closeMinutes % 60).padStart(2, "0");
+                transitionTime = hours + ":" + minutes;
                 countdown.textContent = `Zatvara se za ${getForexSessionCloseCountdown(now, session)}`;
             } else {
                 let nextOpenTime = nextSessionOpenTimes.get(key);
@@ -1256,6 +1254,7 @@ function initForexSessions() {
                     nextSessionOpenTimes.set(key, nextOpenTime);
                 }
 
+                transitionTime = summaryTimeFormatters.get(key).format(nextOpenTime);
                 const remainingSeconds = Math.max(
                     0,
                     Math.ceil((nextOpenTime - now.getTime()) / 1000)
@@ -1263,6 +1262,16 @@ function initForexSessions() {
                 countdown.textContent = `Otvara se za ${formatForexCountdown(remainingSeconds)}`;
             }
 
+            const summaryItem = summaryItems.get(key);
+            if (summaryItem) {
+                const localTime = clock.textContent;
+                const action = isOpen ? "zatvara se" : "otvara se";
+                const abbreviation = isOpen ? "Z:" : "O:";
+                summaryItem.classList.toggle("is-open", isOpen);
+                summaryItem.title = session.label + " · lokalno " + localTime + " · " + action + " " + transitionTime;
+                summaryItem.setAttribute("aria-label", summaryItem.title);
+                summaryItem.querySelector(".session-strip-times").textContent = localTime + " · " + abbreviation + " " + transitionTime;
+            }
             countdown.hidden = false;
 
             if (isOpen) openSessions.push(session.label);
@@ -1566,8 +1575,38 @@ function setSectionNavExpanded(expanded) {
   sectionNavToggle.title = label;
 }
 
-function markCurrentSection() {
-  const hash = window.location.hash || "#prviMeni";
+const dashboard = document.getElementById("glavniDiv");
+const sectionStatusStrip = document.querySelector(".section-status-strip");
+const sectionPanels = [...dashboard.querySelectorAll("[data-section-panel]")];
+const previousSectionIds = new Map([
+  ["market", "market-section"],
+  ["selfAnalysis", "analysis-section"],
+  ["market-ticker", "market-overview"],
+  ["market-fx", "market-time"]
+]);
+
+function showCurrentSection(moveFocus = false) {
+  const id = window.location.hash.slice(1);
+  const activePanel = sectionPanels.find(panel => panel.id === (previousSectionIds.get(id) ?? id));
+  const hash = activePanel ? "#" + activePanel.id : "#prviMeni";
+
+  dashboard.classList.toggle("is-section-view", Boolean(activePanel));
+  for (const panel of sectionPanels) {
+    panel.hidden = Boolean(activePanel && panel !== activePanel);
+    panel.classList.toggle("is-selected-section", panel === activePanel);
+  }
+
+  sectionStatusStrip.hidden = !activePanel;
+  activePanel?.querySelectorAll("lazy-load").forEach(widget => widget.loadContent());
+  LazyLoad.processQueue();
+  showTechnicalAnalysis(activeTradingViewChartKey);
+
+  if (activePanel || moveFocus) {
+    window.scrollTo(0, 0);
+    if (moveFocus) {
+      (activePanel ?? document.getElementById("prviMeni")).focus({ preventScroll: true });
+    }
+  }
   for (const link of sectionLinks) {
     if (link.hash === hash) {
       link.setAttribute("aria-current", "location");
@@ -1587,9 +1626,12 @@ sectionNavToggle.addEventListener("click", () => {
 
 sectionNavigation.addEventListener("click", (event) => {
   const link = event.target.closest("a");
-  if (link && isMobileSectionNav.matches && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) {
-    setSectionNavExpanded(false);
-  }
+  if (!link || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+
+  event.preventDefault();
+  if (isMobileSectionNav.matches) setSectionNavExpanded(false);
+  if (window.location.hash !== link.hash) history.pushState(null, "", link.hash);
+  showCurrentSection(true);
 });
 
 sectionNavigation.addEventListener("keydown", (event) => {
@@ -1600,5 +1642,6 @@ sectionNavigation.addEventListener("keydown", (event) => {
 });
 
 isMobileSectionNav.addEventListener("change", () => setSectionNavExpanded(false));
-window.addEventListener("hashchange", markCurrentSection);
-markCurrentSection();
+window.addEventListener("hashchange", () => showCurrentSection());
+window.addEventListener("popstate", () => showCurrentSection());
+showCurrentSection();

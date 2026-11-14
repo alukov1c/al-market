@@ -889,12 +889,6 @@ lazy-load.market-summary {
     margin: 2em auto 0;
 }
 
-@media screen and (min-width: 1367px) {
-    .technical-analysis-section {
-        display: none;
-    }
-}
-
 .forex-sessions-section {
     position: relative;
     width: min(100%, 980px);
@@ -1959,5 +1953,249 @@ lazy-load.crypto-screener-widget {
 
     .section-nav-toggle[aria-expanded="true"] svg {
         transform: scaleX(-1);
+    }
+}
+
+[data-section-panel][hidden] {
+    display: none !important;
+}
+
+#market-chart {
+    display: contents;
+}
+
+.is-section-view {
+    min-height: calc(100dvh - 2 * var(--section-inset));
+    display: grid;
+    align-items: center;
+    --section-inset: 24px;
+}
+
+.is-section-view #prviMeni,
+.is-section-view #zacelje {
+    display: none;
+}
+
+.is-section-view:has(:is(#market-section, #market-time).is-selected-section) {
+    grid-template-rows: auto 1fr;
+}
+
+.is-section-view:has(:is(#market-section, #market-time).is-selected-section) #prviMeni {
+    display: flex;
+    align-self: start;
+}
+
+.is-section-view #grafikoni,
+.is-section-view .chart-switcher,
+.is-section-view .market-widgets {
+    display: contents;
+}
+
+.is-section-view .is-selected-section {
+    margin: 0 auto;
+    min-width: 0;
+}
+
+.is-section-view #portfolio-section,
+.is-section-view #market-section,
+.is-section-view #analysis-section {
+    width: 100%;
+}
+
+.is-section-view #portfolio {
+    zoom: 1;
+    width: min(100%, 1100px);
+    box-sizing: border-box;
+}
+
+.is-section-view #market-chart.is-selected-section {
+    display: block;
+    width: min(100%, 1600px);
+}
+
+.is-section-view #market-chart .chart-symbol-menu {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 75px), 1fr));
+    grid-template-rows: none;
+    max-width: none;
+    margin: 0 auto;
+    transform: none;
+}
+
+.is-section-view #market-chart .chart-symbol {
+    grid-column: auto;
+    min-height: 2.65rem;
+}
+
+.is-section-view .active-chart-title {
+    display: block;
+    margin: 0.65em auto;
+}
+
+.is-section-view .active-tradingview-chart {
+    min-height: 0;
+}
+
+.is-section-view .active-tradingview-chart .tradingview-widget-container {
+    max-width: none;
+}
+
+.is-section-view .active-tradingview-chart iframe {
+    height: clamp(280px, calc(100dvh - 240px), 900px) !important;
+}
+
+.is-section-view #market-news,
+.is-section-view #market-overview,
+.is-section-view #market-crypto-cap {
+    width: min(100%, 980px);
+}
+
+.is-section-view #market-stock-heatmap,
+.is-section-view #market-crypto-heatmap {
+    width: 100%;
+}
+
+.is-section-view .market-widget-title {
+    margin-top: 0;
+}
+
+.is-section-view lazy-load,
+.is-section-view .tradingview-widget-container {
+    margin-bottom: 0;
+}
+
+.is-section-view .ticker-tape {
+    margin-bottom: 0.5rem;
+}
+
+.is-section-view .heatmap-widget,
+.is-section-view .market-news-widget {
+    max-width: none;
+    min-height: 0;
+    height: clamp(260px, calc(100dvh - 165px), 980px);
+}
+
+.is-section-view .heatmap-widget iframe {
+    height: 100% !important;
+}
+
+.is-section-view .market-news-widget iframe {
+    height: clamp(235px, calc(100dvh - 190px), 955px) !important;
+}
+
+@media screen and (max-width: 700px) {
+    body:has(.is-section-view) {
+        margin-inline: 12px;
+    }
+
+    .is-section-view {
+        min-height: calc(100dvh - 100px);
+    }
+}
+
+.is-section-view .section-heading {
+    box-sizing: border-box;
+    width: fit-content;
+    max-width: 100%;
+    margin: 0 auto 0.85rem;
+    padding: 0.55em 1.25em;
+    border: 1px solid #c7dbf3;
+    border-radius: 0.85rem;
+    background: linear-gradient(140deg, #e6f1ff, #fff 72%);
+    box-shadow: 0 3px 12px rgba(30, 64, 117, 0.13);
+    color: #1e4070;
+    font-size: clamp(0.95rem, 1.5vw, 1.2rem);
+    line-height: 1.3;
+    text-align: center;
+}
+
+#glavniDiv:not(.is-section-view) .section-heading--navigation {
+    display: none;
+}
+
+#glavniDiv:not(.is-section-view) .section-heading:not(.sa-title) {
+    font: inherit;
+    font-weight: bold;
+    margin: 1.4em auto 0.8em;
+}
+
+#glavniDiv:not(.is-section-view) #market-news .section-heading {
+    margin: 0;
+}
+
+#market-time {
+    width: min(100%, 980px);
+    margin: 1.5rem auto;
+}
+
+.is-section-view #market-time.is-selected-section {
+    display: grid;
+    grid-template-rows: minmax(min-content, 1fr) auto auto minmax(0, 1fr);
+    align-self: stretch;
+    margin: 0 auto;
+}
+
+.is-section-view #market-time > .section-heading--navigation {
+    place-self: center;
+    margin: 0.65rem auto;
+}
+
+.is-section-view #market-time > .market-status-bar {
+    margin-bottom: 0;
+}
+
+#market-time .forex-sessions-section {
+    margin-top: 0.85rem;
+}
+
+lazy-load.crypto-screener-widget {
+    overflow-x: auto;
+}
+
+.crypto-screener-widget .tradingview-widget-container {
+    min-width: 980px;
+}
+
+.crypto-screener-widget iframe {
+    height: 550px !important;
+}
+
+.section-status-strip:not([hidden]) {
+    position: fixed;
+    z-index: 19;
+    inset: auto 0 0 55px;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    overflow-x: auto;
+    padding: 0.55rem 0.9rem calc(0.55rem + env(safe-area-inset-bottom));
+    border-top: 1px solid #c9dbf3;
+    background: linear-gradient(90deg, #eaf3ff, #fff);
+    box-shadow: 0 -3px 12px rgba(30, 64, 117, 0.12);
+    color: #23436b;
+    white-space: nowrap;
+    font-size: 0.75rem;
+}
+
+.section-status-strip > * {
+    flex: none;
+}
+
+.is-section-view {
+    box-sizing: border-box;
+    padding-bottom: calc(48px + env(safe-area-inset-bottom));
+}
+
+@media screen and (max-width: 700px) {
+    .section-status-strip:not([hidden]) {
+        left: 0;
+    }
+
+    body:has(.is-section-view) .section-nav {
+        bottom: calc(52px + env(safe-area-inset-bottom));
+        max-height: calc(100dvh - 65px - env(safe-area-inset-bottom));
+    }
+
+    .is-section-view {
+        padding-bottom: calc(108px + env(safe-area-inset-bottom));
     }
 }
