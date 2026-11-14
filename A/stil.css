@@ -2212,14 +2212,16 @@ lazy-load.crypto-screener-widget {
     }
 }
 
-.is-section-view #portfolio-section.is-selected-section #portfolioNotice {
-    opacity: 0;
-}
-
 #portfolio-notice-dialog {
+    position: fixed;
+    z-index: 21;
+    inset: auto;
+    margin: 0;
     box-sizing: border-box;
     width: fit-content;
-    max-width: min(34rem, calc(100% - 2rem));
+    max-width: min(34rem, calc(100% - 76px));
+    max-height: calc(100dvh - 16px);
+    overflow: auto;
     padding: 1rem 1.25rem;
     border: 1px solid #c7dbf3;
     border-radius: 0.85rem;
@@ -2229,14 +2231,10 @@ lazy-load.crypto-screener-widget {
     text-align: left;
 }
 
-#portfolio-notice-dialog::backdrop {
-    background: rgba(18, 36, 62, 0.28);
-}
-
 #portfolio-notice-dialog button {
     position: absolute;
     top: 0.35rem;
-    left: 0.35rem;
+    right: 0.35rem;
     min-width: 44px;
     min-height: 44px;
     border: 0;
@@ -2252,7 +2250,7 @@ lazy-load.crypto-screener-widget {
 }
 
 #portfolio-notice-title {
-    margin: 0 0 0.65rem 2.25rem;
+    margin: 0 2.25rem 0.65rem 0;
     font-size: 1rem;
 }
 

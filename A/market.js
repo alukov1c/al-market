@@ -1579,6 +1579,7 @@ const dashboard = document.getElementById("glavniDiv");
 const sectionStatusStrip = document.querySelector(".section-status-strip");
 const portfolioNotice = document.getElementById("portfolioNotice");
 const portfolioNoticeDialog = document.getElementById("portfolio-notice-dialog");
+const portfolioLink = sectionNavigation.querySelector('a[href="#portfolio-section"]');
 const portfolioNoticeText = document.getElementById("portfolio-notice-text");
 const sectionPanels = [...dashboard.querySelectorAll("[data-section-panel]")];
 const previousSectionIds = new Map([
@@ -1588,13 +1589,23 @@ const previousSectionIds = new Map([
   ["market-fx", "market-time"]
 ]);
 
+function positionPortfolioNotice() {
+  if (!portfolioNoticeDialog.open) return;
+  const anchor = portfolioLink.getBoundingClientRect();
+  portfolioNoticeDialog.style.left = sectionNavigation.getBoundingClientRect().right + 8 + "px";
+  const top = Math.min(anchor.top, window.innerHeight - portfolioNoticeDialog.offsetHeight - 8);
+  portfolioNoticeDialog.style.top = Math.max(8, top) + "px";
+}
+
 function syncPortfolioNoticeDialog() {
-  const showNotice = document.getElementById("portfolio-section").classList.contains("is-selected-section")
-    && !portfolioNotice.hidden;
+  const showNotice = window.location.hash === portfolioLink.hash && !portfolioNotice.hidden;
   if (showNotice) {
     const text = portfolioNotice.innerText.trim();
     if (portfolioNoticeText.textContent !== text) portfolioNoticeText.textContent = text;
-    if (!portfolioNoticeDialog.open) portfolioNoticeDialog.showModal();
+    if (isMobileSectionNav.matches) setSectionNavExpanded(true);
+    portfolioLink.scrollIntoView({ block: "nearest", inline: "nearest" });
+    if (!portfolioNoticeDialog.open) portfolioNoticeDialog.show();
+    positionPortfolioNotice();
   } else if (portfolioNoticeDialog.open) {
     portfolioNoticeDialog.close();
   }
@@ -1602,22 +1613,30 @@ function syncPortfolioNoticeDialog() {
 
 function dismissPortfolioNotice() {
   history.replaceState(null, "", "#prviMeni");
-  showCurrentSection(true);
+  showCurrentSection();
+  portfolioLink.focus({ preventScroll: true });
 }
 
 portfolioNoticeDialog.querySelector("button").addEventListener("click", dismissPortfolioNotice);
-portfolioNoticeDialog.addEventListener("cancel", event => {
+document.addEventListener("keydown", event => {
+  if (event.key !== "Escape" || !portfolioNoticeDialog.open) return;
   event.preventDefault();
   dismissPortfolioNotice();
 });
-new MutationObserver(syncPortfolioNoticeDialog).observe(portfolioNotice, {
+window.addEventListener("resize", positionPortfolioNotice);
+sectionNavigation.querySelector(".section-nav-links").addEventListener("scroll", positionPortfolioNotice);
+new MutationObserver(() => {
+  if (window.location.hash === portfolioLink.hash) showCurrentSection();
+}).observe(portfolioNotice, {
   attributes: true, attributeFilter: ["hidden"], childList: true, characterData: true, subtree: true
 });
 
 function showCurrentSection(moveFocus = false) {
   const id = window.location.hash.slice(1);
-  const activePanel = sectionPanels.find(panel => panel.id === (previousSectionIds.get(id) ?? id));
-  const hash = activePanel ? "#" + activePanel.id : "#prviMeni";
+  const requestedPanel = sectionPanels.find(panel => panel.id === (previousSectionIds.get(id) ?? id));
+  const showPortfolioNotice = id === "portfolio-section" && !portfolioNotice.hidden;
+  const activePanel = showPortfolioNotice ? null : requestedPanel;
+  const hash = requestedPanel ? "#" + requestedPanel.id : "#prviMeni";
 
   dashboard.classList.toggle("is-section-view", Boolean(activePanel));
   for (const panel of sectionPanels) {
@@ -1630,7 +1649,7 @@ function showCurrentSection(moveFocus = false) {
   LazyLoad.processQueue();
   showTechnicalAnalysis(activeTradingViewChartKey);
 
-  if (activePanel || moveFocus) {
+  if (activePanel || (moveFocus && !showPortfolioNotice)) {
     window.scrollTo(0, 0);
     if (moveFocus) {
       (activePanel ?? document.getElementById("prviMeni")).focus({ preventScroll: true });
@@ -1648,6 +1667,10 @@ function showCurrentSection(moveFocus = false) {
 
 sectionNavToggle.addEventListener("click", () => {
   const expanded = sectionNavToggle.getAttribute("aria-expanded") === "true";
+  if (expanded && portfolioNoticeDialog.open) {
+    dismissPortfolioNotice();
+    sectionNavToggle.focus();
+  }
   setSectionNavExpanded(!expanded);
   if (!expanded) {
     sectionLinks[0].focus();
@@ -1659,19 +1682,23 @@ sectionNavigation.addEventListener("click", (event) => {
   if (!link || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
 
   event.preventDefault();
-  if (isMobileSectionNav.matches) setSectionNavExpanded(false);
+  if (isMobileSectionNav.matches && (link !== portfolioLink || portfolioNotice.hidden)) setSectionNavExpanded(false);
   if (window.location.hash !== link.hash) history.pushState(null, "", link.hash);
   showCurrentSection(true);
 });
 
 sectionNavigation.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && isMobileSectionNav.matches) {
+    if (portfolioNoticeDialog.open) return;
     setSectionNavExpanded(false);
     sectionNavToggle.focus();
   }
 });
 
-isMobileSectionNav.addEventListener("change", () => setSectionNavExpanded(false));
+isMobileSectionNav.addEventListener("change", () => {
+  setSectionNavExpanded(false);
+  syncPortfolioNoticeDialog();
+});
 window.addEventListener("hashchange", () => showCurrentSection());
 window.addEventListener("popstate", () => showCurrentSection());
 showCurrentSection();
