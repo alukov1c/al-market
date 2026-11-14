@@ -11,9 +11,14 @@
   const format = new Intl.NumberFormat("sr-Latn-RS", { maximumFractionDigits: 6 });
   const get = id => document.getElementById(id);
   const settings = get("price-settings");
-  const alert = get("price-alert");
+  const triggeredDetails = get("price-alert");
   const form = get("price-alarm-form");
   const fields = form.elements;
+  const alarmList = get("alarm-list-dialog");
+  const alarmCards = get("alarm-cards");
+  const newAlarm = get("new-price-alarm");
+  const alarmCardPrices = new Map();
+  let returnToAlarmList = false;
   const market = get("market");
   const marketSection = get("market-section");
   const marketLink = document.querySelector('.section-nav a[href="#market-section"]');
@@ -151,12 +156,8 @@
     change.className = difference > 0 ? "change-up" : difference < 0 ? "change-down" : "";
   }
 
-  function showNextAlert() {
-    if (currentAlert || !alerts.length) return;
-    currentAlert = alerts.shift();
-    const { symbol, target, trigger, sound, duration, tone } = currentAlert;
+  function appendInstrument(label, symbol) {
     const instrument = instruments[symbol];
-    const label = get("price-alert-instrument");
     label.replaceChildren();
     if (instrument.icon) {
       const icon = document.createElement("img");
@@ -172,10 +173,20 @@
       label.append(icon);
     }
     label.append(" " + instrument.label);
+  }
+
+  function showNextAlert() {
+    if (currentAlert || !alerts.length) return;
+    stopPreview();
+    currentAlert = alerts.shift();
+    const { symbol, target, trigger, sound, duration, tone } = currentAlert;
+    appendInstrument(get("price-alert-instrument"), symbol);
     get("price-alert-target").textContent = priceText(target, symbol);
     get("price-alert-trigger").textContent = priceText(trigger, symbol);
     renderAlert();
-    alert.showModal();
+    triggeredDetails.hidden = false;
+    if (!alarmList.open) alarmList.showModal();
+    renderAlarmCards();
     get("mute-price-alert").disabled = true;
     if (sound) startSound(duration, tone);
   }
@@ -190,6 +201,7 @@
     persist();
     alerts.push({ ...item, symbol, trigger: quote.price });
     if (settings.open && fields.symbol.value === symbol) renderForm();
+    if (currentAlert) renderAlarmCards();
     showNextAlert();
   }
 
@@ -216,7 +228,7 @@
   }
 
   function refreshGold() {
-    if (goldRequest || !(market.dataset.marketLayout === "gold" || alarms.get("xau")?.enabled || currentAlert?.symbol === "xau" ||
+    if (goldRequest || !((alarmList.open && alarms.has("xau")) || market.dataset.marketLayout === "gold" || alarms.get("xau")?.enabled || currentAlert?.symbol === "xau" ||
         alerts.some(item => item.symbol === "xau") || (settings.open && fields.symbol.value === "xau"))) return;
     goldRequest = fetch("/api/market/xau", { signal: AbortSignal.timeout(12000) })
       .then(response => response.ok ? response.json() : null)
@@ -229,6 +241,7 @@
         marketSection.dispatchEvent(new CustomEvent("gold-quote", { detail: gold }));
         renderQuote();
         renderAlert();
+        if (alarmList.open) updateAlarmCardPrices();
       });
   }
 
@@ -277,7 +290,12 @@
     if (fields.sound.checked) prepareSound();
     alarms.set(symbol, { target, duration, direction: fields.direction.value,
       sound: fields.sound.checked, tone: fields.tone.value, enabled: true, armedAt: Date.now() });
-    if (persist()) status.textContent = "Alarm je sačuvan i aktiviran.";
+    const saved = persist();
+    if (saved) status.textContent = "Alarm je sačuvan i aktiviran.";
+    if (returnToAlarmList) {
+      get("alarm-list-status").textContent = saved ? status.textContent : "Promena važi dok je stranica otvorena.";
+      settings.close();
+    }
     renderForm();
     refreshGold();
   });
@@ -299,7 +317,106 @@
     renderForm();
   });
 
-  for (const dialog of [settings, alert]) {
+
+
+  function updateAlarmCardPrices() {
+    for (const [symbol, { current, difference }] of alarmCardPrices) {
+      const quote = currentQuote(symbol);
+      current.textContent = quote ? priceText(quote.price, symbol) : "Nema sveže kotacije";
+      const delta = quote ? quote.price - alarms.get(symbol).target : 0;
+      difference.textContent = quote ? (delta > 0 ? "+" : "") + priceText(delta, symbol) : "—";
+      difference.className = delta > 0 ? "change-up" : delta < 0 ? "change-down" : "";
+    }
+  }
+
+  function renderAlarmCards() {
+    if (!alarmList.open) return;
+    alarmCards.replaceChildren();
+    alarmCardPrices.clear();
+    newAlarm.disabled = alarms.size === Object.keys(instruments).length;
+    newAlarm.title = newAlarm.disabled ? "Već postoji po jedan alarm za svaki instrument." : "";
+    if (!alarms.size) alarmCards.textContent = "Nema sačuvanih alarma.";
+    for (const [symbol, item] of alarms) {
+      const instrument = instruments[symbol];
+      const card = document.createElement("article");
+      card.className = "alarm-card";
+      const title = document.createElement("strong");
+      title.className = "alarm-card-title";
+      appendInstrument(title, symbol);
+      title.append(item.enabled ? " · aktivan" : " · neaktivan");
+
+      const prices = document.createElement("dl");
+      prices.className = "alarm-card-prices";
+      for (const label of ["Ciljna cena", "Trenutna cena", "Razlika od praga"]) {
+        const name = document.createElement("dt");
+        name.textContent = label;
+        prices.append(name, document.createElement("dd"));
+      }
+      const [target, current, difference] = prices.querySelectorAll("dd");
+      target.textContent = (item.direction === "above" ? "≥ " : "≤ ") + priceText(item.target, symbol);
+      alarmCardPrices.set(symbol, { current, difference });
+
+      const edit = document.createElement("button");
+      edit.type = "button";
+      edit.textContent = "✎";
+      edit.setAttribute("aria-label", "Izmeni alarm za " + instrument.label);
+      edit.addEventListener("click", () => editFromAlarmList(symbol));
+
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.textContent = "🗑";
+      remove.setAttribute("aria-label", "Obriši alarm za " + instrument.label);
+      remove.addEventListener("click", () => {
+        alarms.delete(symbol);
+        const saved = persist();
+        get("alarm-list-status").textContent = saved ? "Alarm je obrisan." : "Promena važi dok je stranica otvorena.";
+        renderAlarmCards();
+        renderForm();
+        (alarmCards.querySelector("button") ?? newAlarm).focus();
+      });
+      card.append(title, edit, remove, prices);
+      if (alarmCards.childElementCount) alarmCards.append(document.createElement("hr"));
+      alarmCards.append(card);
+    }
+    updateAlarmCardPrices();
+  }
+
+  function editFromAlarmList(symbol, creating = false) {
+    if (!symbol) return;
+    returnToAlarmList = true;
+    alarmList.close();
+    stopSound();
+    fields.symbol.value = symbol;
+    fields.symbol.disabled = !creating;
+    for (const option of fields.symbol.options) option.disabled = creating && alarms.has(option.value);
+    document.querySelector('[aria-controls="alarm-settings-panel"]').click();
+    status.textContent = "";
+    settings.showModal();
+    renderForm();
+    refreshGold();
+  }
+
+  get("open-alarm-list").addEventListener("click", () => {
+    get("alarm-list-status").textContent = "";
+    if (!alarmList.open) alarmList.showModal();
+    renderAlarmCards();
+    refreshGold();
+  });
+  newAlarm.addEventListener("click", () => {
+    editFromAlarmList(Object.keys(instruments).find(symbol => !alarms.has(symbol)), true);
+  });
+  settings.addEventListener("close", () => {
+    if (!returnToAlarmList) return;
+    returnToAlarmList = false;
+    showNextAlert();
+    fields.symbol.disabled = false;
+    for (const option of fields.symbol.options) option.disabled = false;
+    alarmList.showModal();
+    renderAlarmCards();
+    refreshGold();
+  });
+
+  for (const dialog of [settings, alarmList]) {
     dialog.querySelector(".alarm-close").addEventListener("click", () => dialog.close());
   }
   const soundOption = fields.sound;
@@ -333,9 +450,11 @@
   settings.addEventListener("close", stopPreview);
   settings.querySelector(".market-settings-nav").addEventListener("click", stopPreview);
   get("mute-price-alert").addEventListener("click", stopSound);
-  alert.addEventListener("close", () => {
+  alarmList.addEventListener("close", () => {
+    if (alarmList.open || returnToAlarmList) return;
     stopSound();
     currentAlert = null;
+    triggeredDetails.hidden = true;
     showNextAlert();
   });
 
@@ -344,6 +463,7 @@
     acceptQuote("eth", event.detail.eth);
     if (settings.open) renderQuote();
     renderAlert();
+    if (alarmList.open) updateAlarmCardPrices();
   });
   window.addEventListener("pointerdown", () => {
     if ([...alarms.values()].some(item => item.enabled && item.sound)) prepareSound();
