@@ -1611,6 +1611,7 @@
                 <dt>Trenutna cena</dt><dd id="price-alert-current"></dd>
                 <dt>Promena od aktiviranja</dt><dd id="price-alert-change"></dd>
             </dl>
+            <p id="price-alert-elapsed"></p>
             <button type="button" id="mute-price-alert"><span aria-hidden="true">♪</span> Zaustavi zvuk</button>
         </section>
         <div id="alarm-cards"></div>
@@ -1638,20 +1639,25 @@
                 <fieldset class="alarm-choice-group">
                     <legend>Zvučni signal</legend>
                     <label><input name="sound" type="checkbox" checked> Uključi zvuk alarma</label>
-                    <div class="alarm-tone-row">
-                        <label><input type="radio" name="tone" value="soft" checked> Blagi ton</label>
-                        <button type="button" data-preview-tone="soft" aria-label="Pusti blagi ton">▶</button>
-                        <button type="button" data-pause-tone="soft" aria-label="Pauziraj blagi ton" disabled>⏸</button>
+                    <div class="alarm-tone-row" data-melody-direction="above">
+                        <label><input type="radio" name="tone" value="napredak" checked> Napredak</label>
+                        <button type="button" data-preview-tone="napredak" aria-label="Pusti melodiju Napredak">▶</button>
+                        <button type="button" data-pause-tone="napredak" aria-label="Pauziraj melodiju Napredak" disabled>⏸</button>
                     </div>
-                    <div class="alarm-tone-row">
-                        <label><input type="radio" name="tone" value="clear"> Jasni ton</label>
-                        <button type="button" data-preview-tone="clear" aria-label="Pusti jasni ton">▶</button>
-                        <button type="button" data-pause-tone="clear" aria-label="Pauziraj jasni ton" disabled>⏸</button>
+                    <div class="alarm-tone-row" data-melody-direction="above">
+                        <label><input type="radio" name="tone" value="zamah"> Zamah</label>
+                        <button type="button" data-preview-tone="zamah" aria-label="Pusti melodiju Zamah">▶</button>
+                        <button type="button" data-pause-tone="zamah" aria-label="Pauziraj melodiju Zamah" disabled>⏸</button>
                     </div>
-                    <div class="alarm-tone-row">
-                        <label><input type="radio" name="tone" value="high"> Visoki ton</label>
-                        <button type="button" data-preview-tone="high" aria-label="Pusti visoki ton">▶</button>
-                        <button type="button" data-pause-tone="high" aria-label="Pauziraj visoki ton" disabled>⏸</button>
+                    <div class="alarm-tone-row" data-melody-direction="below" hidden>
+                        <label><input type="radio" name="tone" value="oprez"> Oprez</label>
+                        <button type="button" data-preview-tone="oprez" aria-label="Pusti melodiju Oprez">▶</button>
+                        <button type="button" data-pause-tone="oprez" aria-label="Pauziraj melodiju Oprez" disabled>⏸</button>
+                    </div>
+                    <div class="alarm-tone-row" data-melody-direction="below" hidden>
+                        <label><input type="radio" name="tone" value="usporavanje"> Usporavanje</label>
+                        <button type="button" data-preview-tone="usporavanje" aria-label="Pusti melodiju Usporavanje">▶</button>
+                        <button type="button" data-pause-tone="usporavanje" aria-label="Pauziraj melodiju Usporavanje" disabled>⏸</button>
                     </div>
                 </fieldset>
                 <label>Trajanje zvuka (s) <input name="duration" type="number" min="1" max="120" step="1" value="120" required></label>
