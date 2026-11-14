@@ -1883,7 +1883,7 @@ lazy-load.crypto-screener-widget {
 }
 
 .section-nav .portfolio-icon-outline {
-    stroke: #dc2626;
+    stroke: rgb(220 38 38 / 80%);
 }
 
 body:has(#portfolio:not([hidden])) .section-nav .portfolio-icon-outline {
@@ -2250,7 +2250,8 @@ lazy-load.crypto-screener-widget {
 }
 
 #portfolio-notice-title {
-    margin: 0 2.25rem 0.65rem 0;
+    min-height: 2rem;
+    margin: 0 3rem 0.65rem 0;
     font-size: 1rem;
 }
 
