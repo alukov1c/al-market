@@ -2451,10 +2451,12 @@ lazy-load.crypto-screener-widget {
     font-family: system-ui, sans-serif;
 }
 
+#price-settings[data-price-position="above"],
 #alarm-list-dialog[data-price-position="above"] {
     background: #edf7ef;
 }
 
+#price-settings[data-price-position="below"],
 #alarm-list-dialog[data-price-position="below"] {
     background: #fff2e5;
 }
@@ -2690,4 +2692,16 @@ body:has(#alarm-list-dialog[data-price-position="below"]) #open-alarm-list {
 .alarm-card-prices dd {
     margin: 0;
     text-align: right;
+}
+
+.alarm-target-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+#copy-alarm-price {
+    display: grid;
+    flex: none;
+    place-items: center;
 }

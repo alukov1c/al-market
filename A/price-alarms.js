@@ -85,9 +85,31 @@
     return quote && quote.updatedAt >= Date.now() - maxAge ? quote : null;
   }
 
+  function paintPricePosition(dialog, quote, target, equalSide) {
+    if (!quote || !Number.isFinite(target) || target <= 0) {
+      delete dialog.dataset.pricePosition;
+      return;
+    }
+    dialog.dataset.pricePosition = quote.price === target
+      ? equalSide : quote.price > target ? "above" : "below";
+  }
+
+  const copyPrice = get("copy-alarm-price");
+  copyPrice.addEventListener("click", () => {
+    const quote = currentQuote(fields.symbol.value);
+    if (!quote) return;
+    fields.target.value = quote.price;
+    renderQuote();
+    fields.target.focus();
+  });
+  fields.target.addEventListener("input", renderQuote);
+  for (const direction of fields.direction) direction.addEventListener("change", renderQuote);
+
   function renderQuote() {
     const symbol = fields.symbol.value;
     const quote = currentQuote(symbol);
+    copyPrice.disabled = !quote;
+    paintPricePosition(settings, quote, fields.target.valueAsNumber, fields.direction.value);
     const source = instruments[symbol].source;
     get("alarm-quote").textContent = quote
       ? source + " · " + priceText(quote.price, symbol)
@@ -207,9 +229,7 @@
     if (!currentAlert) return;
     const { symbol, trigger, target } = currentAlert;
     const quote = currentQuote(symbol);
-    if (!quote) delete alarmList.dataset.pricePosition;
-    else if (quote.price === target) alarmList.dataset.pricePosition = currentAlert.crossingSide;
-    else alarmList.dataset.pricePosition = quote.price > target ? "above" : "below";
+    paintPricePosition(alarmList, quote, target, currentAlert.crossingSide);
     get("price-alert-current").textContent = quote ? priceText(quote.price, symbol) : "Nema sveže kotacije";
     const change = get("price-alert-change");
     const difference = quote ? quote.price - trigger : 0;
@@ -265,7 +285,7 @@
     const side = atTarget
       ? (previousSide === "above" ? "below" : previousSide === "below" ? "above" : item.direction)
       : (quote.price > item.target ? "above" : "below");
-    const trigger = previousSide ? side !== previousSide : side === item.direction;
+    const trigger = previousSide !== null && side !== previousSide;
     if (side === item.priceSide && atTarget === item.atTarget) return;
 
     item.priceSide = side;
@@ -367,9 +387,11 @@
     const direction = fields.direction.value;
     const sameThreshold = (previous?.enabled || previous?.paused) && previous.target === target && previous.direction === direction;
     if (!sameThreshold) clearTriggeredAlarm(symbol);
+    const quote = currentQuote(symbol);
+    const initialSide = quote ? (quote.price === target ? direction : quote.price > target ? "above" : "below") : null;
     alarms.set(symbol, { target, duration, direction,
-      priceSide: sameThreshold ? (previous.priceSide ?? (previous.thresholdReached ? previous.direction : null)) : null,
-      atTarget: sameThreshold && previous.atTarget,
+      priceSide: sameThreshold ? (previous.priceSide ?? (previous.thresholdReached ? previous.direction : null)) : initialSide,
+      atTarget: sameThreshold ? previous.atTarget : quote?.price === target,
       hitCount: sameThreshold ? (previous.hitCount ?? 0) : 0,
       riseCount: sameThreshold ? (previous.riseCount ?? 0) : 0,
       fallCount: sameThreshold ? (previous.fallCount ?? 0) : 0,
@@ -419,6 +441,10 @@
 
 
   function updateAlarmCardPrices() {
+    if (!currentAlert) {
+      const item = alarms.get(fields.symbol.value);
+      paintPricePosition(alarmList, currentQuote(fields.symbol.value), item?.target, item?.direction);
+    }
     for (const [symbol, { current, difference }] of alarmCardPrices) {
       const quote = currentQuote(symbol);
       current.textContent = quote ? priceText(quote.price, symbol) : "Nema sveže kotacije";
