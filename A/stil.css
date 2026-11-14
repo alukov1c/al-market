@@ -2550,3 +2550,25 @@ lazy-load.crypto-screener-widget {
         min-width: 0;
     }
 }
+
+#price-alarm-form .alarm-choice-group {
+    display: grid;
+    gap: 0.55rem;
+    margin: 0;
+}
+
+#price-alarm-form .alarm-choice-group label {
+    margin: 0;
+}
+
+.alarm-tone-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+#price-alarm-form .alarm-tone-row button {
+    min-width: 2rem;
+    padding: 0.3rem;
+}

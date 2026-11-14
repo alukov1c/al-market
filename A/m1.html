@@ -1607,10 +1607,32 @@
             <form id="price-alarm-form">
                 <label>Instrument <select name="symbol"><option value="btc">BTC</option><option value="eth">ETH</option><option value="xau">XAU</option></select></label>
                 <p id="alarm-quote"></p>
-                <label>Uslov <select name="direction"><option value="above">Dostigne ili pređe cilj</option><option value="below">Dostigne ili padne ispod cilja</option></select></label>
+                <fieldset class="alarm-choice-group">
+                    <legend>Uslov</legend>
+                    <label><input type="radio" name="direction" value="above" checked> <svg class="change-up" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8m-6 0h6v6"/></svg> Dostigne ili pređe cilj</label>
+                    <label><input type="radio" name="direction" value="below"> <svg class="change-down" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7l6 6 4-4 8 8m-6 0h6v-6"/></svg> Dostigne ili padne ispod cilja</label>
+                </fieldset>
                 <label>Ciljna cena <input name="target" type="number" min="0.000001" step="any" required></label>
-                <label><input name="sound" type="checkbox" checked> Zvučni signal</label>
-                <label>Trajanje zvuka (s) <input name="duration" type="number" min="1" max="120" step="1" value="10" required></label>
+                <fieldset class="alarm-choice-group">
+                    <legend>Zvučni signal</legend>
+                    <label><input name="sound" type="checkbox" checked> Uključi zvuk alarma</label>
+                    <div class="alarm-tone-row">
+                        <label><input type="radio" name="tone" value="soft" checked> Blagi ton</label>
+                        <button type="button" data-preview-tone="soft" aria-label="Pusti blagi ton">▶</button>
+                        <button type="button" data-pause-tone="soft" aria-label="Pauziraj blagi ton" disabled>⏸</button>
+                    </div>
+                    <div class="alarm-tone-row">
+                        <label><input type="radio" name="tone" value="clear"> Jasni ton</label>
+                        <button type="button" data-preview-tone="clear" aria-label="Pusti jasni ton">▶</button>
+                        <button type="button" data-pause-tone="clear" aria-label="Pauziraj jasni ton" disabled>⏸</button>
+                    </div>
+                    <div class="alarm-tone-row">
+                        <label><input type="radio" name="tone" value="high"> Visoki ton</label>
+                        <button type="button" data-preview-tone="high" aria-label="Pusti visoki ton">▶</button>
+                        <button type="button" data-pause-tone="high" aria-label="Pauziraj visoki ton" disabled>⏸</button>
+                    </div>
+                </fieldset>
+                <label>Trajanje zvuka (s) <input name="duration" type="number" min="1" max="120" step="1" value="120" required></label>
                 <div class="alarm-actions">
                     <button type="submit"><span aria-hidden="true">✓</span> Sačuvaj i aktiviraj</button>
                     <button type="button" data-alarm-action="toggle"></button>

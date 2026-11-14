@@ -4,6 +4,7 @@
     eth: { label: "ETH", unit: "USDT", source: "Binance", icon: "ico/ethereum-eth-logo.png" },
     xau: { label: "XAU", unit: "USD", source: "Gold API" }
   };
+  const tones = { soft: 440, clear: 660, high: 880 };
   const storageKey = "al-market-price-alarms";
   const quotes = new Map();
   const alerts = [];
@@ -41,6 +42,9 @@
   let oscillator = null;
   let soundTimer = null;
   let goldRequest = null;
+  let preview = null;
+  let previewTimer;
+  let previewGeneration = 0;
 
   function persist() {
     try {
@@ -76,7 +80,9 @@
     fields.target.value = item?.target ?? "";
     fields.direction.value = item?.direction ?? "above";
     fields.sound.checked = item?.sound ?? true;
-    fields.duration.value = item?.duration ?? 10;
+    syncToneControls();
+    fields.duration.value = item?.duration ?? 120;
+    fields.tone.value = Object.hasOwn(tones, item?.tone) ? item.tone : "soft";
     toggle.disabled = !item;
     remove.disabled = !item;
     toggle.textContent = item?.enabled ? "⏸ Deaktiviraj" : "▶ Aktiviraj";
@@ -95,21 +101,41 @@
 
   function prepareSound() {
     const Audio = window.AudioContext || window.webkitAudioContext;
-    if (!Audio) return;
-    audio ??= new Audio();
-    audio.resume().catch(() => {});
+    if (!Audio) return Promise.resolve(false);
+    try {
+      audio ??= new Audio();
+      return audio.resume().then(() => audio.state === "running", () => false);
+    } catch {
+      return Promise.resolve(false);
+    }
   }
 
-  function startSound(seconds) {
-    if (audio?.state !== "running") return;
+  function createTone(tone) {
     const gain = audio.createGain();
     gain.gain.value = 0.075;
-    oscillator = audio.createOscillator();
-    oscillator.frequency.value = 660;
-    oscillator.connect(gain);
+    const node = audio.createOscillator();
+    node.frequency.value = Object.hasOwn(tones, tone) ? tones[tone] : tones.soft;
+    node.connect(gain);
     gain.connect(audio.destination);
-    oscillator.addEventListener("ended", () => gain.disconnect(), { once: true });
-    oscillator.start();
+    node.addEventListener("ended", () => gain.disconnect(), { once: true });
+    node.start();
+    return node;
+  }
+
+  function stopPreview() {
+    previewGeneration++;
+    clearTimeout(previewTimer);
+    if (preview) {
+      preview.node.stop();
+      preview.pause.disabled = true;
+      preview = null;
+    }
+  }
+
+  function startSound(seconds, tone) {
+    stopPreview();
+    if (audio?.state !== "running") return;
+    oscillator = createTone(tone);
     get("mute-price-alert").disabled = false;
     soundTimer = setTimeout(stopSound, seconds * 1000);
   }
@@ -128,7 +154,7 @@
   function showNextAlert() {
     if (currentAlert || !alerts.length) return;
     currentAlert = alerts.shift();
-    const { symbol, target, trigger, sound, duration } = currentAlert;
+    const { symbol, target, trigger, sound, duration, tone } = currentAlert;
     const instrument = instruments[symbol];
     const label = get("price-alert-instrument");
     label.replaceChildren();
@@ -151,7 +177,7 @@
     renderAlert();
     alert.showModal();
     get("mute-price-alert").disabled = true;
-    if (sound) startSound(duration);
+    if (sound) startSound(duration, tone);
   }
 
   function checkAlarm(symbol) {
@@ -237,6 +263,7 @@
     refreshGold();
   });
   fields.symbol.addEventListener("change", () => {
+    stopPreview();
     status.textContent = "";
     renderForm();
     refreshGold();
@@ -249,7 +276,7 @@
     if (!Number.isFinite(target) || target <= 0 || !Number.isInteger(duration) || duration < 1 || duration > 120) return;
     if (fields.sound.checked) prepareSound();
     alarms.set(symbol, { target, duration, direction: fields.direction.value,
-      sound: fields.sound.checked, enabled: true, armedAt: Date.now() });
+      sound: fields.sound.checked, tone: fields.tone.value, enabled: true, armedAt: Date.now() });
     if (persist()) status.textContent = "Alarm je sačuvan i aktiviran.";
     renderForm();
     refreshGold();
@@ -275,6 +302,36 @@
   for (const dialog of [settings, alert]) {
     dialog.querySelector(".alarm-close").addEventListener("click", () => dialog.close());
   }
+  const soundOption = fields.sound;
+  const previewButtons = form.querySelectorAll("[data-preview-tone]");
+  const pauseButtons = form.querySelectorAll("[data-pause-tone]");
+  function syncToneControls() {
+    for (const input of fields.tone) input.disabled = !soundOption.checked;
+    for (const button of previewButtons) button.disabled = !soundOption.checked;
+  }
+
+  previewButtons.forEach(button => button.addEventListener("click", async () => {
+    stopPreview();
+    const generation = previewGeneration;
+    const ready = await prepareSound();
+    if (generation !== previewGeneration || !settings.open || !soundOption.checked) return;
+    if (!ready) {
+      status.textContent = "Pregledač trenutno ne može da pusti probni ton.";
+      return;
+    }
+    const tone = button.dataset.previewTone;
+    const pause = form.querySelector('[data-pause-tone="' + tone + '"]');
+    preview = { node: createTone(tone), pause };
+    pause.disabled = false;
+    previewTimer = setTimeout(stopPreview, 3000);
+  }));
+  pauseButtons.forEach(button => button.addEventListener("click", stopPreview));
+  soundOption.addEventListener("change", () => {
+    if (!soundOption.checked) stopPreview();
+    syncToneControls();
+  });
+  settings.addEventListener("close", stopPreview);
+  settings.querySelector(".market-settings-nav").addEventListener("click", stopPreview);
   get("mute-price-alert").addEventListener("click", stopSound);
   alert.addEventListener("close", () => {
     stopSound();
