@@ -1883,7 +1883,7 @@ lazy-load.crypto-screener-widget {
 }
 
 .section-nav .portfolio-icon-outline {
-    stroke: rgb(220 38 38 / 80%);
+    stroke: rgb(220 38 38 / 50%);
 }
 
 body:has(#portfolio:not([hidden])) .section-nav .portfolio-icon-outline {
