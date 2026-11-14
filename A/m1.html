@@ -41,13 +41,16 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8M5 10v11h5v-6h4v6h5V10"/></svg>
                 <span>Početak</span>
             </a>
+            <button id="open-price-settings" type="button" aria-haspopup="dialog" aria-label="Podešavanja" title="Podešavanja">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 3-.7 2.6-2 .9L5 5.4 3 8.9l2 1.7v2.8l-2 1.7 2 3.5 2.3-1.1 2 .9.7 2.6h4l.7-2.6 2-.9 2.3 1.1 2-3.5-2-1.7v-2.8l2-1.7-2-3.5-2.3 1.1-2-.9L14 3z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
             <a href="#portfolio-section" title="Portfoliji A i B">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path class="portfolio-icon-outline" d="M3 7h18v13H3zM8 7V4h8v3"/><path class="portfolio-icon-outline" d="M3 12l9 3 9-3M10 14h4"/></svg>
                 <span>Portfoliji A i B</span>
             </a>
-            <a href="#market-section" title="BTC, ETH i SOL · Live i analiza">
+            <a href="#market-section" title="BTC, XAU i ETH · Live i analiza">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg>
-                <span>BTC, ETH i SOL · Live i analiza</span>
+                <span>BTC, XAU i ETH · Live i analiza</span>
             </a>
             <a href="#analysis-section" title="A-L market analitički mehanizam i analiza">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 17v-3m3 3v-6m3 6v-4"/></svg>
@@ -250,10 +253,10 @@
 
         </section>
 
-        <section id="market-section" data-section-panel tabindex="-1" aria-label="BTC, ETH i SOL, Live i analiza">
-        <div id="market">
+        <section id="market-section" data-section-panel tabindex="-1" aria-label="BTC, XAU i ETH, Live i analiza">
+        <div id="market" data-market-layout="gold">
 
-            <div class="instrument">
+            <div class="instrument" data-market-instrument="btc">
 
                 <div class="instrument-title">
 
@@ -271,7 +274,16 @@
 
             </div>
 
-            <div class="instrument">
+            <div class="instrument" data-market-instrument="xau">
+                <div class="instrument-title">
+                    <p>XAU</p>
+                    <svg class="coin-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="#eab545" stroke="#976000" stroke-width="1.15" stroke-linejoin="round" d="M9 4h6l2 6H7zm-5 9h6l2 6H2zm10 0h6l2 6H12z"/></svg>
+                </div>
+                <p id="xauPrice"><span class="price-value">—</span></p>
+                <p id="xauChange" title="Promena za poslednja 24 sata"><span class="change-value">—</span></p>
+            </div>
+
+            <div class="instrument" data-market-instrument="eth">
 
                 <div class="instrument-title">
 
@@ -289,7 +301,7 @@
 
             </div>
 
-            <div class="instrument">
+            <div class="instrument" data-market-instrument="sol">
 
                 <div class="instrument-title">
 
@@ -422,11 +434,12 @@
                     <span id="eth7dChange" class="change-value">—</span>
                     u proteklih 7 dana. <br>
 
-                    Cena SOL
+                    <span data-market-analysis="sol" hidden>Cena SOL
                     <span id="solTrendText">—</span>
                     za
                     <span id="sol7dChange" class="change-value">—</span>
-                    u proteklih 7 dana. <br>
+                    u proteklih 7 dana. <br></span>
+                    <span data-market-analysis="xau">XAU · promena za 7 dana nije dostupna.</span>
                 </p>
             </div>
 
@@ -467,11 +480,12 @@
                     <span id="eth30dChange" class="change-value">—</span>
                     u proteklih 30 dana. <br>
 
-                    Cena SOL
+                    <span data-market-analysis="sol" hidden>Cena SOL
                     <span id="sol30dTrendText">—</span>
                     za
                     <span id="sol30dChange" class="change-value">—</span>
-                    u proteklih 30 dana. <br>
+                    u proteklih 30 dana. <br></span>
+                    <span data-market-analysis="xau">XAU · promena za 30 dana nije dostupna.</span>
                 </p>
             </div>
 
@@ -1580,6 +1594,56 @@
         <p id="portfolio-notice-text"></p>
     </dialog>
 
+    <dialog id="price-settings" class="alarm-dialog" aria-labelledby="price-settings-title">
+        <button class="alarm-close" type="button" aria-label="Zatvori podešavanja">×</button>
+        <h2 id="price-settings-title">Podešavanja</h2>
+        <div class="market-settings-layout">
+            <nav class="market-settings-nav" aria-label="Kategorije podešavanja">
+                <button type="button" aria-current="true" aria-controls="alarm-settings-panel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span>Alarmi za cenu</span></button>
+                <button type="button" aria-controls="market-layout-panel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18v16H3zM9 4v16M15 4v16"/></svg><span>Prikaz instrumenata</span></button>
+            </nav>
+            <section id="alarm-settings-panel" class="market-settings-panel">
+                <h3>Alarmi za cenu</h3>
+            <form id="price-alarm-form">
+                <label>Instrument <select name="symbol"><option value="btc">BTC</option><option value="eth">ETH</option><option value="xau">XAU</option></select></label>
+                <p id="alarm-quote"></p>
+                <label>Uslov <select name="direction"><option value="above">Dostigne ili pređe cilj</option><option value="below">Dostigne ili padne ispod cilja</option></select></label>
+                <label>Ciljna cena <input name="target" type="number" min="0.000001" step="any" required></label>
+                <label><input name="sound" type="checkbox" checked> Zvučni signal</label>
+                <label>Trajanje zvuka (s) <input name="duration" type="number" min="1" max="120" step="1" value="10" required></label>
+                <div class="alarm-actions">
+                    <button type="submit"><span aria-hidden="true">✓</span> Sačuvaj i aktiviraj</button>
+                    <button type="button" data-alarm-action="toggle"></button>
+                    <button type="button" data-alarm-action="delete"><span aria-hidden="true">×</span> Obriši</button>
+                </div>
+                <p id="alarm-settings-status" role="status"></p>
+            </form>
+            </section>
+            <section id="market-layout-panel" class="market-settings-panel" hidden>
+                <h3>Prikaz instrumenata</h3>
+                <fieldset>
+                    <legend>Instrumenti u pregledu tržišta</legend>
+                    <label><input type="radio" name="market-layout" value="gold" checked> BTC, XAU i ETH</label>
+                    <label><input type="radio" name="market-layout" value="crypto"> BTC, ETH i SOL</label>
+                </fieldset>
+            </section>
+        </div>
+    </dialog>
+
+    <dialog id="price-alert" class="alarm-dialog" aria-labelledby="price-alert-title">
+        <button class="alarm-close" type="button" aria-label="Zatvori alarm">×</button>
+        <h2 id="price-alert-title">Alarm za cenu</h2>
+        <p id="price-alert-instrument"></p>
+        <dl>
+            <dt>Ciljna cena</dt><dd id="price-alert-target"></dd>
+            <dt>Cena pri aktiviranju</dt><dd id="price-alert-trigger"></dd>
+            <dt>Trenutna cena</dt><dd id="price-alert-current"></dd>
+            <dt>Promena od aktiviranja</dt><dd id="price-alert-change"></dd>
+        </dl>
+        <button type="button" id="mute-price-alert"><span aria-hidden="true">♪</span> Zaustavi zvuk</button>
+    </dialog>
+
+    <script src="price-alarms.js"></script>
     <script src="portfolio.js"></script>
     <script src="market.js"></script>
 

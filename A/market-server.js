@@ -120,6 +120,50 @@ app.get("/api/market", (_req, res) => {
   res.json(marketTick);
 });
 
+
+let goldQuote = null;
+let goldRequest = null;
+let goldRequestedAt = 0;
+let goldTimer = null;
+const goldHistory = [];
+const goldDayMs = 24 * 60 * 60 * 1000;
+
+async function refreshGoldQuote() {
+  if (!goldRequest && Date.now() - goldRequestedAt >= 30000) {
+    goldRequestedAt = Date.now();
+    goldRequest = (async () => {
+      const response = await fetchPublic("https://api.gold-api.com/price/XAU");
+      if (!response.ok) throw Error("XAU HTTP " + response.status);
+      const { price, updatedAt } = await response.json();
+      const timestamp = Date.parse(updatedAt);
+      if (!Number.isFinite(price) || price <= 0 || !Number.isFinite(timestamp)) {
+        throw Error("Neispravna XAU kotacija");
+      }
+      if (goldQuote && timestamp <= goldQuote.updatedAt) return;
+      goldHistory.push({ price, updatedAt: timestamp });
+      const baselineTime = timestamp - goldDayMs;
+      while (goldHistory.length > 1 && goldHistory[1].updatedAt <= baselineTime) {
+        goldHistory.shift();
+      }
+      const baseline = goldHistory[0];
+      const hasBaseline = baselineTime - baseline.updatedAt >= 0 &&
+        baselineTime - baseline.updatedAt <= 120000;
+      goldQuote = {
+        price,
+        updatedAt: timestamp,
+        changePercent: hasBaseline ? (price / baseline.price - 1) * 100 : null
+      };
+    })().catch(error => console.warn("XAU:", error.message)).finally(() => { goldRequest = null; });
+  }
+  await goldRequest;
+}
+
+app.get("/api/market/xau", async (_req, res) => {
+  await refreshGoldQuote();
+  if (!goldQuote) return res.status(503).json({ error: "XAU kotacija trenutno nije dostupna." });
+  res.json(goldQuote);
+});
+
 const baseCache = new Map();
 async function fetchMarketBasePrice(symbol, days) {
   const key = symbol + ':' + days;
@@ -656,6 +700,8 @@ const retryDailyAnalysis = () => analysisRunner.run(true)
 if (process.env.PORTFOLIO_TEST_MODE !== '1') {
   connectBinanceMarketStream();
   refreshMarketRest();
+  refreshGoldQuote();
+  goldTimer = setInterval(refreshGoldQuote, 60000);
   restTimer = setInterval(refreshMarketRest, 10000);
   retryDailyAnalysis();
   analysisRetryTimer = setInterval(retryDailyAnalysis, 60000);
@@ -665,6 +711,7 @@ return () => {
   selfAnalysisCronTask.stop();
   if (analysisRetryTimer) clearInterval(analysisRetryTimer);
   if (restTimer) clearInterval(restTimer);
+  if (goldTimer) clearInterval(goldTimer);
   publicAgent.destroy();
   if (reconnectTimer) clearTimeout(reconnectTimer);
   if (binanceWs) { binanceWs.removeAllListeners(); binanceWs.on('error', () => {}); binanceWs.terminate(); }

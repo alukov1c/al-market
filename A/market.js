@@ -142,7 +142,6 @@ let btnMinus = document.querySelector('#btnMinus');
 let btnNoc = document.querySelector('#btnNoc');
 
 let market = document.querySelector('#market');
-let coinIcons = document.querySelectorAll('.coin-icon');
 
 let naslovBTC = document.querySelector('#naslovBTC');
 let naslovETH = document.querySelector('#naslovETH');
@@ -183,7 +182,6 @@ btnPlus.addEventListener('click', () => {
     if (window.innerWidth <= 700) {
 
       market.style.fontSize = '18px';
-      setCoinIconSize('16px');
 
     } else {
 
@@ -191,7 +189,6 @@ btnPlus.addEventListener('click', () => {
 
         market.style.fontSize = 'xx-large';
 
-        setCoinIconSize('25px');
 
         marketZoom = 1;
 
@@ -202,7 +199,6 @@ btnPlus.addEventListener('click', () => {
 
           market.style.fontSize = 'xx-large';
 
-          setCoinIconSize('25px');
 
           marketZoom = 1;
 
@@ -210,7 +206,6 @@ btnPlus.addEventListener('click', () => {
 
           market.style.fontSize = '40px';
 
-          setCoinIconSize('36px');
 
           marketZoom = 2;
 
@@ -237,7 +232,6 @@ btnPlus.addEventListener('click', () => {
 
         market.style.fontSize = 'xxx-large';
 
-        setCoinIconSize('36px');
 
         marketZoom = 2;
 
@@ -259,7 +253,6 @@ btnMinus.addEventListener('click', () => {
     market.style.fontSize = 'smaller';
   }
 
-  setCoinIconSize('18px');
 
   marketZoom = 0;
 
@@ -301,7 +294,8 @@ function updateVolatilityLabel(level, elementId = "volatility7dText") {
 }
 
 function refreshVolatility(period = "7d", elementId = "volatility7dText") {
-  const moves = MARKET_SYMBOLS
+  const symbols = getVisibleCryptoSymbols();
+  const moves = symbols
     .map(symbol => getChangePercent(symbol, period))
     .filter(Number.isFinite);
 
@@ -348,17 +342,28 @@ const analysisState = {
 };
 
 const MARKET_SYMBOLS = ["btc", "eth", "sol"];
-
-function setCoinIconSize(size) {
-  coinIcons.forEach(icon => {
-    icon.style.width = size;
-    icon.style.height = size;
-  });
+function getVisibleCryptoSymbols() {
+  return document.getElementById("market").dataset.marketLayout === "gold" ? ["btc", "eth"] : MARKET_SYMBOLS;
 }
+const marketDisplaySection = document.getElementById("market-section");
+let goldQuoteIsFresh = false;
+marketDisplaySection.addEventListener("gold-quote", event => {
+  const quote = event.detail;
+  updateMarketInstrument("xau", quote?.price, quote?.changePercent);
+});
+marketDisplaySection.addEventListener("market-layout-change", () => {
+  refreshMarketAnalysis();
+  if (analysisState.lastMarketTick) updateMarketStateFromTick(analysisState.lastMarketTick);
+});
+marketDisplaySection.addEventListener("gold-quote-status", event => {
+  goldQuoteIsFresh = event.detail;
+  if (analysisState.lastMarketTick) updateMarketStateFromTick(analysisState.lastMarketTick);
+});
 
 function updateMarketStateFromTick(market) {
   if (!market) return;
   analysisState.lastMarketTick = market;
+  window.dispatchEvent(new CustomEvent("market-prices", { detail: market }));
   let freshCount = 0;
   MARKET_SYMBOLS.forEach(symbol => {
     const item = market[symbol];
@@ -369,11 +374,12 @@ function updateMarketStateFromTick(market) {
       updateMarketInstrument(symbol, null, null);
       return;
     }
-    freshCount++;
+    if (getVisibleCryptoSymbols().includes(symbol)) freshCount++;
     updateMarketInstrument(symbol, item.price, item.changePercent);
     analysisState[`${symbol}Current`] = item.price;
   });
-  setLiveStatus(freshCount === MARKET_SYMBOLS.length);
+  const goldSelected = document.getElementById("market").dataset.marketLayout === "gold";
+  setLiveStatus(freshCount === getVisibleCryptoSymbols().length && (!goldSelected || goldQuoteIsFresh));
 }
 setInterval(() => {
   if (analysisState.lastMarketTick) updateMarketStateFromTick(analysisState.lastMarketTick);

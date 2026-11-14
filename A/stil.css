@@ -201,6 +201,7 @@ input {
 }
 
 .instrument-title {
+    line-height: 1.4;
 
     display: flex;
     align-items: center;
@@ -220,6 +221,13 @@ input {
     object-fit: contain;
     display: inline-block;
 
+}
+
+.instrument-title > .coin-icon {
+    display: block;
+    flex: none;
+    width: 0.85lh;
+    height: 0.85lh;
 }
 
 .up {
@@ -1285,12 +1293,6 @@ lazy-load.crypto-screener-widget {
         gap: 0.25em;
     }
 
-    #market .coin-icon {
-        width: 16px;
-        height: 16px;
-        flex: 0 0 16px;
-    }
-
     #opcije {
         width: 50%;
     }
@@ -2281,5 +2283,270 @@ lazy-load.crypto-screener-widget {
 
     .section-status-strip:hover .section-status-track {
         animation-play-state: paused;
+    }
+}
+
+.section-nav #open-price-settings {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #23436b;
+    cursor: pointer;
+}
+
+.section-nav #open-price-settings:hover {
+    background: #dceaff;
+}
+
+.alarm-dialog {
+    box-sizing: border-box;
+    width: 50vw;
+    height: 50dvh;
+    max-width: calc(100vw - 24px);
+    padding: 1rem 1.25rem;
+    overflow: auto;
+    border: 1px solid #c7dbf3;
+    border-radius: 0.85rem;
+    background: #f7fbff;
+    color: #23436b;
+    box-shadow: 0 10px 32px rgba(30, 64, 117, 0.22);
+    text-align: left;
+}
+
+.alarm-dialog::backdrop {
+    background: rgba(18, 36, 62, 0.28);
+}
+
+.alarm-dialog h2 {
+    margin: 0 3rem 1rem 0;
+    font-size: 1.1rem;
+}
+
+.alarm-dialog .alarm-close {
+    position: absolute;
+    top: 0.25rem;
+    right: 0.25rem;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    max-width: 50%;
+    height: 44px;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font-size: 1.45rem;
+    line-height: 1;
+}
+
+.alarm-dialog summary {
+    cursor: pointer;
+    font-weight: 600;
+}
+
+#price-alarm-form {
+    display: grid;
+    gap: 1.25rem;
+    margin-top: 1rem;
+}
+
+#price-alarm-form label {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+#price-alarm-form input:not([type="checkbox"]),
+#price-alarm-form select {
+    box-sizing: border-box;
+    max-width: 100%;
+    min-height: 0;
+    height: auto;
+    margin: 0;
+    padding: 0.15em 0.45em;
+    border: 1px solid #8eb6ed;
+    border-radius: 0.45rem;
+    background: #fff;
+    color: inherit;
+    font: inherit;
+    line-height: 1.2;
+}
+
+#price-alarm-form p {
+    margin: 0;
+}
+
+.alarm-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.alarm-dialog button:not(.alarm-close) {
+    width: auto;
+    padding: 0.4rem 0.65rem;
+    border: 1px solid #c7dbf3;
+    border-radius: 0.5rem;
+    background: #eaf3ff;
+    color: inherit;
+}
+
+.alarm-dialog button:disabled {
+    opacity: 0.55;
+}
+
+#price-alert dl {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.5rem;
+}
+
+#price-alert dd {
+    margin: 0;
+    text-align: right;
+}
+
+.alarm-gold {
+    color: #bf8b17;
+}
+
+@media (max-width: 700px) {
+    .section-nav #open-price-settings {
+        width: 44px;
+        height: 44px;
+    }
+
+    .alarm-dialog {
+        width: min(100% - 24px, 28rem);
+    }
+}
+
+#market[data-market-layout="gold"] [data-market-instrument="sol"],
+#market[data-market-layout="crypto"] [data-market-instrument="xau"],
+.market-settings-panel[hidden],
+[data-market-analysis][hidden] {
+    display: none;
+}
+
+#price-settings {
+    width: min(780px, calc(100vw - 32px));
+    height: auto;
+    max-height: calc(100dvh - 40px);
+    padding: 24px;
+    border: 2px solid #d6e0ef;
+    border-radius: 18px;
+    background: #fff;
+    color: #243247;
+    box-shadow: 0 20px 70px #172b4d30;
+    font-family: system-ui, sans-serif;
+}
+
+#price-settings::backdrop {
+    background: #15284666;
+    backdrop-filter: blur(3px);
+}
+
+.market-settings-layout {
+    display: grid;
+    grid-template-columns: 150px minmax(0, 1fr);
+    gap: 24px;
+    margin-top: 18px;
+}
+
+.market-settings-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-right: 15px;
+    border-right: 1px solid #e3e9f2;
+}
+
+#price-settings .market-settings-nav button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 11px 14px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: #566580;
+    font: inherit;
+    font-size: 14px;
+    text-align: left;
+    cursor: pointer;
+}
+
+#price-settings .market-settings-nav button[aria-current] {
+    background: #eaf1ff;
+    color: #1e40af;
+    font-weight: 700;
+}
+
+.market-settings-nav svg {
+    flex: 0 0 18px;
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.market-settings-panel {
+    min-width: 0;
+}
+
+.market-settings-panel h3 {
+    margin-top: 0;
+}
+
+.market-settings-panel fieldset {
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid #d6e0ef;
+    border-radius: 9px;
+}
+
+.market-settings-panel fieldset label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-block: 12px;
+}
+
+#price-settings input:is([type="radio"], [type="checkbox"]) {
+    width: auto;
+}
+
+@media (max-width: 700px) {
+    #price-settings {
+        padding: 18px;
+    }
+
+    .market-settings-layout {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 14px;
+    }
+
+    .market-settings-nav {
+        flex-direction: row;
+        padding: 0 0 10px;
+        border: 0;
+        border-bottom: 1px solid #e3e9f2;
+    }
+
+    .market-settings-nav button {
+        flex: 1;
+        min-width: 0;
     }
 }

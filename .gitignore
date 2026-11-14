@@ -26,6 +26,7 @@
 !/A/analysis-runner.js
 !/A/analysis-runner.test.js
 !/A/market.js
+!/A/price-alarms.js
 !/A/portfolio.js
 !/A/public-network.js
 !/A/publisher.js

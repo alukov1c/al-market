@@ -19,7 +19,7 @@ app.use(express.json({ limit: '64kb' }));
 app.get(['/', '/m1', '/m1.html', '/A/m1.html'], (_req, res) => res.sendFile(local('m1.html')));
 app.get(['/portfolio.html', '/A/portfolio.html'], (_req, res) => res.redirect(302, '/m1.html'));
 app.get('/healthz', (_req, res) => res.json({status:'ok'}));
-for (const name of ['portfolio.js', 'market.js', 'stil.css', 'AL-market.png']) {
+for (const name of ['portfolio.js', 'market.js', 'price-alarms.js', 'stil.css', 'AL-market.png']) {
   app.get(['/' + name, '/A/' + name], (_req, res) => res.sendFile(local(name)));
 }
 app.use(['/ico', '/A/ico'], express.static(local('ico/'), { dotfiles: 'deny', index: false }));
