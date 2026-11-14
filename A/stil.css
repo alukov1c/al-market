@@ -1883,7 +1883,7 @@ lazy-load.crypto-screener-widget {
 }
 
 .section-nav .portfolio-icon-outline {
-    stroke: rgb(220 38 38 / 50%);
+    stroke: rgb(220 38 38 / 75%);
 }
 
 body:has(#portfolio:not([hidden])) .section-nav .portfolio-icon-outline {
@@ -2235,7 +2235,14 @@ lazy-load.crypto-screener-widget {
     position: absolute;
     top: 0.35rem;
     right: 0.35rem;
-    min-width: 44px;
+    display: grid;
+    place-items: center;
+    box-sizing: border-box;
+    width: 44px;
+    min-width: 0;
+    max-width: 50%;
+    padding: 0;
+    line-height: 1;
     min-height: 44px;
     border: 0;
     border-radius: 0.45rem;
