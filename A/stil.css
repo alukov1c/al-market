@@ -1893,6 +1893,22 @@ body:has(#portfolio:not([hidden])) .section-nav .portfolio-icon-outline {
     stroke: #15803d;
 }
 
+body:has(.section-status-strip:not([hidden])) .section-nav a[href="#prviMeni"] {
+    position: relative;
+}
+
+body:has(.section-status-strip:not([hidden])) .section-nav a[href="#prviMeni"]::after {
+    content: "";
+    position: absolute;
+    right: 4px;
+    bottom: 4px;
+    width: 8px;
+    height: 8px;
+    border: 1px solid #f5f8fd;
+    border-radius: 50%;
+    background: #16a34a;
+}
+
 .section-nav a span {
     position: absolute;
     width: 1px;
@@ -2193,7 +2209,7 @@ lazy-load.crypto-screener-widget {
     flex: none;
 }
 
-.is-section-view {
+#glavniDiv:has(~ .section-status-strip:not([hidden])) {
     box-sizing: border-box;
     padding-bottom: calc(48px + env(safe-area-inset-bottom));
 }
@@ -2203,12 +2219,12 @@ lazy-load.crypto-screener-widget {
         left: 0;
     }
 
-    body:has(.is-section-view) .section-nav {
+    body:has(.section-status-strip:not([hidden])) .section-nav {
         bottom: calc(52px + env(safe-area-inset-bottom));
         max-height: calc(100dvh - 65px - env(safe-area-inset-bottom));
     }
 
-    .is-section-view {
+    #glavniDiv:has(~ .section-status-strip:not([hidden])) {
         padding-bottom: calc(108px + env(safe-area-inset-bottom));
     }
 }
@@ -2816,6 +2832,9 @@ body:has(#alarm-list-dialog[data-price-position="below"]) #open-alarm-list {
 
     .is-section-view:has(#market-overview.is-selected-section, #market-news.is-selected-section, #market-crypto-cap.is-selected-section) {
         min-height: calc(100dvh - 48px);
+    }
+
+    #glavniDiv.is-section-view:has(#market-overview.is-selected-section, #market-news.is-selected-section, #market-crypto-cap.is-selected-section):has(~ .section-status-strip:not([hidden])) {
         padding-bottom: calc(44px + env(safe-area-inset-bottom));
     }
 

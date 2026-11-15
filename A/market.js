@@ -1606,7 +1606,6 @@ function setSectionNavExpanded(expanded) {
 }
 
 const dashboard = document.getElementById("glavniDiv");
-const sectionStatusStrip = document.querySelector(".section-status-strip");
 const portfolioNotice = document.getElementById("portfolioNotice");
 const portfolioNoticeDialog = document.getElementById("portfolio-notice-dialog");
 const portfolioLink = sectionNavigation.querySelector('a[href="#portfolio-section"]');
@@ -1674,7 +1673,6 @@ function showCurrentSection(moveFocus = false) {
     panel.classList.toggle("is-selected-section", panel === activePanel);
   }
 
-  sectionStatusStrip.hidden = !activePanel;
   activePanel?.querySelectorAll("lazy-load").forEach(widget => widget.loadContent());
   LazyLoad.processQueue();
   showTechnicalAnalysis(activeTradingViewChartKey);

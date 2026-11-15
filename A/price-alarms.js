@@ -379,6 +379,23 @@
   });
   applyMarketLayout(layout);
 
+  const statusStrip = document.querySelector(".section-status-strip");
+  const statusStripKey = "al-market-status-strip";
+  let statusStripMode = "on";
+  try {
+    if (localStorage.getItem(statusStripKey) === "off") statusStripMode = "off";
+  } catch { /* Keep the default if storage is unavailable. */ }
+  statusStrip.hidden = statusStripMode === "off";
+  for (const radio of settings.querySelectorAll('input[name="status-strip"]')) {
+    radio.checked = radio.value === statusStripMode;
+    radio.addEventListener("change", () => {
+      if (!radio.checked) return;
+      statusStrip.hidden = radio.value === "off";
+      try { localStorage.setItem(statusStripKey, radio.value); }
+      catch { /* The choice still applies to this page. */ }
+    });
+  }
+
   get("open-price-settings").addEventListener("click", () => {
     settings.showModal();
     renderForm();
