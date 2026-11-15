@@ -3001,7 +3001,7 @@ body:has(#alarm-list-dialog[data-price-position="below"]) #open-alarm-list {
             box-sizing: content-box;
             width: max-content;
             padding-left: 100%;
-            animation: portfolioNoticeScroll 12s linear infinite;
+            animation: portfolioNoticeScroll 12s linear infinite reverse;
         }
 
         .section-status-scroll:not(:focus-within) .section-status-session-window {
