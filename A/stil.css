@@ -2049,10 +2049,6 @@ body:has(#portfolio:not([hidden])) .section-nav .portfolio-icon-outline {
     max-width: none;
 }
 
-.is-section-view .active-tradingview-chart iframe {
-    height: clamp(280px, calc(100dvh - 240px), 900px) !important;
-}
-
 .is-section-view #market-news,
 .is-section-view #market-overview,
 .is-section-view #market-crypto-cap {
@@ -2627,17 +2623,12 @@ body:has(#alarm-list-dialog[data-price-position="below"]) #open-alarm-list {
     stroke-width: 1.7;
 }
 
-#alarm-list-dialog .alarm-close {
-    left: 0.25rem;
-    right: auto;
-}
-
 .alarm-list-heading {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
     gap: 0.4rem 0.75rem;
-    padding-left: 2.25rem;
+    padding-right: 2.25rem;
 }
 
 #alarm-list-title,
@@ -2704,4 +2695,137 @@ body:has(#alarm-list-dialog[data-price-position="below"]) #open-alarm-list {
     display: grid;
     flex: none;
     place-items: center;
+}
+
+.section-nav-mobile-alarm {
+    display: none;
+}
+
+.alert-sound-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.8rem;
+}
+
+.alert-sound-controls label {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.alert-sound-controls input[type="checkbox"] {
+    width: auto;
+}
+
+#alert-sound-duration {
+    box-sizing: border-box;
+    width: 4.5rem;
+    padding: 0.2em 0.35em;
+    border: 1px solid #8eb6ed;
+    border-radius: 0.45rem;
+    font: inherit;
+}
+
+.alert-sound-controls svg,
+#refresh-market-page svg {
+    display: block;
+    width: 1em;
+    height: 1em;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+#refresh-market-page {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 1lh;
+    height: 1lh;
+    box-sizing: border-box;
+    padding: 0;
+    border: 1px solid #cbd7eb;
+    border-radius: 8px;
+    background: #fff;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.is-section-view .active-tradingview-chart {
+    --chart-frame-height: clamp(460px, calc(100dvh - 165px), 1000px);
+}
+
+.is-section-view .active-tradingview-chart .tradingview-widget-container,
+.is-section-view .active-tradingview-chart .tradingview-widget-container__widget {
+    height: auto !important;
+    min-height: var(--chart-frame-height);
+    overflow: visible;
+}
+
+.is-section-view .active-tradingview-chart iframe {
+    display: block;
+    height: var(--chart-frame-height) !important;
+}
+
+@media (max-width: 700px) {
+    .section-nav-mobile-alarm {
+        display: grid;
+        flex: none;
+        place-items: center;
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: #23436b;
+        cursor: pointer;
+    }
+
+    body:has(#alarm-list-dialog[data-price-position="above"]) .section-nav-mobile-alarm {
+        color: #15803d;
+    }
+
+    body:has(#alarm-list-dialog[data-price-position="below"]) .section-nav-mobile-alarm {
+        color: #b45309;
+    }
+
+    #alarm-list-dialog:not(:modal) {
+        position: fixed;
+        z-index: 21;
+        inset: auto 8px 110px 64px;
+        width: auto;
+        max-width: none;
+        max-height: calc(100dvh - 130px);
+        margin: 0;
+    }
+
+    .is-section-view:has(#market-overview.is-selected-section, #market-news.is-selected-section, #market-crypto-cap.is-selected-section) {
+        min-height: calc(100dvh - 48px);
+        padding-bottom: calc(44px + env(safe-area-inset-bottom));
+    }
+
+    .is-section-view #market-news,
+    .is-section-view #market-crypto-cap {
+        --market-widget-height: max(560px, calc(100dvh - 140px));
+    }
+
+    .is-section-view #market-news .market-news-widget,
+    .is-section-view #market-crypto-cap .crypto-screener-widget {
+        height: calc(var(--market-widget-height) + 28px);
+    }
+
+    .is-section-view #market-news iframe,
+    .is-section-view #market-crypto-cap iframe {
+        height: var(--market-widget-height) !important;
+    }
+
+    .is-section-view .active-tradingview-chart {
+        --chart-frame-height: max(460px, calc(100dvh - 135px));
+    }
 }

@@ -89,6 +89,7 @@
                 <span>Kapitalizacija tržišta kriptovaluta</span>
             </a>
         </div>
+        <button class="section-nav-mobile-alarm" id="mobile-alarm-list" type="button" aria-haspopup="dialog" aria-expanded="false" aria-label="Otvori ili umanji prozor alarma" title="Alarmi za cenu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg></button>
     </nav>
 
     <div id="glavniDiv">
@@ -1589,6 +1590,7 @@
             <span class="market-status-item" data-summary-session="newYork"><span class="market-status-dot" aria-hidden="true"></span>Njujork <span class="session-strip-times"></span></span>
         </div>
         </div>
+        <button id="refresh-market-page" type="button" aria-label="Osveži stranicu" title="Osveži stranicu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10a8 8 0 1 0-1 7M20 4v6h-6"/></svg></button>
     </aside>
 
     <dialog id="portfolio-notice-dialog" aria-labelledby="portfolio-notice-title" aria-describedby="portfolio-notice-text">
@@ -1598,7 +1600,7 @@
     </dialog>
 
     <dialog id="alarm-list-dialog" class="alarm-dialog market-settings-dialog" aria-labelledby="alarm-list-title">
-        <button class="alarm-close" type="button" aria-label="Zatvori alarme">×</button>
+        <button class="alarm-close" type="button" aria-label="Umanji prozor alarma" title="Umanji prozor alarma">−</button>
         <header class="alarm-list-heading">
             <h2 id="alarm-list-title">Alarmi za cenu</h2>
             <button type="button" id="new-price-alarm"><span aria-hidden="true">＋</span> Novi alarm</button>
@@ -1614,7 +1616,12 @@
                 <dt>Promena od aktiviranja</dt><dd id="price-alert-change"></dd>
             </dl>
             <p id="price-alert-elapsed"></p>
-            <button type="button" id="mute-price-alert"><span aria-hidden="true">♪</span> Zaustavi zvuk</button>
+            <div class="alert-sound-controls">
+                <button type="button" id="mute-price-alert" aria-label="Zaustavi zvuk" title="Zaustavi zvuk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17V5l11-2v12M9 17a3 2 0 1 1-6 0 3 2 0 1 1 6 0zm11-2a3 2 0 1 1-6 0 3 2 0 1 1 6 0zM3 3l18 18"/></svg></button>
+                <button type="button" id="restart-price-alert" aria-label="Ponovo pusti zvuk" title="Ponovo pusti zvuk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17V5l11-2v12M9 17a3 2 0 1 1-6 0 3 2 0 1 1 6 0zm11-2a3 2 0 1 1-6 0 3 2 0 1 1 6 0z"/></svg></button>
+                <label><input type="checkbox" id="alert-sound-enabled"> Zvučni signal</label>
+                <label>Trajanje zvuka (s) <input id="alert-sound-duration" type="number" min="1" max="120" step="1" required></label>
+            </div>
         </section>
         <div id="alarm-cards"></div>
     </dialog>
