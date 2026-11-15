@@ -335,7 +335,8 @@
   }
 
   function refreshGold() {
-    if (goldRequest || !((alarmList.open && alarms.has("xau")) || market.dataset.marketLayout === "gold" || alarms.get("xau")?.enabled || currentAlert?.symbol === "xau" ||
+    if (goldRequest) return goldRequest;
+    if (!((alarmList.open && alarms.has("xau")) || market.dataset.marketLayout === "gold" || alarms.get("xau")?.enabled || currentAlert?.symbol === "xau" ||
         (settings.open && fields.symbol.value === "xau"))) return;
     goldRequest = fetch("/api/market/xau", { signal: AbortSignal.timeout(12000) })
       .then(response => response.ok ? response.json() : null)
@@ -350,6 +351,7 @@
         renderAlert();
         if (alarmList.open) updateAlarmCardPrices();
       });
+    return goldRequest;
   }
 
   const categories = settings.querySelectorAll(".market-settings-nav button");
@@ -592,6 +594,36 @@
 
   const mobileAlarm = get("mobile-alarm-list");
   const mobileAlarmLayout = window.matchMedia("(max-width: 700px)");
+  const refreshAlarms = get("refresh-price-alarms");
+  const alarmListStatus = get("alarm-list-status");
+
+  function positionAlarmRefresh() {
+    if (mobileAlarmLayout.matches) alarmList.querySelector(".alarm-list-footer").append(refreshAlarms);
+    else alarmListStatus.before(refreshAlarms);
+  }
+
+  mobileAlarmLayout.addEventListener("change", positionAlarmRefresh);
+  positionAlarmRefresh();
+
+  refreshAlarms.addEventListener("click", async () => {
+    refreshAlarms.disabled = true;
+    alarmListStatus.textContent = "Osvežavanje kotacija…";
+    const results = await Promise.allSettled([
+      fetch("/api/market", { cache: "no-store", signal: AbortSignal.timeout(12000) }).then(async response => {
+        if (!response.ok) throw Error("Kotacije nisu dostupne");
+        const market = await response.json();
+        acceptQuote("btc", market.btc);
+        acceptQuote("eth", market.eth);
+      }),
+      refreshGold()
+    ]);
+    renderAlert();
+    updateAlarmCardPrices();
+    const unavailable = results[0].status === "rejected" ||
+      [...alarms.keys()].some(symbol => !currentQuote(symbol));
+    alarmListStatus.textContent = unavailable ? "Neke sveže kotacije nisu dostupne." : "Kotacije su proverene.";
+    refreshAlarms.disabled = false;
+  });
 
   function openAlarmList() {
     if (!alarmList.open) {

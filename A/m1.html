@@ -994,6 +994,21 @@
                         <span class="chart-symbol-icon chart-symbol-icon--nvidia" aria-hidden="true">N</span>
                         <span>NVIDIA</span>
                     </button>
+                    <button class="chart-symbol" type="button" role="tab" aria-selected="false"
+                        aria-controls="activeTradingViewChart" data-chart="kospi">
+                        <span class="chart-symbol-icon chart-symbol-index-icon" aria-hidden="true">KR</span>
+                        <span>KOSPI</span>
+                    </button>
+                    <button class="chart-symbol" type="button" role="tab" aria-selected="false"
+                        aria-controls="activeTradingViewChart" data-chart="nikkei">
+                        <span class="chart-symbol-icon chart-symbol-index-icon" aria-hidden="true">JP</span>
+                        <span>NIKKEI</span>
+                    </button>
+                    <button class="chart-symbol" type="button" role="tab" aria-selected="false"
+                        aria-controls="activeTradingViewChart" data-chart="nasdaq">
+                        <span class="chart-symbol-icon chart-symbol-index-icon" aria-hidden="true">US</span>
+                        <span>NASDAQ</span>
+                    </button>
                 </div>
 
                 <div class="active-chart-title" aria-live="polite">
@@ -1604,6 +1619,7 @@
         <header class="alarm-list-heading">
             <h2 id="alarm-list-title">Alarmi za cenu</h2>
             <button type="button" id="new-price-alarm"><span aria-hidden="true">＋</span> Novi alarm</button>
+            <button type="button" id="refresh-price-alarms" aria-label="Osveži cene alarma" title="Osveži cene alarma"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10a8 8 0 1 0-1 7M20 4v6h-6"/></svg></button>
             <p id="alarm-list-status" role="status"></p>
         </header>
         <section id="price-alert" aria-labelledby="price-alert-title" hidden>
@@ -1624,6 +1640,7 @@
             </div>
         </section>
         <div id="alarm-cards"></div>
+        <footer class="alarm-list-footer"></footer>
     </dialog>
 
     <dialog id="price-settings" class="alarm-dialog market-settings-dialog" aria-labelledby="price-settings-title">

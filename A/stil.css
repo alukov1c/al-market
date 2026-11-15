@@ -789,7 +789,7 @@ lazy-load.market-summary {
 
 .chart-symbol-menu {
     display: grid;
-    grid-template-columns: repeat(9, minmax(0, 1fr));
+    grid-template-columns: repeat(12, minmax(0, 1fr));
     gap: 0.45em;
     width: 100%;
     margin: 0 auto 1em;
@@ -1450,7 +1450,8 @@ lazy-load.crypto-screener-widget {
         grid-column: 1;
         grid-row: 3;
         grid-template-columns: 1fr;
-        grid-template-rows: repeat(9, minmax(0, 1fr));
+        grid-template-rows: none;
+        grid-auto-rows: minmax(0, 1fr);
         gap: 0.3em;
         margin: 0;
         align-self: stretch;
@@ -1636,7 +1637,7 @@ lazy-load.crypto-screener-widget {
     }
 
     .chart-symbol-menu {
-        grid-template-columns: repeat(9, minmax(0, 1fr));
+        grid-template-columns: repeat(12, minmax(0, 1fr));
     }
 
     .chart-symbol-menu .chart-symbol {
@@ -2623,6 +2624,14 @@ body:has(#alarm-list-dialog[data-price-position="below"]) #open-alarm-list {
     stroke-width: 1.7;
 }
 
+#alarm-list-dialog .alarm-close {
+    box-sizing: border-box;
+    border: 1px solid #cbd7eb;
+    border-radius: 9px;
+    background: #fff;
+    cursor: pointer;
+}
+
 .alarm-list-heading {
     display: flex;
     align-items: center;
@@ -2827,5 +2836,54 @@ body:has(#alarm-list-dialog[data-price-position="below"]) #open-alarm-list {
 
     .is-section-view .active-tradingview-chart {
         --chart-frame-height: max(460px, calc(100dvh - 135px));
+    }
+}
+
+.chart-symbol-index-icon {
+    flex: none;
+    border-radius: 50%;
+    background: #e7effb;
+    color: #23436b;
+    font-size: 0.59rem;
+    font-weight: 800;
+}
+
+#refresh-price-alarms svg {
+    display: block;
+    width: 1em;
+    height: 1em;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.alarm-list-footer:empty {
+    display: none;
+}
+
+@media (max-width: 700px) {
+    .section-nav-mobile-alarm:focus-visible {
+        outline-offset: -2px;
+    }
+
+    .section-nav-mobile-alarm[aria-expanded="true"] {
+        background: #dceaff;
+        box-shadow: inset 0 0 0 1px #a9c7f2;
+    }
+
+    .section-nav:has(.section-nav-toggle[aria-expanded="false"]) .section-nav-mobile-alarm {
+        margin-bottom: 5px;
+        border: 1px solid #dbe5f4;
+    }
+
+    .alarm-list-footer {
+        position: sticky;
+        bottom: 0;
+        margin: 0.8rem -18px -18px;
+        padding: 0.55rem 18px;
+        border-top: 1px solid #d6e0ef;
+        background: #fff;
     }
 }

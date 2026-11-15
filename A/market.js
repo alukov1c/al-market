@@ -758,6 +758,30 @@ const tradingViewCharts = {
         symbol: "NASDAQ:NVDA",
         href: "https://www.tradingview.com/symbols/NVDA/?exchange=NASDAQ",
         label: "NVIDIA grafik"
+    },
+    kospi: {
+        title: "Grafik - KOSPI",
+        analysisTitle: "KOSPI tehnička analiza",
+        analysisEnglishTitle: "KOSPI Analysis on TradingView",
+        symbol: "KRX:KOSPI",
+        href: "https://www.tradingview.com/symbols/KRX-KOSPI/",
+        label: "KOSPI grafik"
+    },
+    nikkei: {
+        title: "Grafik - NIKKEI 225",
+        analysisTitle: "NIKKEI tehnička analiza",
+        analysisEnglishTitle: "NIKKEI Analysis on TradingView",
+        symbol: "TVC:NI225",
+        href: "https://www.tradingview.com/symbols/TVC-NI225/",
+        label: "NIKKEI grafik"
+    },
+    nasdaq: {
+        title: "Grafik - NASDAQ Composite",
+        analysisTitle: "NASDAQ tehnička analiza",
+        analysisEnglishTitle: "NASDAQ Analysis on TradingView",
+        symbol: "NASDAQ:IXIC",
+        href: "https://www.tradingview.com/symbols/NASDAQ-IXIC/",
+        label: "NASDAQ grafik"
     }
 };
 
