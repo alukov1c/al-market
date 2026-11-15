@@ -2981,6 +2981,10 @@ body:has(#alarm-list-dialog[data-price-position="below"]) #open-alarm-list {
         display: none;
     }
 
+    .section-status-markets strong::after {
+        content: " →";
+    }
+
     @media (prefers-reduced-motion: no-preference) {
         .section-status-scroll:not(:focus-within) .section-status-track {
             width: 100%;
