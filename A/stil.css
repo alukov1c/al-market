@@ -2917,10 +2917,6 @@ body:has(#alarm-list-dialog[data-price-position="below"]) #open-alarm-list {
     gap: 0.85rem;
 }
 
-.section-status-mobile-label {
-    display: none;
-}
-
 #sectionStatusClock {
     flex: none;
     font-variant-numeric: tabular-nums;
@@ -2950,16 +2946,21 @@ body:has(#alarm-list-dialog[data-price-position="below"]) #open-alarm-list {
         }
 
         .section-status-scroll:not(:focus-within):not(:hover) .section-status-sessions {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 0;
-            animation: status-session-rotation 8s infinite;
-        }
-
-        .section-status-sessions > .market-status-item {
-            min-height: 1lh;
+            display: grid;
+            grid-template-columns: repeat(2, max-content);
+            align-items: center;
+            grid-auto-rows: 1lh;
+            gap: 0 0.55rem;
+            width: max-content;
+            animation: status-session-pairs 4s infinite;
         }
     }
+}
+
+@keyframes status-session-pairs {
+    0%, 44% { transform: translateY(0); }
+    50%, 94% { transform: translateY(-1lh); }
+    100% { transform: translateY(-2lh); }
 }
 
 @keyframes status-session-rotation {
@@ -2976,28 +2977,45 @@ body:has(#alarm-list-dialog[data-price-position="below"]) #open-alarm-list {
         padding-inline: 0.55rem;
     }
 
-    .section-status-strip #open-alarm-list,
-    .section-status-tablet-label {
+    .section-status-strip #open-alarm-list {
         display: none;
     }
 
-    .section-status-mobile-label {
-        display: block;
-        flex: none;
-    }
-
     @media (prefers-reduced-motion: no-preference) {
-        .section-status-scroll:not(:focus-within) {
-            overflow-x: hidden;
-        }
-
         .section-status-scroll:not(:focus-within) .section-status-track {
-            box-sizing: content-box;
-            padding-left: 100%;
-            animation: portfolioNoticeScroll 34s linear infinite;
+            width: 100%;
+            gap: 0.4rem;
         }
 
-        .section-status-scroll:hover .section-status-track {
+        .section-status-scroll:not(:focus-within) .section-status-market-window {
+            flex: 1 1 0;
+            min-width: 1.5rem;
+            overflow: hidden;
+        }
+
+        .section-status-scroll:not(:focus-within) .section-status-markets {
+            box-sizing: content-box;
+            width: max-content;
+            padding-left: 100%;
+            animation: portfolioNoticeScroll 12s linear infinite;
+        }
+
+        .section-status-scroll:not(:focus-within) .section-status-session-window {
+            flex: 0 1 auto;
+            min-width: 0;
+            height: 1lh;
+            overflow: hidden;
+        }
+
+        .section-status-scroll:not(:focus-within) .section-status-sessions {
+            display: grid;
+            grid-template-columns: max-content;
+            grid-auto-rows: 1lh;
+            gap: 0;
+            animation: status-session-rotation 8s infinite;
+        }
+
+        .section-status-scroll:hover :is(.section-status-markets, .section-status-sessions) {
             animation-play-state: paused;
         }
     }
