@@ -627,6 +627,9 @@
   const mobileAlarm = get("mobile-alarm-list");
   const mobileAlarmLayout = window.matchMedia("(max-width: 700px)");
   const refreshAlarms = get("refresh-price-alarms");
+  new ResizeObserver(() => {
+    alarmList.style.setProperty("--status-strip-height", statusStrip.getBoundingClientRect().height + "px");
+  }).observe(statusStrip);
   const alarmListStatus = get("alarm-list-status");
 
   function positionAlarmRefresh() {

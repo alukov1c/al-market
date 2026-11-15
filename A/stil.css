@@ -2566,15 +2566,23 @@ lazy-load.crypto-screener-widget {
     }
 
     .market-settings-nav {
-        flex-direction: row;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
         padding: 0 0 10px;
         border: 0;
         border-bottom: 1px solid #e3e9f2;
     }
 
-    .market-settings-nav button {
-        flex: 1;
+    #price-settings .market-settings-nav button {
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.3rem;
         min-width: 0;
+        padding: 0.45rem 0.2rem;
+        text-align: center;
+        font-size: 0.75rem;
+        overflow-wrap: anywhere;
     }
 }
 
@@ -2822,14 +2830,25 @@ body:has(#alarm-list-dialog[data-price-position="below"]) #open-alarm-list {
         color: #b45309;
     }
 
-    #alarm-list-dialog:not(:modal) {
+    #alarm-list-dialog[open] {
         position: fixed;
         z-index: 21;
-        inset: auto 8px 110px 64px;
+        inset: auto 8px max(var(--status-strip-height, 0px), env(safe-area-inset-bottom)) 64px;
         width: auto;
         max-width: none;
-        max-height: calc(100dvh - 130px);
+        max-height: calc(100dvh - max(var(--status-strip-height, 0px), env(safe-area-inset-bottom)) - 12px);
         margin: 0;
+        display: flex;
+        flex-direction: column;
+        padding: 0;
+        overflow: hidden;
+
+    }
+
+    .alarm-list-body {
+        min-height: 0;
+        overflow-y: auto;
+        padding: 18px;
     }
 
     .is-section-view:has(#market-overview.is-selected-section, #market-news.is-selected-section, #market-crypto-cap.is-selected-section) {
@@ -2900,11 +2919,10 @@ body:has(#alarm-list-dialog[data-price-position="below"]) #open-alarm-list {
     }
 
     .alarm-list-footer {
-        position: sticky;
-        bottom: 0;
-        margin: 0.8rem -18px -18px;
+        flex: none;
         padding: 0.55rem 18px;
-        border-top: 1px solid #d6e0ef;
-        background: #fff;
+        border-top: 1px solid #b7c8de;
+        box-shadow: 0 -3px 8px rgba(30, 64, 117, 0.10);
+        background: inherit;
     }
 }
