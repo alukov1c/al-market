@@ -2286,23 +2286,6 @@ lazy-load.crypto-screener-widget {
     line-height: 1.55;
 }
 
-@media screen and (max-width: 1000px) and (prefers-reduced-motion: no-preference),
-       screen and (max-width: 1366px) and (pointer: coarse) and (prefers-reduced-motion: no-preference) {
-    .section-status-scroll:not(:focus-within) {
-        overflow-x: hidden;
-    }
-
-    .section-status-strip:not(:focus-within) .section-status-track {
-        box-sizing: content-box;
-        padding-left: 100%;
-        animation: portfolioNoticeScroll 34s linear infinite;
-    }
-
-    .section-status-scroll:hover .section-status-track {
-        animation-play-state: paused;
-    }
-}
-
 .section-nav #open-price-settings {
     display: grid;
     flex: none;
@@ -2924,5 +2907,98 @@ body:has(#alarm-list-dialog[data-price-position="below"]) #open-alarm-list {
         border-top: 1px solid #b7c8de;
         box-shadow: 0 -3px 8px rgba(30, 64, 117, 0.10);
         background: inherit;
+    }
+}
+
+.section-status-markets,
+.section-status-sessions {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.section-status-mobile-label {
+    display: none;
+}
+
+#sectionStatusClock {
+    flex: none;
+    font-variant-numeric: tabular-nums;
+}
+
+@media screen and (min-width: 701px) and (max-width: 1000px),
+       screen and (min-width: 701px) and (max-width: 1366px) and (pointer: coarse) {
+    .section-status-track {
+        width: 100%;
+    }
+
+    .section-status-track,
+    .section-status-markets {
+        gap: 0.5rem;
+    }
+
+    .section-status-track > .section-status-session-window {
+        flex: 1;
+        min-width: 0;
+        overflow-x: auto;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+        .section-status-scroll:not(:focus-within):not(:hover) .section-status-session-window {
+            height: 1lh;
+            overflow: hidden;
+        }
+
+        .section-status-scroll:not(:focus-within):not(:hover) .section-status-sessions {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0;
+            animation: status-session-rotation 8s infinite;
+        }
+
+        .section-status-sessions > .market-status-item {
+            min-height: 1lh;
+        }
+    }
+}
+
+@keyframes status-session-rotation {
+    0%, 21% { transform: translateY(0); }
+    25%, 46% { transform: translateY(-1lh); }
+    50%, 71% { transform: translateY(-2lh); }
+    75%, 96% { transform: translateY(-3lh); }
+    100% { transform: translateY(-4lh); }
+}
+
+@media screen and (max-width: 700px) {
+    .section-status-strip:not([hidden]) {
+        gap: 0.4rem;
+        padding-inline: 0.55rem;
+    }
+
+    .section-status-strip #open-alarm-list,
+    .section-status-tablet-label {
+        display: none;
+    }
+
+    .section-status-mobile-label {
+        display: block;
+        flex: none;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+        .section-status-scroll:not(:focus-within) {
+            overflow-x: hidden;
+        }
+
+        .section-status-scroll:not(:focus-within) .section-status-track {
+            box-sizing: content-box;
+            padding-left: 100%;
+            animation: portfolioNoticeScroll 34s linear infinite;
+        }
+
+        .section-status-scroll:hover .section-status-track {
+            animation-play-state: paused;
+        }
     }
 }
