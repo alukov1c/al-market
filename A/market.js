@@ -1629,7 +1629,9 @@ function positionPortfolioNotice() {
 function syncPortfolioNoticeDialog() {
   const showNotice = window.location.hash === portfolioLink.hash && !portfolioNotice.hidden;
   if (showNotice) {
-    const text = portfolioNotice.innerText.trim();
+    const noticeCopy = portfolioNotice.cloneNode(true);
+    noticeCopy.querySelectorAll("[hidden]").forEach(element => element.remove());
+    const text = noticeCopy.textContent.trim();
     if (portfolioNoticeText.textContent !== text) portfolioNoticeText.textContent = text;
     if (isMobileSectionNav.matches) setSectionNavExpanded(true);
     portfolioLink.scrollIntoView({ block: "nearest", inline: "nearest" });

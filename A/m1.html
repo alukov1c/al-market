@@ -139,7 +139,7 @@
 
 
         <section id="portfolio-section" data-section-panel tabindex="-1" aria-label="Performanse i status portfolija">
-        <div id="portfolioNotice" role="status" aria-live="polite"><span>Menadžer je privremeno isključio prikaz portfolija ili podaci nisu poslati preko portfolio izvoznika • Sačekati aktiviranje servera ili testirati druge mogućnosti A-L platforme • <span id="portfolioLastActiveMessage">Nema zabeleženog aktivnog prikaza.</span><time id="portfolioLastActive" hidden></time></span></div>
+        <div id="portfolioNotice" data-ticker="off" role="status" aria-live="polite"><span>Menadžer je privremeno isključio prikaz portfolija ili podaci nisu poslati preko portfolio izvoznika • Sačekati aktiviranje servera ili testirati druge mogućnosti A-L platforme • <span id="portfolioLastActiveMessage">Nema zabeleženog aktivnog prikaza.</span><time id="portfolioLastActive" hidden></time></span></div>
         <div id="portfolio" hidden>
 
             <div id="portfolioA">
@@ -1651,6 +1651,7 @@
                 <button type="button" aria-current="true" aria-controls="alarm-settings-panel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span>Alarmi za cenu</span></button>
                 <button type="button" aria-controls="market-layout-panel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18v16H3zM9 4v16M15 4v16"/></svg><span>Prikaz instrumenata</span></button>
                 <button type="button" aria-controls="status-strip-settings-panel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v14H3zM3 14h18M7 16.5h2m3 0h5"/></svg><span>Donja traka</span></button>
+                <button type="button" aria-controls="portfolio-ticker-settings-panel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v12H9l-6 4zM7 9h10M7 13h7"/></svg><span>Obaveštenje o portfoliju</span></button>
             </nav>
             <section id="alarm-settings-panel" class="market-settings-panel">
                 <h3>Alarmi za cenu</h3>
@@ -1719,6 +1720,14 @@
                     <legend>Prikaz datuma, tržišta i FX sesija</legend>
                     <label><input type="radio" name="status-strip" value="on" checked> Uključeno</label>
                     <label><input type="radio" name="status-strip" value="off"> Isključeno</label>
+                </fieldset>
+            </section>
+            <section id="portfolio-ticker-settings-panel" class="market-settings-panel" hidden>
+                <h3>Trčeće obaveštenje o statusu portfolija</h3>
+                <fieldset>
+                    <legend>Prikaz obaveštenja</legend>
+                    <label><input type="radio" name="portfolio-ticker" value="on"> Uključeno</label>
+                    <label><input type="radio" name="portfolio-ticker" value="off" checked> Isključeno</label>
                 </fieldset>
             </section>
         </div>

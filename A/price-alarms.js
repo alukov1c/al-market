@@ -396,6 +396,21 @@
     });
   }
 
+  const portfolioTicker = get("portfolioNotice");
+  const portfolioTickerKey = "al-market-portfolio-ticker";
+  try {
+    if (localStorage.getItem(portfolioTickerKey) === "on") portfolioTicker.dataset.ticker = "on";
+  } catch { /* Keep the default if storage is unavailable. */ }
+  for (const radio of settings.querySelectorAll('input[name="portfolio-ticker"]')) {
+    radio.checked = radio.value === portfolioTicker.dataset.ticker;
+    radio.addEventListener("change", () => {
+      if (!radio.checked) return;
+      portfolioTicker.dataset.ticker = radio.value;
+      try { localStorage.setItem(portfolioTickerKey, radio.value); }
+      catch { /* The choice still applies to this page. */ }
+    });
+  }
+
   get("open-price-settings").addEventListener("click", () => {
     settings.showModal();
     renderForm();

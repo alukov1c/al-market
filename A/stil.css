@@ -1660,7 +1660,9 @@ lazy-load.crypto-screener-widget {
 
 }
 
-#portfolio[hidden], #portfolioNotice[hidden] {
+#portfolio[hidden],
+#portfolioNotice[hidden],
+#portfolioNotice[data-ticker="off"] {
     display: none !important;
 }
 
@@ -1906,7 +1908,7 @@ body:has(.section-status-strip:not([hidden])) .section-nav a[href="#prviMeni"]::
     height: 8px;
     border: 1px solid #f5f8fd;
     border-radius: 50%;
-    background: #16a34a;
+    background: rgb(22 163 74 / 75%);
 }
 
 .section-nav a span {
