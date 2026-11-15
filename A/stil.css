@@ -266,7 +266,7 @@ price-value {
 #opcije {
 
     width: 30%;
-    margin: 0 auto 0 auto;
+    margin: 8px auto;
     /* border: 1px solid rgba(165, 165, 165, 0.3); 
         border-radius: 1em; */
     display: flex;
