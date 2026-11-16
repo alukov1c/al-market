@@ -151,8 +151,11 @@ async function refreshGoldQuote() {
       goldQuote = {
         price,
         updatedAt: timestamp,
-        changePercent: hasBaseline ? (price / baseline.price - 1) * 100 : null
+        changePercent: hasBaseline ? (price / baseline.price - 1) * 100 : null,
+        tickChangePercent: goldQuote ? (price / goldQuote.price - 1) * 100 : null
       };
+      marketTick.xau = goldQuote;
+      broadcastMarketTick();
     })().catch(error => console.warn("XAU:", error.message)).finally(() => { goldRequest = null; });
   }
   await goldRequest;
@@ -701,7 +704,7 @@ if (process.env.PORTFOLIO_TEST_MODE !== '1') {
   connectBinanceMarketStream();
   refreshMarketRest();
   refreshGoldQuote();
-  goldTimer = setInterval(refreshGoldQuote, 60000);
+  goldTimer = setInterval(refreshGoldQuote, 30000);
   restTimer = setInterval(refreshMarketRest, 10000);
   retryDailyAnalysis();
   analysisRetryTimer = setInterval(retryDailyAnalysis, 60000);

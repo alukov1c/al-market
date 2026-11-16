@@ -349,7 +349,10 @@ const marketDisplaySection = document.getElementById("market-section");
 let goldQuoteIsFresh = false;
 marketDisplaySection.addEventListener("gold-quote", event => {
   const quote = event.detail;
-  updateMarketInstrument("xau", quote?.price, quote?.changePercent);
+  const changePercent = quote?.changePercent ?? quote?.tickChangePercent;
+  document.getElementById("xauChange").title = Number.isFinite(quote?.changePercent)
+    ? "Promena za poslednja 24 sata" : "Promena od prethodne kotacije";
+  updateMarketInstrument("xau", quote?.price, changePercent);
 });
 marketDisplaySection.addEventListener("market-layout-change", () => {
   refreshMarketAnalysis();
@@ -758,30 +761,6 @@ const tradingViewCharts = {
         symbol: "NASDAQ:NVDA",
         href: "https://www.tradingview.com/symbols/NVDA/?exchange=NASDAQ",
         label: "NVIDIA grafik"
-    },
-    kospi: {
-        title: "Grafik - KOSPI",
-        analysisTitle: "KOSPI tehnička analiza",
-        analysisEnglishTitle: "KOSPI Analysis on TradingView",
-        symbol: "KRX:KOSPI",
-        href: "https://www.tradingview.com/symbols/KRX-KOSPI/",
-        label: "KOSPI grafik"
-    },
-    nikkei: {
-        title: "Grafik - NIKKEI 225",
-        analysisTitle: "NIKKEI tehnička analiza",
-        analysisEnglishTitle: "NIKKEI Analysis on TradingView",
-        symbol: "TVC:NI225",
-        href: "https://www.tradingview.com/symbols/TVC-NI225/",
-        label: "NIKKEI grafik"
-    },
-    nasdaq: {
-        title: "Grafik - NASDAQ Composite",
-        analysisTitle: "NASDAQ tehnička analiza",
-        analysisEnglishTitle: "NASDAQ Analysis on TradingView",
-        symbol: "NASDAQ:IXIC",
-        href: "https://www.tradingview.com/symbols/NASDAQ-IXIC/",
-        label: "NASDAQ grafik"
     }
 };
 
@@ -1296,11 +1275,12 @@ function initForexSessions() {
             if (summaryItem) {
                 const localTime = clock.textContent;
                 const action = isOpen ? "zatvara se" : "otvara se";
-                const abbreviation = isOpen ? "Z:" : "O:";
                 summaryItem.classList.toggle("is-open", isOpen);
                 summaryItem.title = session.label + " · lokalno " + localTime + " · " + action + " " + transitionTime;
                 summaryItem.setAttribute("aria-label", summaryItem.title);
-                summaryItem.querySelector(".session-strip-times").textContent = localTime + " · " + abbreviation + " " + transitionTime;
+                summaryItem.querySelector(".session-local-time").textContent = localTime;
+                summaryItem.querySelector(".session-transition-icon").classList.toggle("is-closing", isOpen);
+                summaryItem.querySelector(".session-transition-time").textContent = transitionTime;
             }
             countdown.hidden = false;
 

@@ -21,7 +21,7 @@
   const volumeLevel = (value, tone) => [1, 5, 10].includes(Number(value)) ? Number(value) : defaultVolumes[tone];
   const storageKey = "al-market-price-alarms";
   const quotes = new Map();
-  const format = new Intl.NumberFormat("sr-Latn-RS", { maximumFractionDigits: 6 });
+  const format = new Intl.NumberFormat("sr-Latn-RS", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const get = id => document.getElementById(id);
   const settings = get("price-settings");
   const triggeredDetails = get("price-alert");
@@ -229,10 +229,11 @@
     const duration = [Math.floor(elapsed / 86400), Math.floor(elapsed / 3600) % 24,
       Math.floor(elapsed / 60) % 60, elapsed % 60];
     const date = new Date(currentAlert.activatedAt);
-    const activated = [date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds()];
+    const day = [date.getDate(), date.getMonth() + 1, date.getFullYear()];
+    const activated = [date.getHours(), date.getMinutes(), date.getSeconds()];
     const clockText = parts => parts.map(part => String(part).padStart(2, "0")).join(":");
     get("price-alert-elapsed").textContent = "Od aktiviranja: " + clockText(duration) +
-      " · Vreme aktiviranja: " + clockText(activated);
+      " · Vreme aktiviranja: " + clockText(day).replaceAll(":", ".") + " " + clockText(activated) + ".";
   }
 
   function renderAlert() {
@@ -334,6 +335,12 @@
     refreshGold();
   }
 
+  function publishGoldQuote() {
+    const quote = currentQuote("xau");
+    marketSection.dispatchEvent(new CustomEvent("gold-quote-status", { detail: Boolean(quote) }));
+    marketSection.dispatchEvent(new CustomEvent("gold-quote", { detail: quote }));
+  }
+
   function refreshGold() {
     if (goldRequest) return goldRequest;
     if (!((alarmList.open && alarms.has("xau")) || market.dataset.marketLayout === "gold" || alarms.get("xau")?.enabled || currentAlert?.symbol === "xau" ||
@@ -344,9 +351,7 @@
       .catch(() => {})
       .finally(() => {
         goldRequest = null;
-        const gold = currentQuote("xau");
-        marketSection.dispatchEvent(new CustomEvent("gold-quote-status", { detail: Boolean(gold) }));
-        marketSection.dispatchEvent(new CustomEvent("gold-quote", { detail: gold }));
+        publishGoldQuote();
         renderQuote();
         renderAlert();
         if (alarmList.open) updateAlarmCardPrices();
@@ -568,8 +573,8 @@
         prices.append(name, document.createElement("dd"));
       }
       const [target, current, difference, rise, fall] = prices.querySelectorAll("dd");
-      rise.textContent = item.riseCount ?? 0;
-      fall.textContent = item.fallCount ?? 0;
+      rise.textContent = format.format(item.riseCount ?? 0);
+      fall.textContent = format.format(item.fallCount ?? 0);
       target.textContent = (item.direction === "above" ? "≥ " : "≤ ") + priceText(item.target, symbol);
       alarmCardPrices.set(symbol, { current, difference });
 
@@ -581,7 +586,7 @@
 
       const remove = document.createElement("button");
       remove.type = "button";
-      remove.textContent = "🗑";
+      remove.innerHTML = "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"m4 13 9-9a2 2 0 0 1 3 0l4 4a2 2 0 0 1 0 3l-9 9H8l-4-4a2 2 0 0 1 0-3zm4-4 7 7m-4 4h10\"/></svg>";
       remove.setAttribute("aria-label", "Obriši alarm za " + instrument.label);
       remove.addEventListener("click", () => {
         clearTriggeredAlarm(symbol);
@@ -603,7 +608,30 @@
         toggleAlarmPause(symbol);
         alarmCards.querySelector('[data-pause-alarm="' + symbol + '"]')?.focus();
       });
-      card.append(title, edit, remove, pause, prices);
+      const refresh = document.createElement("button");
+      refresh.type = "button";
+      refresh.className = "alarm-refresh-quote";
+      refresh.innerHTML = "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M20 10a8 8 0 1 0-1 7M20 4v6h-6\"/></svg>";
+      refresh.title = "Osveži kotaciju za " + instrument.label;
+      refresh.setAttribute("aria-label", refresh.title);
+      refresh.addEventListener("click", async () => {
+        refresh.disabled = true;
+        const message = get("alarm-list-status");
+        message.textContent = "Osvežavanje kotacije…";
+        try {
+          if (symbol === "xau") await refreshGold();
+          else await refreshCryptoQuotes(symbol);
+          message.textContent = currentQuote(symbol) ? "Kotacija je proverena." : "Sveža kotacija nije dostupna.";
+        } catch {
+          message.textContent = "Osvežavanje kotacije nije uspelo.";
+        } finally {
+          renderAlert();
+          updateAlarmCardPrices();
+          refresh.disabled = false;
+        }
+      });
+      remove.className = "alarm-erase";
+      card.append(title, edit, refresh, remove, pause, prices);
       if (alarmCards.childElementCount) alarmCards.append(document.createElement("hr"));
       alarmCards.append(card);
     }
@@ -640,16 +668,22 @@
   mobileAlarmLayout.addEventListener("change", positionAlarmRefresh);
   positionAlarmRefresh();
 
+  async function refreshCryptoQuotes(symbol) {
+    const response = await fetch("/api/market", { cache: "no-store", signal: AbortSignal.timeout(12000) });
+    if (!response.ok) throw Error("Kotacije nisu dostupne");
+    const market = await response.json();
+    if (symbol) acceptQuote(symbol, market[symbol]);
+    else {
+      acceptQuote("btc", market.btc);
+      acceptQuote("eth", market.eth);
+    }
+  }
+
   refreshAlarms.addEventListener("click", async () => {
     refreshAlarms.disabled = true;
     alarmListStatus.textContent = "Osvežavanje kotacija…";
     const results = await Promise.allSettled([
-      fetch("/api/market", { cache: "no-store", signal: AbortSignal.timeout(12000) }).then(async response => {
-        if (!response.ok) throw Error("Kotacije nisu dostupne");
-        const market = await response.json();
-        acceptQuote("btc", market.btc);
-        acceptQuote("eth", market.eth);
-      }),
+      refreshCryptoQuotes(),
       refreshGold()
     ]);
     renderAlert();
@@ -801,6 +835,10 @@
   window.addEventListener("market-prices", event => {
     acceptQuote("btc", event.detail.btc);
     acceptQuote("eth", event.detail.eth);
+    if (event.detail.xau?.updatedAt > (quotes.get("xau")?.updatedAt ?? 0)) {
+      acceptQuote("xau", event.detail.xau);
+      publishGoldQuote();
+    }
     if (settings.open) renderQuote();
     renderAlert();
     if (alarmList.open) updateAlarmCardPrices();
