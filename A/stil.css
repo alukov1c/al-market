@@ -2642,10 +2642,18 @@ body:has(#alarm-list-dialog[open]) {
     padding: var(--alarm-list-padding);
 }
 
+#new-price-alarm {
+    min-height: 2rem;
+    box-sizing: border-box;
+}
+
 #alarm-list-dialog .alarm-close {
     position: static;
     flex: none;
-    margin-inline-start: auto;
+    width: 2rem;
+    height: 2rem;
+    min-height: 0;
+    max-width: none;
     box-sizing: border-box;
     border: 1px solid #cbd7eb;
     border-radius: 9px;
@@ -2668,8 +2676,20 @@ body:has(#alarm-list-dialog[open]) {
     margin: 0;
 }
 
+.alarm-list-heading-end {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.4rem;
+    margin-inline-start: auto;
+    min-width: 0;
+}
+
 #alarm-list-status {
     font-size: 0.85rem;
+    text-align: right;
+    overflow-wrap: anywhere;
 }
 
 #alarm-list-status:empty {
@@ -3114,24 +3134,5 @@ body:has(#alarm-list-dialog[open]) {
 
     #alarm-cards[data-count="3"] .alarm-card-prices {
         gap: 0.05rem 0.35rem;
-    }
-}
-
-@media (min-width: 701px) {
-    .alarm-list-heading {
-        display: grid;
-        grid-template-columns: auto auto auto minmax(0, 1fr) auto;
-    }
-
-    #alarm-list-status {
-        grid-column: 4;
-        grid-row: 1;
-        text-align: right;
-        overflow-wrap: anywhere;
-    }
-
-    #alarm-list-dialog .alarm-close {
-        grid-column: 5;
-        grid-row: 1;
     }
 }

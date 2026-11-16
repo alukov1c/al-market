@@ -234,7 +234,7 @@
     const date = new Date(event.activatedAt);
     return {
       activated: decimal([date.getDate(), date.getMonth() + 1, date.getFullYear()]).join(":") + " " +
-        decimal([date.getHours(), date.getMinutes(), date.getSeconds()]).join(":") + ".",
+        decimal([date.getHours(), date.getMinutes(), date.getSeconds()]).join(":") + " h",
       elapsed: decimal([Math.floor(seconds / 86400), Math.floor(seconds / 3600) % 24,
         Math.floor(seconds / 60) % 60, seconds % 60]).join(":")
     };
@@ -571,8 +571,8 @@
         prices.append(name, document.createElement("dd"));
       }
       const [target, current, difference, rise, fall, activated, elapsed] = prices.querySelectorAll("dd");
-      rise.textContent = format.format(item.riseCount ?? 0);
-      fall.textContent = format.format(item.fallCount ?? 0);
+      rise.textContent = item.riseCount ?? 0;
+      fall.textContent = item.fallCount ?? 0;
       target.textContent = (item.direction === "above" ? "≥ " : "≤ ") + priceText(item.target, symbol);
       activated.textContent = alarmTimes(lastTriggers.get(symbol)).activated;
       const controls = get("alarm-sound-template").content.firstElementChild.cloneNode(true);

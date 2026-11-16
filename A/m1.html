@@ -1612,8 +1612,10 @@
             <h2 id="alarm-list-title">Alarmi za cenu</h2>
             <button type="button" id="new-price-alarm"><span aria-hidden="true">＋</span> Novi alarm</button>
             <button type="button" id="refresh-price-alarms" aria-label="Osveži cene alarma" title="Osveži cene alarma"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10a8 8 0 1 0-1 7M20 4v6h-6"/></svg></button>
-            <button class="alarm-close" type="button" aria-label="Umanji prozor alarma" title="Umanji prozor alarma">−</button>
-            <p id="alarm-list-status" role="status"></p>
+            <div class="alarm-list-heading-end">
+                <p id="alarm-list-status" role="status"></p>
+                <button class="alarm-close" type="button" aria-label="Umanji prozor alarma" title="Umanji prozor alarma">−</button>
+            </div>
         </header>
         <div class="alarm-list-body">
             <div id="alarm-cards"></div>
