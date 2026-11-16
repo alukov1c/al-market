@@ -2633,7 +2633,30 @@ body:has(#alarm-list-dialog[data-price-position="below"]) #open-alarm-list {
     stroke-width: 1.7;
 }
 
+html:has(#alarm-list-dialog[open]),
+body:has(#alarm-list-dialog[open]) {
+    overflow: hidden;
+}
+
+#alarm-list-dialog[open] {
+    display: flex;
+    flex-direction: column;
+    --alarm-list-padding: 24px;
+    padding: 0;
+    overflow: hidden;
+}
+
+.alarm-list-body {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    padding: var(--alarm-list-padding);
+}
+
 #alarm-list-dialog .alarm-close {
+    position: static;
+    flex: none;
+    margin-inline-start: auto;
     box-sizing: border-box;
     border: 1px solid #cbd7eb;
     border-radius: 9px;
@@ -2646,7 +2669,9 @@ body:has(#alarm-list-dialog[data-price-position="below"]) #open-alarm-list {
     align-items: center;
     flex-wrap: wrap;
     gap: 0.4rem 0.75rem;
-    padding-right: 2.25rem;
+    flex: none;
+    padding: 0.65rem var(--alarm-list-padding);
+    border-bottom: 1px solid #b7c8de;
 }
 
 #alarm-list-title,
@@ -2664,16 +2689,17 @@ body:has(#alarm-list-dialog[data-price-position="below"]) #open-alarm-list {
 
 #alarm-cards {
     display: grid;
-    gap: 0.65rem;
-    margin-block: 0.7rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem;
 }
 
 .alarm-card {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.45rem;
-    padding: 0.65rem;
+    gap: 0.3rem;
+    padding: 0.45rem;
+    font-size: 0.85rem;
     border: 1px solid #d6e0ef;
     border-radius: 9px;
     background: #f3f7ff;
@@ -2683,18 +2709,11 @@ body:has(#alarm-list-dialog[data-price-position="below"]) #open-alarm-list {
     flex: 1;
 }
 
-#alarm-cards hr {
-    width: 100%;
-    margin: 0;
-    border: 0;
-    border-top: 1px solid #cbd7eb;
-}
-
 .alarm-card-prices {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     flex: 0 0 100%;
-    gap: 0.45rem;
+    gap: 0.15rem 0.45rem;
     margin: 0.25rem 0 0;
 }
 
@@ -2821,17 +2840,7 @@ body:has(#alarm-list-dialog[data-price-position="below"]) #open-alarm-list {
         max-width: none;
         max-height: calc(100dvh - max(var(--status-strip-height, 0px), env(safe-area-inset-bottom)) - 12px);
         margin: 0;
-        display: flex;
-        flex-direction: column;
-        padding: 0;
-        overflow: hidden;
-
-    }
-
-    .alarm-list-body {
-        min-height: 0;
-        overflow-y: auto;
-        padding: 18px;
+        --alarm-list-padding: 14px;
     }
 
     .is-section-view:has(#market-overview.is-selected-section, #market-news.is-selected-section, #market-crypto-cap.is-selected-section) {
@@ -2873,10 +2882,6 @@ body:has(#alarm-list-dialog[data-price-position="below"]) #open-alarm-list {
     stroke-linejoin: round;
 }
 
-.alarm-list-footer:empty {
-    display: none;
-}
-
 @media (max-width: 700px) {
     .section-nav-mobile-alarm:focus-visible {
         outline-offset: -2px;
@@ -2892,13 +2897,6 @@ body:has(#alarm-list-dialog[data-price-position="below"]) #open-alarm-list {
         border: 1px solid #dbe5f4;
     }
 
-    .alarm-list-footer {
-        flex: none;
-        padding: 0.55rem 18px;
-        border-top: 1px solid #b7c8de;
-        box-shadow: 0 -3px 8px rgba(30, 64, 117, 0.10);
-        background: inherit;
-    }
 }
 
 .section-status-markets,
@@ -3045,4 +3043,58 @@ body:has(#alarm-list-dialog[data-price-position="below"]) #open-alarm-list {
     stroke-width: 1.7;
     stroke-linecap: round;
     stroke-linejoin: round;
+}
+
+#alarm-cards[hidden],
+#alarm-list-footer[hidden] {
+    display: none;
+}
+
+#alarm-list-footer {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 0.45rem;
+    overflow-x: auto;
+    padding: 0.55rem var(--alarm-list-padding);
+    border-top: 1px solid #b7c8de;
+    box-shadow: 0 -3px 8px rgba(30, 64, 117, 0.12);
+    background: inherit;
+}
+
+#alarm-list-footer button {
+    display: inline-flex;
+    align-items: center;
+    flex: none;
+    gap: 0.25em;
+    white-space: nowrap;
+}
+
+#alarm-list-footer button[aria-pressed="true"] {
+    border-color: #637f9f;
+    background: #dceafd;
+}
+
+#alarm-list-dialog .alarm-card button {
+    padding: 0.25rem 0.4rem;
+}
+
+@media (max-width: 700px) {
+    #alarm-cards {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    #alarm-list-dialog[open] {
+        --alarm-list-padding: 8px;
+    }
+
+    .alarm-list-heading,
+    #alarm-list-footer {
+        gap: 0.3rem;
+        padding-block: 0.35rem;
+    }
+
+    .alarm-card-title {
+        flex-basis: 100%;
+    }
 }

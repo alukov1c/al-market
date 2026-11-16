@@ -1608,14 +1608,15 @@
     </dialog>
 
     <dialog id="alarm-list-dialog" class="alarm-dialog market-settings-dialog" aria-labelledby="alarm-list-title">
-        <button class="alarm-close" type="button" aria-label="Umanji prozor alarma" title="Umanji prozor alarma">−</button>
+        <header class="alarm-list-heading">
+            <h2 id="alarm-list-title">Alarmi za cenu</h2>
+            <button type="button" id="new-price-alarm"><span aria-hidden="true">＋</span> Novi alarm</button>
+            <button type="button" id="refresh-price-alarms" aria-label="Osveži cene alarma" title="Osveži cene alarma"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10a8 8 0 1 0-1 7M20 4v6h-6"/></svg></button>
+            <button class="alarm-close" type="button" aria-label="Umanji prozor alarma" title="Umanji prozor alarma">−</button>
+            <p id="alarm-list-status" role="status"></p>
+        </header>
         <div class="alarm-list-body">
-            <header class="alarm-list-heading">
-                <h2 id="alarm-list-title">Alarmi za cenu</h2>
-                <button type="button" id="new-price-alarm"><span aria-hidden="true">＋</span> Novi alarm</button>
-                <button type="button" id="refresh-price-alarms" aria-label="Osveži cene alarma" title="Osveži cene alarma"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10a8 8 0 1 0-1 7M20 4v6h-6"/></svg></button>
-                <p id="alarm-list-status" role="status"></p>
-            </header>
+            <div id="alarm-cards"></div>
             <section id="price-alert" aria-labelledby="price-alert-title" hidden>
                 <h3 id="price-alert-title">Aktiviran alarm</h3>
                 <p id="price-alert-instrument"></p>
@@ -1623,7 +1624,7 @@
                     <dt>Ciljna cena</dt><dd id="price-alert-target"></dd>
                     <dt>Cena pri aktiviranju</dt><dd id="price-alert-trigger"></dd>
                     <dt>Trenutna cena</dt><dd id="price-alert-current"></dd>
-                    <dt>Promena od aktiviranja</dt><dd id="price-alert-change"></dd>
+                    <dt id="price-alert-change-label">Promena od aktiviranja</dt><dd id="price-alert-change"></dd>
                 </dl>
                 <p id="price-alert-elapsed"></p>
                 <div class="alert-sound-controls">
@@ -1633,9 +1634,8 @@
                     <label>Trajanje zvuka (s) <input id="alert-sound-duration" type="number" min="1" max="120" step="1" required></label>
                 </div>
             </section>
-            <div id="alarm-cards"></div>
         </div>
-        <footer class="alarm-list-footer"></footer>
+        <footer id="alarm-list-footer" aria-label="Prikazi alarma"></footer>
     </dialog>
 
     <dialog id="price-settings" class="alarm-dialog market-settings-dialog" aria-labelledby="price-settings-title">
