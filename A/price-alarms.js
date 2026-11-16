@@ -287,7 +287,11 @@
     currentAlert = { ...item, symbol, trigger, crossingSide, activatedAt, triggeredAt: activatedAt };
     lastTriggers.set(symbol, currentAlert);
     openAlarmList();
-    showAlarmDetails(symbol);
+    if (mobileAlarmLayout.matches || detailSymbol !== null) showAlarmDetails(symbol);
+    else {
+      cardPage = 0;
+      renderAlarmCards();
+    }
     const melody = resolveMelody(item.tone, crossingSide);
     if (item.sound) startSound(item.duration, melody, item.volumes?.[melody]);
   }
@@ -507,10 +511,10 @@
       const item = alarms.get(fields.symbol.value);
       paintPricePosition(alarmList, currentQuote(fields.symbol.value), item?.target, item?.direction);
     }
-    for (const [symbol, { current, difference }] of alarmCardPrices) {
+    for (const [symbol, { current, difference, target = alarms.get(symbol).target }] of [...alarmCardPrices, ...overviewPrices]) {
       const quote = currentQuote(symbol);
       current.textContent = quote ? priceText(quote.price, symbol) : "Nema sveže kotacije";
-      const delta = quote ? quote.price - alarms.get(symbol).target : 0;
+      const delta = quote ? quote.price - target : 0;
       difference.textContent = quote ? (delta > 0 ? "+" : "") + priceText(delta, symbol) : "—";
       difference.className = delta > 0 ? "change-up" : delta < 0 ? "change-down" : "";
     }
@@ -592,6 +596,52 @@
     alarmFooter.hidden = !alarmFooter.childElementCount;
   }
 
+  const alarmOverview = get("alarm-details-overview");
+  const overviewPrices = new Map();
+  const activationDate = new Intl.DateTimeFormat("sr-Latn-RS", {
+    day: "2-digit", month: "2-digit", year: "numeric",
+    hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23"
+  });
+
+  function renderAlarmOverview(entries) {
+    const show = !mobileAlarmLayout.matches && detailSymbol === null && entries.some(([, item]) => item.enabled);
+    alarmOverview.hidden = !show;
+    alarmOverview.replaceChildren();
+    overviewPrices.clear();
+    if (!show) return;
+
+    for (const [symbol, item] of entries) {
+      if (!item.enabled) continue;
+      const event = lastTriggers.get(symbol);
+      const article = document.createElement("article");
+      article.className = "alarm-overview-card";
+      const title = document.createElement("h3");
+      appendInstrument(title, symbol);
+      title.append(" · Detalji alarma");
+      const values = document.createElement("dl");
+      const rows = [
+        ["Ciljna cena", priceText(item.target, symbol)],
+        ["Cena pri aktiviranju", event ? priceText(event.trigger, symbol) : "—"],
+        ["Trenutna cena", "—"],
+        [event ? "Promena od aktiviranja" : "Razlika od praga", "—"],
+        ["Vreme aktiviranja", event ? activationDate.format(event.activatedAt) : "Prag još nije dostignut"],
+        ["Zvučni signal", item.sound ? item.duration + " s" : "Isključen"]
+      ];
+      for (const [label, value] of rows) {
+        const term = document.createElement("dt");
+        const data = document.createElement("dd");
+        term.textContent = label;
+        data.textContent = value;
+        values.append(term, data);
+      }
+      overviewPrices.set(symbol, {
+        current: values.children[5], difference: values.children[7], target: event?.trigger ?? item.target
+      });
+      article.append(title, values);
+      alarmOverview.append(article);
+    }
+  }
+
   function renderAlarmCards() {
     if (!alarmList.open) return;
     if (!alarms.has(detailSymbol)) detailSymbol = null;
@@ -599,6 +649,12 @@
     triggeredDetails.hidden = detailSymbol === null;
     renderAlarmFooter();
     alarmCards.replaceChildren();
+    if (alarms.size <= 2) cardPage = 0;
+    const entries = [...alarms];
+    if (!mobileAlarmLayout.matches) entries.sort((a, b) => Number(b[1].enabled) - Number(a[1].enabled));
+    const visibleEntries = entries.slice(cardPage * 2, cardPage * 2 + 2);
+    renderAlarmOverview(visibleEntries);
+    get("alarm-overview-divider").hidden = alarmOverview.hidden;
     alarmCardPrices.clear();
     newAlarm.disabled = alarms.size === Object.keys(instruments).length;
     newAlarm.title = newAlarm.disabled ? "Već postoji po jedan alarm za svaki instrument." : "";
@@ -617,8 +673,7 @@
       return;
     }
     if (!alarms.size) alarmCards.textContent = "Nema sačuvanih alarma.";
-    if (alarms.size <= 2) cardPage = 0;
-    for (const [symbol, item] of [...alarms].slice(cardPage * 2, cardPage * 2 + 2)) {
+    for (const [symbol, item] of visibleEntries) {
       const instrument = instruments[symbol];
       const card = document.createElement("article");
       card.className = "alarm-card";
@@ -715,6 +770,7 @@
 
   const mobileAlarm = get("mobile-alarm-list");
   const mobileAlarmLayout = window.matchMedia("(max-width: 700px)");
+  mobileAlarmLayout.addEventListener("change", renderAlarmCards);
   const refreshAlarms = get("refresh-price-alarms");
   new ResizeObserver(() => {
     alarmList.style.setProperty("--status-strip-height", statusStrip.getBoundingClientRect().height + "px");
