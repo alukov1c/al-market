@@ -2403,17 +2403,6 @@ lazy-load.crypto-screener-widget {
     opacity: 0.55;
 }
 
-#price-alert dl {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 0.5rem;
-}
-
-#price-alert dd {
-    margin: 0;
-    text-align: right;
-}
-
 .alarm-gold {
     color: #bf8b17;
 }
@@ -2687,12 +2676,6 @@ body:has(#alarm-list-dialog[open]) {
     display: none;
 }
 
-#alarm-cards {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.45rem;
-}
-
 .alarm-card {
     display: flex;
     flex-wrap: wrap;
@@ -2756,7 +2739,7 @@ body:has(#alarm-list-dialog[open]) {
     width: auto;
 }
 
-#alert-sound-duration {
+[data-alarm-sound="duration"] {
     box-sizing: border-box;
     width: 4.5rem;
     padding: 0.2em 0.35em;
@@ -3045,51 +3028,71 @@ body:has(#alarm-list-dialog[open]) {
     stroke-linejoin: round;
 }
 
-#alarm-cards[hidden],
-#alarm-list-footer[hidden] {
-    display: none;
+#alarm-cards {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.9rem;
 }
 
-#alarm-list-footer {
-    display: flex;
-    flex: none;
-    align-items: center;
-    gap: 0.45rem;
-    overflow-x: auto;
-    padding: 0.55rem var(--alarm-list-padding);
+#alarm-cards[data-count="2"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+#alarm-cards[data-count="3"] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.alarm-card {
+    position: relative;
+    align-content: flex-start;
+    min-width: 0;
+}
+
+.alarm-card + .alarm-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 -0.49rem;
+    width: 1px;
+    background: #b7c8de;
+    box-shadow: 2px 0 4px rgba(30, 64, 117, 0.18);
+}
+
+.alarm-card-prices dd {
+    overflow-wrap: anywhere;
+}
+
+.alarm-card .alert-sound-controls {
+    flex: 0 0 100%;
+    box-sizing: border-box;
+    margin-top: auto;
+    padding-top: 0.4rem;
     border-top: 1px solid #b7c8de;
-    box-shadow: 0 -3px 8px rgba(30, 64, 117, 0.12);
-    background: inherit;
+    gap: 0.3rem 0.5rem;
 }
 
-#alarm-list-footer button {
-    display: inline-flex;
-    align-items: center;
-    flex: none;
-    gap: 0.25em;
-    white-space: nowrap;
+.alarm-card .alert-sound-controls label {
+    gap: 0.25rem;
 }
 
-#alarm-list-footer button[aria-pressed="true"] {
-    border-color: #637f9f;
-    background: #dceafd;
+.alarm-card [data-alarm-sound="duration"] {
+    width: 3.5rem;
+    max-width: 100%;
 }
 
 #alarm-list-dialog .alarm-card button {
-    padding: 0.25rem 0.4rem;
+    padding: 0.2rem 0.35rem;
+}
+
+#alarm-cards[data-count="3"] .alarm-card {
+    font-size: 0.78rem;
 }
 
 @media (max-width: 700px) {
-    #alarm-cards {
-        grid-template-columns: minmax(0, 1fr);
-    }
-
     #alarm-list-dialog[open] {
         --alarm-list-padding: 8px;
     }
 
-    .alarm-list-heading,
-    #alarm-list-footer {
+    .alarm-list-heading {
         gap: 0.3rem;
         padding-block: 0.35rem;
     }
@@ -3099,8 +3102,19 @@ body:has(#alarm-list-dialog[open]) {
     }
 }
 
-#alarm-details-overview {
-    display: none;
+@media (max-width: 560px) {
+    #alarm-cards:is([data-count="2"], [data-count="3"]) {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0.5rem;
+    }
+
+    .alarm-card + .alarm-card::before {
+        display: none;
+    }
+
+    #alarm-cards[data-count="3"] .alarm-card-prices {
+        gap: 0.05rem 0.35rem;
+    }
 }
 
 @media (min-width: 701px) {
@@ -3119,64 +3133,5 @@ body:has(#alarm-list-dialog[open]) {
     #alarm-list-dialog .alarm-close {
         grid-column: 5;
         grid-row: 1;
-    }
-
-    #alarm-details-overview:not([hidden]) {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 0.45rem;
-    }
-
-    .alarm-overview-divider {
-        margin: 0.75rem 0;
-        border: 0;
-        border-top: 1px solid #b7c8de;
-        box-shadow: 0 3px 5px rgba(30, 64, 117, 0.18);
-    }
-
-    .alarm-overview-card {
-        padding: 0.55rem;
-        border: 1px solid #d6e0ef;
-        border-radius: 9px;
-        background: #f3f7ff;
-        font-size: 0.85rem;
-    }
-
-    .alarm-overview-card h3 {
-        margin: 0 0 0.45rem;
-        font-size: 0.9rem;
-    }
-
-    .alarm-overview-card dl {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(0, auto);
-        gap: 0.2rem 0.5rem;
-        margin: 0;
-    }
-
-    .alarm-overview-card dd {
-        margin: 0;
-        text-align: right;
-        overflow-wrap: anywhere;
-    }
-
-    .alarm-list-body:has(#alarm-details-overview:not([hidden]) > .alarm-overview-card:only-child) {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
-        align-items: stretch;
-        gap: 0.75rem;
-    }
-
-    .alarm-list-body:has(#alarm-details-overview:not([hidden]) > .alarm-overview-card:only-child)
-        :is(#alarm-cards, #alarm-details-overview) {
-        grid-template-columns: minmax(0, 1fr);
-    }
-
-    .alarm-list-body:has(#alarm-details-overview:not([hidden]) > .alarm-overview-card:only-child) .alarm-overview-divider:not([hidden]) {
-        width: 1px;
-        margin: 0;
-        border: 0;
-        background: #b7c8de;
-        box-shadow: 3px 0 5px rgba(30, 64, 117, 0.18);
     }
 }

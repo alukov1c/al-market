@@ -1617,28 +1617,17 @@
         </header>
         <div class="alarm-list-body">
             <div id="alarm-cards"></div>
-            <hr class="alarm-overview-divider" id="alarm-overview-divider" hidden>
-            <section id="alarm-details-overview" aria-label="Detalji aktivnih alarma" hidden></section>
-            <section id="price-alert" aria-labelledby="price-alert-title" hidden>
-                <h3 id="price-alert-title">Aktiviran alarm</h3>
-                <p id="price-alert-instrument"></p>
-                <dl>
-                    <dt>Ciljna cena</dt><dd id="price-alert-target"></dd>
-                    <dt>Cena pri aktiviranju</dt><dd id="price-alert-trigger"></dd>
-                    <dt>Trenutna cena</dt><dd id="price-alert-current"></dd>
-                    <dt id="price-alert-change-label">Promena od aktiviranja</dt><dd id="price-alert-change"></dd>
-                </dl>
-                <p id="price-alert-elapsed"></p>
-                <div class="alert-sound-controls">
-                    <button type="button" id="mute-price-alert" aria-label="Zaustavi zvuk" title="Zaustavi zvuk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17V5l11-2v12M9 17a3 2 0 1 1-6 0 3 2 0 1 1 6 0zm11-2a3 2 0 1 1-6 0 3 2 0 1 1 6 0zM3 3l18 18"/></svg></button>
-                    <button type="button" id="restart-price-alert" aria-label="Ponovo pusti zvuk" title="Ponovo pusti zvuk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17V5l11-2v12M9 17a3 2 0 1 1-6 0 3 2 0 1 1 6 0zm11-2a3 2 0 1 1-6 0 3 2 0 1 1 6 0z"/></svg></button>
-                    <label><input type="checkbox" id="alert-sound-enabled"> Zvučni signal</label>
-                    <label>Trajanje zvuka (s) <input id="alert-sound-duration" type="number" min="1" max="120" step="1" required></label>
-                </div>
-            </section>
         </div>
-        <footer id="alarm-list-footer" aria-label="Prikazi alarma"></footer>
     </dialog>
+
+    <template id="alarm-sound-template">
+        <div class="alert-sound-controls">
+            <button type="button" data-alarm-sound="stop" aria-label="Zaustavi zvuk" title="Zaustavi zvuk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17V5l11-2v12M9 17a3 2 0 1 1-6 0 3 2 0 1 1 6 0zm11-2a3 2 0 1 1-6 0 3 2 0 1 1 6 0zM3 3l18 18"/></svg></button>
+            <button type="button" data-alarm-sound="replay" aria-label="Ponovo pusti zvuk" title="Ponovo pusti zvuk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17V5l11-2v12M9 17a3 2 0 1 1-6 0 3 2 0 1 1 6 0zm11-2a3 2 0 1 1-6 0 3 2 0 1 1 6 0z"/></svg></button>
+            <label><input type="checkbox" data-alarm-sound="enabled"> Zvučni signal</label>
+            <label>Trajanje zvuka (s) <input data-alarm-sound="duration" type="number" min="1" max="120" step="1" required></label>
+        </div>
+    </template>
 
     <dialog id="price-settings" class="alarm-dialog market-settings-dialog" aria-labelledby="price-settings-title">
         <button class="alarm-close" type="button" aria-label="Zatvori podešavanja">×</button>

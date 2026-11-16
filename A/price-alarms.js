@@ -24,7 +24,6 @@
   const format = new Intl.NumberFormat("sr-Latn-RS", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const get = id => document.getElementById(id);
   const settings = get("price-settings");
-  const triggeredDetails = get("price-alert");
   const form = get("price-alarm-form");
   const fields = form.elements;
   const alarmList = get("alarm-list-dialog");
@@ -57,8 +56,6 @@
 
   let currentAlert = null;
   const lastTriggers = new Map();
-  let detailSymbol = null;
-  let cardPage = 0;
   let audio = null;
   let oscillator = null;
   let soundTimer = null;
@@ -101,7 +98,7 @@
   copyPrice.addEventListener("click", () => {
     const quote = currentQuote(fields.symbol.value);
     if (!quote) return;
-    fields.target.value = quote.price;
+    fields.target.value = quote.price.toFixed(2);
     renderQuote();
     fields.target.focus();
   });
@@ -138,7 +135,6 @@
 
   function clearTriggeredAlarm(symbol) {
     lastTriggers.delete(symbol);
-    if (detailSymbol === symbol) detailSymbol = null;
     if (currentAlert?.symbol !== symbol) return;
     stopSound();
     currentAlert = null;
@@ -146,9 +142,12 @@
   }
 
   function syncAlertSoundButtons() {
-    get("mute-price-alert").disabled = !oscillator;
-    const selectedAlert = lastTriggers.get(detailSymbol);
-    get("restart-price-alert").disabled = Boolean(oscillator) || !selectedAlert || !alarms.get(detailSymbol)?.sound || !alarms.get(detailSymbol)?.enabled;
+    for (const [symbol, { stop, replay }] of alarmCardPrices) {
+      const item = alarms.get(symbol);
+      const playing = Boolean(oscillator) && currentAlert?.symbol === symbol;
+      stop.disabled = !playing;
+      replay.disabled = playing || !item?.enabled || !item?.sound;
+    }
   }
 
   function stopSound() {
@@ -228,37 +227,30 @@
     soundTimer = setTimeout(stopSound, seconds * 1000);
   }
 
-  function updateAlertElapsed() {
-    const event = lastTriggers.get(detailSymbol);
-    const time = get("price-alert-elapsed");
-    time.hidden = !event;
-    if (!event || !alarmList.open) return;
-    const elapsed = Math.max(0, Math.floor(((event.pausedAt ?? Date.now()) - event.triggeredAt) / 1000));
-    const duration = [Math.floor(elapsed / 86400), Math.floor(elapsed / 3600) % 24,
-      Math.floor(elapsed / 60) % 60, elapsed % 60];
+  function alarmTimes(event) {
+    if (!event) return { activated: "—", elapsed: "—" };
+    const seconds = Math.max(0, Math.floor(((event.pausedAt ?? Date.now()) - event.triggeredAt) / 1000));
+    const decimal = parts => parts.map(value => String(value).padStart(2, "0"));
     const date = new Date(event.activatedAt);
-    const day = [date.getDate(), date.getMonth() + 1, date.getFullYear()];
-    const activated = [date.getHours(), date.getMinutes(), date.getSeconds()];
-    const clockText = parts => parts.map(part => String(part).padStart(2, "0")).join(":");
-    time.textContent = "Od aktiviranja: " + clockText(duration) +
-      " · Vreme aktiviranja: " + clockText(day).replaceAll(":", ".") + " " + clockText(activated) + ".";
+    return {
+      activated: decimal([date.getDate(), date.getMonth() + 1, date.getFullYear()]).join(":") + " " +
+        decimal([date.getHours(), date.getMinutes(), date.getSeconds()]).join(":") + ".",
+      elapsed: decimal([Math.floor(seconds / 86400), Math.floor(seconds / 3600) % 24,
+        Math.floor(seconds / 60) % 60, seconds % 60]).join(":")
+    };
+  }
+
+  function updateAlertElapsed() {
+    if (!alarmList.open) return;
+    for (const [symbol, fields] of alarmCardPrices) {
+      fields.elapsed.textContent = alarmTimes(lastTriggers.get(symbol)).elapsed;
+    }
   }
 
   function renderAlert() {
-    const symbol = detailSymbol ?? currentAlert?.symbol;
+    const symbol = currentAlert?.symbol;
     const item = alarms.get(symbol);
-    if (!item) return;
-    const event = lastTriggers.get(symbol);
-    const quote = currentQuote(symbol);
-    paintPricePosition(alarmList, quote, item.target, event?.crossingSide ?? item.direction);
-    if (detailSymbol === null) return;
-    const trigger = event?.trigger ?? item.target;
-    get("price-alert-change-label").textContent = event ? "Promena od aktiviranja" : "Razlika od praga";
-    get("price-alert-current").textContent = quote ? priceText(quote.price, symbol) : "Nema sveže kotacije";
-    const change = get("price-alert-change");
-    const difference = quote ? quote.price - trigger : 0;
-    change.textContent = quote ? (difference > 0 ? "+" : "") + priceText(difference, symbol) : "—";
-    change.className = difference > 0 ? "change-up" : difference < 0 ? "change-down" : "";
+    if (item) paintPricePosition(alarmList, currentQuote(symbol), item.target, currentAlert.crossingSide);
   }
 
   function appendInstrument(label, symbol) {
@@ -287,11 +279,8 @@
     currentAlert = { ...item, symbol, trigger, crossingSide, activatedAt, triggeredAt: activatedAt };
     lastTriggers.set(symbol, currentAlert);
     openAlarmList();
-    if (mobileAlarmLayout.matches || detailSymbol !== null) showAlarmDetails(symbol);
-    else {
-      cardPage = 0;
-      renderAlarmCards();
-    }
+    renderAlarmCards();
+    renderAlert();
     const melody = resolveMelody(item.tone, crossingSide);
     if (item.sound) startSound(item.duration, melody, item.volumes?.[melody]);
   }
@@ -462,8 +451,6 @@
     if (currentAlert?.symbol === symbol) {
       const item = alarms.get(symbol);
       applyAlertSoundSettings(item);
-      get("alert-sound-duration").value = item.duration;
-      get("alert-sound-enabled").checked = item.sound;
     }
     const saved = persist();
     if (saved) status.textContent = alarms.get(symbol).paused ? "Pauzirani alarm je sačuvan." : "Alarm je sačuvan i aktiviran.";
@@ -511,7 +498,8 @@
       const item = alarms.get(fields.symbol.value);
       paintPricePosition(alarmList, currentQuote(fields.symbol.value), item?.target, item?.direction);
     }
-    for (const [symbol, { current, difference, target = alarms.get(symbol).target }] of [...alarmCardPrices, ...overviewPrices]) {
+    for (const [symbol, { current, difference }] of alarmCardPrices) {
+      const target = alarms.get(symbol).target;
       const quote = currentQuote(symbol);
       current.textContent = quote ? priceText(quote.price, symbol) : "Nema sveže kotacije";
       const delta = quote ? quote.price - target : 0;
@@ -558,122 +546,15 @@
     refreshGold();
   }
 
-  const alarmFooter = get("alarm-list-footer");
-
-  function showAlarmDetails(symbol) {
-    detailSymbol = symbol;
-    renderAlarmCards();
-    alarmList.querySelector(".alarm-list-body").scrollTop = 0;
-  }
-
-  function renderAlarmFooter() {
-    alarmFooter.replaceChildren();
-    if (detailSymbol !== null || alarms.size > 2) {
-      const cards = document.createElement("button");
-      cards.type = "button";
-      cards.textContent = detailSymbol !== null ? "Kartice alarma" : (cardPage + 1) + " / 2 · Kartice";
-      cards.addEventListener("click", () => {
-        if (detailSymbol === null) cardPage = 1 - cardPage;
-        showAlarmDetails(null);
-        alarmFooter.querySelector("button")?.focus();
-      });
-      alarmFooter.append(cards);
-    }
-    for (const [symbol, item] of alarms) {
-      if (!item.enabled && detailSymbol !== symbol) continue;
-      const button = document.createElement("button");
-      button.type = "button";
-      appendInstrument(button, symbol);
-      if (detailSymbol !== null) button.append(" · " + (item.hitCount ?? 0));
-      button.dataset.alarmDetail = symbol;
-      button.setAttribute("aria-pressed", String(symbol === detailSymbol));
-      button.addEventListener("click", () => {
-        showAlarmDetails(detailSymbol === symbol ? null : symbol);
-        alarmFooter.querySelector('[data-alarm-detail="' + symbol + '"]')?.focus();
-      });
-      alarmFooter.append(button);
-    }
-    alarmFooter.hidden = !alarmFooter.childElementCount;
-  }
-
-  const alarmOverview = get("alarm-details-overview");
-  const overviewPrices = new Map();
-  const activationDate = new Intl.DateTimeFormat("sr-Latn-RS", {
-    day: "2-digit", month: "2-digit", year: "numeric",
-    hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23"
-  });
-
-  function renderAlarmOverview(entries) {
-    const show = !mobileAlarmLayout.matches && detailSymbol === null && entries.some(([, item]) => item.enabled);
-    alarmOverview.hidden = !show;
-    alarmOverview.replaceChildren();
-    overviewPrices.clear();
-    if (!show) return;
-
-    for (const [symbol, item] of entries) {
-      if (!item.enabled) continue;
-      const event = lastTriggers.get(symbol);
-      const article = document.createElement("article");
-      article.className = "alarm-overview-card";
-      const title = document.createElement("h3");
-      appendInstrument(title, symbol);
-      title.append(" · Detalji alarma");
-      const values = document.createElement("dl");
-      const rows = [
-        ["Ciljna cena", priceText(item.target, symbol)],
-        ["Cena pri aktiviranju", event ? priceText(event.trigger, symbol) : "—"],
-        ["Trenutna cena", "—"],
-        [event ? "Promena od aktiviranja" : "Razlika od praga", "—"],
-        ["Vreme aktiviranja", event ? activationDate.format(event.activatedAt) : "Prag još nije dostignut"],
-        ["Zvučni signal", item.sound ? item.duration + " s" : "Isključen"]
-      ];
-      for (const [label, value] of rows) {
-        const term = document.createElement("dt");
-        const data = document.createElement("dd");
-        term.textContent = label;
-        data.textContent = value;
-        values.append(term, data);
-      }
-      overviewPrices.set(symbol, {
-        current: values.children[5], difference: values.children[7], target: event?.trigger ?? item.target
-      });
-      article.append(title, values);
-      alarmOverview.append(article);
-    }
-  }
-
   function renderAlarmCards() {
     if (!alarmList.open) return;
-    if (!alarms.has(detailSymbol)) detailSymbol = null;
-    alarmCards.hidden = detailSymbol !== null;
-    triggeredDetails.hidden = detailSymbol === null;
-    renderAlarmFooter();
     alarmCards.replaceChildren();
-    if (alarms.size <= 2) cardPage = 0;
-    const entries = [...alarms];
-    if (!mobileAlarmLayout.matches) entries.sort((a, b) => Number(b[1].enabled) - Number(a[1].enabled));
-    const visibleEntries = entries.slice(cardPage * 2, cardPage * 2 + 2);
-    renderAlarmOverview(visibleEntries);
-    get("alarm-overview-divider").hidden = alarmOverview.hidden;
     alarmCardPrices.clear();
+    alarmCards.dataset.count = alarms.size;
     newAlarm.disabled = alarms.size === Object.keys(instruments).length;
     newAlarm.title = newAlarm.disabled ? "Već postoji po jedan alarm za svaki instrument." : "";
-    if (detailSymbol !== null) {
-      const item = alarms.get(detailSymbol);
-      const event = lastTriggers.get(detailSymbol);
-      get("price-alert-title").textContent = event ? "Aktiviran alarm" : "Detalji alarma";
-      appendInstrument(get("price-alert-instrument"), detailSymbol);
-      get("price-alert-target").textContent = priceText(item.target, detailSymbol);
-      get("price-alert-trigger").textContent = event ? priceText(event.trigger, detailSymbol) : "—";
-      get("alert-sound-duration").value = item.duration;
-      get("alert-sound-enabled").checked = item.sound;
-      renderAlert();
-      updateAlertElapsed();
-      syncAlertSoundButtons();
-      return;
-    }
     if (!alarms.size) alarmCards.textContent = "Nema sačuvanih alarma.";
-    for (const [symbol, item] of visibleEntries) {
+    for (const [symbol, item] of alarms) {
       const instrument = instruments[symbol];
       const card = document.createElement("article");
       card.className = "alarm-card";
@@ -684,16 +565,19 @@
 
       const prices = document.createElement("dl");
       prices.className = "alarm-card-prices";
-      for (const label of ["Ciljna cena", "Trenutna cena", "Razlika od praga", "Prelazi naviše", "Prelazi naniže"]) {
+      for (const label of ["Ciljna cena", "Trenutna cena", "Razlika od praga", "Prelazi naviše", "Prelazi naniže", "Vreme aktiviranja", "Od aktiviranja"]) {
         const name = document.createElement("dt");
         name.textContent = label;
         prices.append(name, document.createElement("dd"));
       }
-      const [target, current, difference, rise, fall] = prices.querySelectorAll("dd");
+      const [target, current, difference, rise, fall, activated, elapsed] = prices.querySelectorAll("dd");
       rise.textContent = format.format(item.riseCount ?? 0);
       fall.textContent = format.format(item.fallCount ?? 0);
       target.textContent = (item.direction === "above" ? "≥ " : "≤ ") + priceText(item.target, symbol);
-      alarmCardPrices.set(symbol, { current, difference });
+      activated.textContent = alarmTimes(lastTriggers.get(symbol)).activated;
+      const controls = get("alarm-sound-template").content.firstElementChild.cloneNode(true);
+      const buttons = configureCardSound(symbol, item, controls);
+      alarmCardPrices.set(symbol, { current, difference, elapsed, ...buttons });
 
       const edit = document.createElement("button");
       edit.type = "button";
@@ -748,10 +632,12 @@
         }
       });
       remove.className = "alarm-erase";
-      card.append(title, refresh, edit, remove, pause, prices);
+      card.append(title, refresh, edit, remove, pause, prices, controls);
       alarmCards.append(card);
     }
     updateAlarmCardPrices();
+    updateAlertElapsed();
+    syncAlertSoundButtons();
   }
 
   function editFromAlarmList(symbol, creating = false) {
@@ -823,8 +709,8 @@
     }
     get("alarm-list-status").textContent = "";
     openAlarmList();
-    cardPage = 0;
-    showAlarmDetails(null);
+    renderAlarmCards();
+    alarmList.querySelector(".alarm-list-body").scrollTop = 0;
     refreshGold();
   }
 
@@ -892,8 +778,6 @@
   });
   settings.addEventListener("close", stopPreview);
   settings.querySelector(".market-settings-nav").addEventListener("click", stopPreview);
-  const alertDuration = get("alert-sound-duration");
-  const alertSound = get("alert-sound-enabled");
 
   function applyAlertSoundSettings(item) {
     const previousDuration = currentAlert.duration;
@@ -915,37 +799,48 @@
     syncAlertSoundButtons();
   }
 
-  function saveAlertSoundSettings() {
-    const item = alarms.get(detailSymbol);
-    if (!item) return;
-    if (!alertDuration.checkValidity()) alertDuration.value = item.duration;
-    item.duration = alertDuration.valueAsNumber;
-    item.sound = alertSound.checked;
-    if (currentAlert?.symbol === detailSymbol) applyAlertSoundSettings(item);
-    syncAlertSoundButtons();
-    persist();
-    if (fields.symbol.value === detailSymbol) {
-      fields.duration.value = item.duration;
-      fields.sound.checked = item.sound;
-      syncToneControls();
-    }
-  }
+  function configureCardSound(symbol, item, controls) {
+    const stop = controls.querySelector('[data-alarm-sound="stop"]');
+    const replay = controls.querySelector('[data-alarm-sound="replay"]');
+    const duration = controls.querySelector('[data-alarm-sound="duration"]');
+    const enabled = controls.querySelector('[data-alarm-sound="enabled"]');
+    const label = instruments[symbol].label;
+    stop.setAttribute("aria-label", "Zaustavi zvuk · " + label);
+    replay.setAttribute("aria-label", "Ponovo pusti zvuk · " + label);
+    duration.value = item.duration;
+    enabled.checked = item.sound;
 
-  alertDuration.addEventListener("change", saveAlertSoundSettings);
-  alertSound.addEventListener("change", saveAlertSoundSettings);
-  get("mute-price-alert").addEventListener("click", stopSound);
-  get("restart-price-alert").addEventListener("click", async () => {
-    const symbol = detailSymbol;
-    const event = lastTriggers.get(symbol);
-    if (!event || !alarms.get(symbol)?.sound || !alarms.get(symbol)?.enabled || oscillator) return;
-    const ready = await prepareSound();
-    const item = alarms.get(symbol);
-    if (!ready || symbol !== detailSymbol || event !== lastTriggers.get(symbol) || !item?.sound || !item.enabled || oscillator) return;
-    currentAlert = event;
-    Object.assign(event, { sound: item.sound, duration: item.duration, tone: item.tone, volumes: item.volumes });
-    const melody = resolveMelody(item.tone, event.crossingSide);
-    startSound(item.duration, melody, item.volumes?.[melody]);
-  });
+    function saveSound() {
+      if (!duration.checkValidity()) duration.value = item.duration;
+      item.duration = duration.valueAsNumber;
+      item.sound = enabled.checked;
+      if (currentAlert?.symbol === symbol) applyAlertSoundSettings(item);
+      syncAlertSoundButtons();
+      if (!persist()) get("alarm-list-status").textContent = status.textContent;
+      if (fields.symbol.value === symbol) {
+        fields.duration.value = item.duration;
+        fields.sound.checked = item.sound;
+        syncToneControls();
+      }
+    }
+
+    stop.addEventListener("click", () => {
+      if (currentAlert?.symbol === symbol) stopSound();
+    });
+    replay.addEventListener("click", async () => {
+      if (!await prepareSound() || alarms.get(symbol) !== item || !item.enabled || !item.sound) return;
+      stopSound();
+      const side = lastTriggers.get(symbol)?.crossingSide ?? item.direction;
+      const melody = resolveMelody(item.tone, side);
+      // Manual playback does not alter the recorded time or number of crossings.
+      currentAlert = lastTriggers.get(symbol) ?? { ...item, symbol, crossingSide: side };
+      Object.assign(currentAlert, { duration: item.duration, sound: item.sound, tone: item.tone, volumes: item.volumes });
+      startSound(item.duration, melody, item.volumes?.[melody]);
+    });
+    duration.addEventListener("change", saveSound);
+    enabled.addEventListener("change", saveSound);
+    return { stop, replay };
+  }
 
   window.addEventListener("market-prices", event => {
     acceptQuote("btc", event.detail.btc);
