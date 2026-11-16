@@ -2403,8 +2403,19 @@ lazy-load.crypto-screener-widget {
     opacity: 0.55;
 }
 
-.alarm-gold {
-    color: #bf8b17;
+.alarm-card-title .alarm-coin-icon {
+    width: 1cap;
+    height: 1cap;
+    vertical-align: baseline;
+}
+
+.alarm-card-title .alarm-gold {
+    display: inline-block;
+    width: 0.76cap;
+    height: 0.76cap;
+    vertical-align: 0.12cap;
+    border-radius: 50%;
+    background: #bf8b17;
 }
 
 @media (max-width: 700px) {
@@ -3075,6 +3086,10 @@ body:has(#alarm-list-dialog[open]) {
     width: 1px;
     background: #b7c8de;
     box-shadow: 2px 0 4px rgba(30, 64, 117, 0.18);
+}
+
+#alarm-cards[data-count="3"] > .alarm-card:nth-child(2)::before {
+    box-shadow: 2px 0 4px rgba(30, 64, 117, 0.12);
 }
 
 .alarm-card-prices dd {

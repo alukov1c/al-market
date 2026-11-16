@@ -260,11 +260,10 @@
       const icon = document.createElement("img");
       icon.src = instrument.icon;
       icon.alt = "";
-      icon.className = "coin-icon";
+      icon.className = "coin-icon alarm-coin-icon";
       label.append(icon);
     } else {
       const icon = document.createElement("span");
-      icon.textContent = "●";
       icon.className = "alarm-gold";
       icon.setAttribute("aria-hidden", "true");
       label.append(icon);
