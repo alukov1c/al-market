@@ -854,6 +854,23 @@ lazy-load.market-summary {
     font-size: 1.4rem;
 }
 
+.chart-symbol-icon--silver {
+    border: 1px solid #94a3b8;
+    border-radius: 4px;
+    background: linear-gradient(135deg, #f8fafc, #cbd5e1);
+    color: #475569;
+    font-size: 0.65rem;
+    font-weight: 700;
+}
+
+.chart-symbol-icon--anthropic {
+    border-radius: 4px;
+    background: #d4a27f;
+    color: #241c18;
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
 .chart-symbol-icon--nvidia {
     border-radius: 50%;
     background: #76b900;

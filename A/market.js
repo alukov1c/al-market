@@ -761,6 +761,22 @@ const tradingViewCharts = {
         symbol: "NASDAQ:NVDA",
         href: "https://www.tradingview.com/symbols/NVDA/?exchange=NASDAQ",
         label: "NVIDIA grafik"
+    },
+    xag: {
+        title: "Grafik - Srebro - XAG",
+        analysisTitle: "XAG tehnička analiza",
+        analysisEnglishTitle: "XAGUSD Analysis on TradingView",
+        symbol: "OANDA:XAGUSD",
+        href: "https://www.tradingview.com/symbols/XAGUSD/?exchange=OANDA",
+        label: "XAG grafik"
+    },
+    ant: {
+        title: "Berza - Grafik - Anthropic - ANT (ANT.NAS-24)",
+        analysisTitle: "ANT tehnička analiza",
+        analysisEnglishTitle: "ANT Analysis on TradingView",
+        symbol: "NASDAQ:ANT",
+        href: "https://www.tradingview.com/symbols/NASDAQ-ANT/",
+        label: "Anthropic ANT grafik"
     }
 };
 
@@ -1003,7 +1019,7 @@ function getMarketStatus(date) {
 
 function updateMarketStatusMessage(chartKey, leadText) {
     const message = document.querySelector("#marketStatusMessage");
-    const chartLabels = { nvda: "NVIDIA" };
+    const chartLabels = { nvda: "NVIDIA", ant: "ANT (Anthropic)" };
     const marketLeadTexts = {
         xau: "Tržište zlata je otvoreno",
         xbr: "Tržište nafte je otvoreno",
@@ -1013,6 +1029,12 @@ function updateMarketStatusMessage(chartKey, leadText) {
         sol: "Kripto tržište je otvoreno (24/7)",
         chf: "Forex tržište je otvoreno",
         aud: "Forex tržište je otvoreno",
+        xag: getMarketStatus(new Date()).gold
+            ? "Tržište srebra je otvoreno"
+            : "Tržište srebra je zatvoreno",
+        ant: getMarketStatus(new Date()).nasdaq
+            ? "Nasdaq berza je otvorena"
+            : "Nasdaq berza je zatvorena",
         nvda: getMarketStatus(new Date()).nasdaq
             ? "Nasdaq berza je otvorena"
             : "Nasdaq berza je zatvorena"
@@ -1065,7 +1087,7 @@ function initMarketStatusBar(activateDefaultChart, hasManualSelection) {
         });
 
         const activeChartKey = document.querySelector(".chart-symbol.is-active")?.dataset.chart;
-        if (activeChartKey === "nvda") updateMarketStatusMessage(activeChartKey);
+        if (["nvda", "ant", "xag"].includes(activeChartKey)) updateMarketStatusMessage(activeChartKey);
 
         if (previousGoldStatus === null) {
             if (isWeekend || !status.gold) {
