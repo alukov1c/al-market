@@ -39,8 +39,8 @@
     $('procenatKapitala' + suffix).value = available ? number(p.level) + (p.level === null ? '' : ' %') : '—';
     $('procenatKapitala' + suffix).title = available ? 'Nivo = equity / balance × 100' : status;
     $('valuta' + suffix).value = p.currency || '—';
-    $('jacinaPozicije' + p.id).value = available && p.strength !== null ? number(p.strength) + ' %' : '—';
-    $('jacinaPozicije' + p.id).title = 'Jačina = equity / zbir tržišnih vrednosti otvorenih pozicija × 100, u valuti računa.';
+    $('jacinaPortfolija' + p.id).value = available && p.strength !== null ? number(p.strength) + ' %' : '—';
+    $('jacinaPortfolija' + p.id).title = 'Jačina = equity / zbir tržišnih vrednosti otvorenih pozicija × 100, u valuti računa.';
     const profit = $('lastProfit' + suffix);
     const date = $('lastDate' + suffix);
     profit.style.color = '#6b7280'; profit.style.fontWeight = 'bold';
